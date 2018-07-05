@@ -1,0 +1,218 @@
+1、基本表结构
+    class UserInfo(models.Model):
+        username = models.CharField(max_lenght=32,db_index=True)
+        email = models.CharField(max_lenght=32,unique=True)
+        pwd = models.CharField(max_length=64)
+        ################ 最后一次发的时间 ################
+        ptime = models.DateTimeField(auto_add=True)
+        code = models.CharField(max_length=6)
+        
+        """
+        class Meta:
+            index_together = [
+                ('username', 'pwd'),
+            ]
+            
+            unique_together = [
+                ('username', 'pwd'),
+            ]
+        """
+        
+    class SendMsg(models.Model):
+        email = models.EmailField(max_lenght=32,unique=True)
+        code = models.CharField(max_length=6)
+        stime = models.DateTimeField()
+        times = models.IntergarField(default=1)
+    
+    SendMsg.objects.create(email='11111111',code='123',stime=datetime.now())
+    # 特殊语句
+    obj = SendMsg(email='11111111',code='123',stime=datetime.now())
+    obj.clean()
+    obj.save()
+    # django Admin也是可以的
+    
+    ？django的Models字段怎么验证？
+    
+
+    
+2、登录和注册
+    - ORM操作
+    - F 和 Q   
+        filter(id__gt=1,name='root')
+        filter(**{"id__gt": 1,...})
+        filter(Q(Q(id__gt=1)&Q(name="root"))|)
+        （邮箱&密码）| （用户名&密码）
+    - 简单倒计时效果
+    - 验证码
+    - *** 逻辑性处理 ***
+    - 注册成功后，自动登录
+    
+    
+    a. 分解注册
+        --- 发送随机验证码
+            前端
+                - 获取邮箱框中的内容，并发到后台（Ajax）
+                - Form验证，只验证一个邮箱
+                        class Foo(forms.Form):
+                            email ...
+                    ret = {'stauts':.., 'summary': ..}
+                    不合法：
+                        ..
+                    合法
+                        ..
+                - success回调函数：
+                    合法：
+                        跑秒
+                    不合法：
+                        显示错误
+              
+            后端：
+                class BaseResponse:
+                    def __init__(self):
+                        self.status = True
+                        self.summary = None
+                        self.error = None
+                        self.data = None
+                
+                class SendMsgForm(forms.Form):
+                    email = EmailField(error_messages={'invalid': '邮箱格式错误'})
+                   
+                
+                def msg(request):
+                    #ret = {'stauts': True, 'summary': None, 'error': None, 'data': None}
+                    # return HttpResponse(json.dumps(ret))
+                    
+                    obj = BaseResponse()
+                    
+                    form = SendMsgForm(request.POST)
+                    
+                    if form.is_valid():
+                        # 用户邮箱格式正确
+                        
+                        # 【用户表】中是否已经存在当前邮箱
+                        obj.status = False
+                        obj.summary = "邮箱已被注册"
+                        return return HttpResponse(json.dumps(obj.__dict__))
+                        
+                        
+                        【验证码临时表】
+                        获取当前时间
+                        # 11:11
+                        current_date = datetime.datetime.now()
+                        code = # 生成随机验证码 random
+                         
+                         
+                        如果【验证码临时表】有当前邮箱：
+                            ====== 1小时，10个数 ======
+                            # 10: 11
+                            limit_date = current_date - datetime.datedela(hours=1)
+                            # 时间是合理的，次数不合理
+                            a = SendMsg.objects.filter(utime__gt=limit_date, times__gt=10).count()
+                            # 1小时内次数太多了
+                            return 
+                            
+                            # 10年后
+                            b = SendMsg.objects.filter(utime__lte=limit_date).count()
+                            # SendMsg.objects.filter(email=email).update(code=code,stime=current_date,times=1)
+                            
+                            # 
+                            SendMsg.objects.filter(email=email).update(code=code,times=F('times') + 1)
+                            
+                        else：
+                           
+                            # 数据库的SendMsg创建一条信息   SendMsg.objects.create(... current_date,times=1)
+                            # 发送邮件
+                            obj.status = True
+                    else:
+                        obj.summary = form.errors['email'][0]
+                        obj.status = False
+                        # obj.__dict__ # {'stauts': True, 'summary': None, 'error': None, 'data': None}
+
+                    return HttpResponse(json.dumps(obj.__dict__))
+            
+        
+        -------- 注册
+            a. 获取注册表单中的所有信息，Ajax发送
+                $.ajax({
+                    url: ...
+                    data: {.....},
+                    
+                })
+            b. 写Form用于验证用户请求
+               合法： 
+                    ..
+               不合法：
+                    错误信息返回给用户
+                form = registerForm(request.POSt)
+                if form.is_valid():
+                    # 随机验证码进行检查，1分钟内的做的操作
+                    【随机验证码的临时表，邮箱，code,code生成的时间】
+                    # 获取当前时间 - 1分钟                    
+            c. 错误信息的展示：
+                -- 详细错误信息
+        
+    b. 登录
+        访问首页
+        1、商城验证码图片 <img src='/check_code/'/>    session['CheckCode'] = code
+        2、用眼看图片，输入图片上的内容
+        3、用户输入的值和session['CheckCode']进行比较
+        4、用户名和密码的验证
+            models.UserInfo.objects.filter(Q(Q(username=u)&Q(pwd=p))|Q(Q(emial=u)&Q(pwd=p)))
+            
+            # {'id': 1,'name': 'root'}
+            
+            con = Q()
+            
+            q1 = Q()
+            q1.connector = 'AND'
+            
+            q1.children.append(('email', e))
+            q1.children.append(('password', p))
+            # Q(Q(email=e)&Q(pwd=p))
+            
+            
+            q2 = Q()
+            q2.connector = 'AND'
+            q2.children.append(('username', _value_dict['user']))
+            q2.children.append(('password', _value_dict['pwd']))
+            # Q(Q(username=u)&Q(pwd=p))
+            
+
+            con.add(q1, 'OR')
+            con.add(q2, 'OR')
+
+            models.UserInfo.objects.filter(con)
+        
+        验证码
+            - 页面上是图片
+            - 后台字符串且保存在session
+            
+========================================================== 登录注册 ======================================================
+新闻类型
+查看新闻列表
+
+作业具体：
+    数据库设计
+    查看新闻列表 DESC
+    分页
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+   
+    
+    

@@ -1,0 +1,47 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD HTML 4.01 Strict//EN' 'http://www.w3.org/TR/html4/strict.dtd'>
+<html>
+<head>
+<meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>
+<title>在此插入标题</title>
+</head>
+<body>
+	<div>
+		<button type="button" onclick="func1()">ajax提交</button>
+	</div>
+
+	<script type="text/javascript">
+		function createXMLHttpRequest() {
+			var xmlHttp;
+			// 适用于大多数浏览器，以及IE7和IE更高版本
+			try {
+				xmlHttp = new XMLHttpRequest();
+			} catch (e) {
+				// 适用于IE6
+				try {
+					xmlHttp = new ActiveXObject("Msxml2.XMLHTTP");
+				} catch (e) {
+					// 适用于IE5.5，以及IE更早版本
+					try {
+						xmlHttp = new ActiveXObject("Microsoft.XMLHTTP");
+					} catch (e) {}
+				}
+			}
+			return xmlHttp;
+		}
+	
+		var xmlhttp = createXMLHttpRequest()
+		xmlhttp.onreadystatechange = function() {
+			if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+				var data = xmlhttp.responseText
+				console.log(data)
+			}
+		}
+	
+		function func1() {
+			xmlhttp.open("POST", "/ajax_receive/", true)
+			xmlhttp.setRequestHeader("Content-Type","application/x-www-form-urlencoded")
+			xmlhttp.send("name=alex")
+		}
+	</script>
+</body>
+</html>

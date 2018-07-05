@@ -1,0 +1,60 @@
+<!Doctype html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style>
+.current {
+	background-color: aqua;
+	width: 50px;
+	height: 20px;
+	border: 1px solid green;
+	/* 	padding-top: 200px; */
+	/* 	padding-left: 200px; */
+	/* 	border-color: orange; */
+	/* 	border-width: 5px; */
+	float: left
+}
+
+li {
+	float: left
+}
+
+.hide {
+	display: none
+}
+</style>
+<script type="text/javascript" src="jquery-3.3.1.js"></script>
+</head>
+<body>
+
+	<div>
+		<div class="tab">
+			<ul>
+				<li xxx="c1" onclick="tab(this);" class="current">菜单1</li>
+				<li xxx="c2" onclick="tab(this);">菜单2</li>
+				<li xxx="c3" onclick="tab(this);">菜单3</li>
+			</ul>
+		</div>
+		<p>
+			<br>
+		</p>
+		<div class="content">
+			<ul>
+				<li id="c1">内容1</li>
+				<li id="c2" class="hide">内容2</li>
+				<li id="c3" class="hide">内容3</li>
+			</ul>
+		</div>
+	</div>
+</body>
+<script type="text/javascript">
+	function tab(self) {
+		$(self).addClass("current").siblings().removeClass("current");
+		
+		var attrXXX=$(self).attr("xxx");
+		$("#"+attrXXX).removeClass("hide").siblings().addClass("hide");
+		
+	}
+</script>
+
+</html>

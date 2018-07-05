@@ -1,0 +1,53 @@
+{% load my_tag %}
+<!DOCTYPE html PUBLIC '-//W3C//DTD HTML 4.01 Strict//EN' 'http://www.w3.org/TR/html4/strict.dtd'>
+<html>
+<head>
+<meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>
+<title>在此插入标题</title>
+</head>
+<body>
+	<form action="/userinfo/" method="post">
+		<p>
+			姓名<input type="text" name="username">
+		</p>
+		<p>
+			性别<input type="text" name="sex">
+		</p>
+		<p>
+			邮箱<input type="text" name="email">
+		</p>
+		<p>
+			<input type="submit">
+		</p>
+		{% csrf_token %}
+	</form>
+	<hr>
+	<h1>数据展示</h1>
+	<table border="1px">
+		<tr>
+			<td>姓名</td>
+			<td>性别</td>
+			<td>邮箱</td>
+		</tr>
+		{% for i in user_list %}
+		<tr>
+			<td>{{ i.username }}</td>
+			<td>{{ i.sex }}</td>
+			<td>{{ i.email }}</td>
+		</tr>
+		{% endfor %}
+
+	</table>
+
+	<h1>函数展示</h1>
+	<p>{% my_add 2 5 10 %}</p>
+	<p>{{ 10 | my_add100 }}</p>
+	<p>{{ 10 | my_add101:1000 }}</p>
+
+	{% if 100|my_add100 > 199 %}
+	<p>if True</p>
+	{% elif 100|my_add101:100 > 1000 %}
+	<p>elif True</p>
+	{% endif %}
+</body>
+</html>

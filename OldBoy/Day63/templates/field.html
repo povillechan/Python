@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <form method="POST" action="/field.html" enctype="multipart/form-data">
+
+        <!-- <label for="{{ obj.f1.id_for_label }}">{{ obj.f1.label }}</label> -->
+        {{ obj.f1.label_tag }}
+{#        {{ obj.f1 }}#}
+{#        {{ obj.f3 }}#}
+{#        {{ obj.f4 }}#}
+{#        {{ obj.f6 }}#}
+        {{ obj.f8 }}
+        <input type="submit" value="提交" />
+    </form>
+</body>
+</html>

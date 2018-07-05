@@ -1,0 +1,25 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD HTML 4.01 Strict//EN' 'http://www.w3.org/TR/html4/strict.dtd'>
+<html>
+<head>
+<meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>
+<title>ZSYBOM管理系统</title>
+<script type="text/javascript" src="/static/jquery-3.3.1.js"></script>
+<style type="text/css">
+@import url("/static/site.css");
+</style>
+</head>
+<body>
+	<div class="breadcrumbs">
+	ZSY BOM 管理系统
+    <br>
+    <br>
+    {% block cur_navi %}
+    {% endblock %}
+    <span style="float:right;">用户：{{ cur_user }}|<a href="{% url "logout" %}">注销</a></span>
+	</div>
+    {% block content %}
+    {% endblock %}
+    {% block js %}
+    {% endblock %}
+</body>
+</html>

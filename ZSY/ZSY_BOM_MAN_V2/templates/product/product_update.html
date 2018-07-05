@@ -1,0 +1,76 @@
+{% extends "layoutComfirm.html" %} 
+{% block cur_navi %} 
+	<a href="{% url "index" %}">首页</a> &rsaquo;
+	<a href="{% url "product" %}">产品单</a> &rsaquo; 
+	变更产品
+{% endblock %} 
+
+{% block content %}
+	<div class="content">	 
+	    <br>
+	    <table border="1px">
+		    <tr>
+			    <td>产品名</td>				    
+			    <td><input id="productName" type="text" value="{{ product.productName }}"></input</td>
+		    </tr>
+		    <tr>
+			    <td>Bom名</td>				    
+			    <td id="bomName">{{ product.bom }} </td>
+	        </tr>
+	        <tr>
+	            <td></td>		
+			    <td><select id="bomSelect">
+			    {% for i in bom_item %}
+			        <option value ="{{ i }}">{{ i }}</option>
+			    {% endfor %}
+			    </div>
+			    </select>
+			    </td>
+    		    </tr>
+	    </table>
+    </div>
+{% endblock %}
+{% block comfirmAction %}   
+        	var str = '{"csrfmiddlewaretoken":"{{ csrf_token }}",  "action":"update"}';
+            var commitContent= JSON.parse(str);
+            var before = JSON.parse("{}")
+            var after = JSON.parse("{}")
+            var value = JSON.parse("{}")
+
+            after["bomName"] = $("#bomName")[0].innerHTML;
+            after["productName"] = $("#productName").val();
+           
+            before["bomName"] = "{{ product.bom }}"
+            before["productName"] = "{{ product.productName }}"
+            
+            commitContent['id']="{{ product.id }}"
+            commitContent['value']=JSON.stringify([befor,after])
+            
+         	$.ajax({
+                url: "{% url "product_edit" %}",
+                type: 'POST',
+                data:  commitContent,
+                dataType: "json",
+                success: function (rep) {                	
+                    if(!rep.status){
+                    	if (rep.error == "errLogin"){
+             	           location.href = "{% url "login" %}?next="+location.pathname;
+                        }
+                    	else{
+                            $("#msg")[0].innerHTML = rep.data;
+                    	}
+                    }
+                    else{
+                        location.href = "{% url "product" %}";
+                    }
+               }
+          });
+{% endblock %}
+
+{% block js %}
+    $(function() {
+    	$("#bomSelect").change(function(){
+    		$("#bomName")[0].innerHTML=$(this).val()
+    	});
+    });
+{% endblock %}

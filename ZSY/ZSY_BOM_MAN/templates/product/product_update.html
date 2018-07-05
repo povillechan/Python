@@ -1,0 +1,84 @@
+{% extends "layout.html" %} 
+{% block cur_navi %} 
+	<a href="{% url "index" %}">首页</a> &rsaquo;
+	<a href="{% url "product" %}">产品单</a> &rsaquo; 
+	变更产品
+{% endblock %} 
+
+{% block content %}
+	<div class="content">	 
+	    <br>
+		    <table border="1px">
+			    <tr>
+				    <td>产品名</td>				    
+				    <td><input id="productName" type="text" value="{{ product_name }}"></input</td>
+			    </tr>
+			    <tr>
+				    <td>Bom名</td>				    
+				    <td id="bomName">{{ bom_name }} </td>
+		        </tr>
+		        <tr>
+		            <td></td>		
+				    <td><select id="bomSelect">
+				    {% for i in bom_item %}
+				        <option value ="{{ i }}">{{ i }}</option>
+				    {% endfor %}
+				    </div>
+				    </select>
+				    </td>
+     		    </tr>
+		    </table>
+            <input id="add_comfirm" type="button" value="提交"></input>  
+            <span id="msg" style="color: red;">{{ msg }}</span>
+    </div>
+{% endblock %}
+{% block js %}
+<script type="text/javascript">
+    $(function() {
+    	$("#bomSelect").change(function(){
+    		$("#bomName")[0].innerHTML=$(this).val()
+    	});
+		bindConfirmEvent()
+    });
+    
+    function  bindConfirmEvent() {
+        $('#add_comfirm').click(function () {     
+        	var str = '{"csrfmiddlewaretoken":"{{ csrf_token }}",  "action":"update"}';
+            var commitContent= JSON.parse(str);
+            var before = JSON.parse("{}")
+            var after = JSON.parse("{}")
+
+            after["bomName"] = $("#bomName")[0].innerHTML;
+            after["productName"] = $("#productName").val();
+           
+            before["bomName"] = "{{ bom_name }}"
+            before["productName"] = "{{ product_name }}"
+        
+            commitContent['before']=before
+            commitContent['after']=after
+
+            console.log(commitContent)
+         	 $.ajax({
+                url: "{% url "product_edit" %}",
+                type: 'POST',
+                data:  commitContent,
+                dataType: "JSON",
+                success: function (rep) {                	
+                    if(!rep.status){
+                    	if (rep.error == "errLogin"){
+             	           location.href = "{% url "login" %}?next="+location.pathname;
+                        }
+                    	else{
+                            $("#msg")[0].innerHTML = rep.data;
+                    	}
+                    }
+                    else{
+                        location.href = "{% url "product" %}";
+                    }
+               }
+          });
+        });
+    }  
+    
+</script>
+{% endblock %}

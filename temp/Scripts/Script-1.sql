@@ -1,0 +1,1 @@
+alter table View_product2bom drop CONSTRAINT PRIMARY KEY;

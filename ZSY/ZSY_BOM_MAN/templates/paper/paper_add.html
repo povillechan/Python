@@ -1,0 +1,63 @@
+{% extends "layout.html" %} 
+{% block cur_navi %} 
+	<a href="{% url "index" %}">首页</a> &rsaquo;
+	<a href="{% url "paper" %}">图纸单</a> &rsaquo; 
+	增加产品
+{% endblock %} 
+
+{% block content %}
+	<div class="content">	 
+	    <br>
+		    <table border="1px">
+			    {% for key,value in item_name.items %}
+			    <tr>
+				    <td>{{ key }}</td>
+				    <td><input type="text" name="{{ value }}" style="width:400px"></input</td>
+			    </tr>
+			    {% endfor %}
+		    </table>
+            <input id="add_comfirm" type="button" value="提交"></input>  
+            <span id="msg" style="color: red;">{{ msg }}</span>
+    </div>
+{% endblock %}
+{% block js %}
+<script type="text/javascript">
+    $(function() {
+		bindConfirmEvent()
+    });
+    
+    function  bindConfirmEvent() {
+        $('#add_comfirm').click(function () {     
+        	var str = '{"csrfmiddlewaretoken":"{{ csrf_token }}",  "action":"add"}';
+            var commitContent= JSON.parse(str);
+      
+            $("td input").each(function( val, index ) {
+            	    console.log(this)
+            	    commitContent[$(this).attr("name")] = $(this).val();
+            	}
+            );
+            
+                  console.log(commitContent)
+        	 $.ajax({
+                url: "{% url "paper_edit" %}",
+                type: 'POST',
+                data:  commitContent,
+                dataType: "JSON",
+                success: function (rep) {                	
+                    if(!rep.status){
+                    	if (rep.error == "errLogin"){
+                 	         location.href = "{% url "login" %}?next="+location.pathname;
+                        }
+                    	else{
+                            $("#msg")[0].innerHTML = rep.data;
+                    	}
+                    }else{
+                       location.href = "{% url "paper" %}";
+                    }
+               }
+          });  
+        });
+    }  
+    
+</script>
+{% endblock %}

@@ -1,0 +1,220 @@
+Day59,课上笔记
+
+一对多操作：
+        
+    获取所有的学生
+        - 获取DB数据
+            class Classes(models.Model):
+                caption = models.CharField(max_length=32)
+
+
+            class Student(models.Model):
+                name = models.CharField(max_length=32)
+                email = models.CharField(max_length=32,null=True)
+                cls = models.ForeignKey('Classes')
+            
+            result = models.Student.object.all()
+            # QuerySet, select * from ....
+            # [obj,obj,obj,]，Django内部有一个模块，可以转换
+            # obj.name, obj.email, obj.cls_id, obj.cls.id, obj.cls.caption
+            
+            
+            result = models.Student.object.all().values('id','name','email', 'cls_id', 'cls__id', 'cls__caption')
+            # QuerySet, select id.. from ...
+            # list(result)  -> QuerySet -> list， json.dumps()
+            # [ {'id': 1, 'name': ...,},{'id': 1, 'name': ...,},{'id': 1, 'name': ...,},{'id': 1, 'name': ...,} ]
+        
+        
+            result = models.Student.object.all().value_list('id','name','email', 'cls_id', 'cls__id', 'cls__caption')
+            # QuerySet, select id.. from ...
+            # list(result)  -> QuerySet -> list， json.dumps()
+            # [ (1,'root'..),(1,'root'..),(1,'root'..),(1,'root'..),(1,'root'..) ]
+            
+            # PS: QuerySet,无法直接使用json.dumps()序列化
+            # QuerySet
+                - Django内部有一个模块，可以转换
+                - values, value_list, 转换成  list(result)， json.dumps 
+            
+            获取数据：三种形式
+            请求数据：form(url)，ajax
+            
+            
+        - 模版语言显示数据(URL,Form表单的形式)
+            def index(request):
+                result = models.Student.object.all()
+                return render(request, 'index.html', {'reuslt': result})
+                
+            {% for item in result%}
+                {{item.id}} - {{item.name}} - {{item.cls.id}} - {{item.cls.caption}}
+            {% endfor %}
+            
+            
+            def index(request):
+                result = models.Student.object.all().values('id','name','email', 'cls_id', 'cls__id', 'cls__caption')
+                # [ {'id': 1, 'name': ...,},{'id': 1, 'name': ...,},{'id': 1, 'name': ...,},{'id': 1, 'name': ...,} ]
+                return render(request, 'index.html', {'reuslt': result})
+                
+            {% for item in result%}
+                {{item.id}} - {{item.name}} - {{item.cls__id}} - {{item.cls__caption}}
+            {% endfor %}
+            
+            
+            def index(request):
+                result = models.Student.object.all().value_list('id','name','email', 'cls_id', 'cls__id', 'cls__caption')
+                # QuerySet, select id.. from ...
+                # list(result)  -> QuerySet -> list， json.dumps()
+                # [ (1,'root'..),(1,'root'..),(1,'root'..),(1,'root'..),(1,'root'..) ]
+                return render(request, 'index.html', {'reuslt': result})
+                
+            {% for item in result%}
+                {{item.0}} - {{item.1}} - {{item.4}} - {{item.5}}
+            {% endfor %}
+        
+        - Ajax请求
+            a. 
+                $(function(){
+                       $.ajax...
+                })
+            
+            b.
+                def index(request):
+                    result = models.Student.object.all()
+                    # Django内部序列化工具
+                    result = Django内部序列化工具
+                    
+                    return HttpResponse(result)
+                    
+                    
+                def index(request):
+                    result = models.Student.object.all().values('id','name','email', 'cls_id', 'cls__id', 'cls__caption')
+                    result = list(result)
+                    result_str = json.dumps(result)
+                    
+                    return HttpResponse(result_str)
+                    
+                def index(request):
+                    result = models.Student.object.all().value_list('id','name','email', 'cls_id', 'cls__id', 'cls__caption')
+                    result = list(result)
+                    result_str = json.dumps(result)
+                    
+                    return HttpResponse(result_str)
+                    
+            c. 
+                $.each(function(){
+                    # 构建html标签
+                    # 将标签添加到HTML指定位置
+                
+                })
+            
+            ==================================疑问========================================
+            前端ajax：
+        
+                a. 希望对返回的内容进行进一步操作：HttpResponse
+                    {
+                        status: 0,
+                        error: 1,
+                        data: [11,22,3,44]
+                        
+                    }
+                    
+                    
+                    JSON.parse(arg)
+                
+                b. 希望对返回的内容进行进一步操作：render()
+                    "
+                    <h1>asdfasdf</h1>
+                    "
+                        
+    加钱：HttpResponse和render
+        
+          HttpResponse，传入的数据，直接返回给用户
+          
+          
+          render(request,'a.html', {'k':123})
+          1、找到html模版，open函数打开获取到内存
+          2、Django的模版引擎： html模版的内容 + 数据 => 渲染（替换） ===》 最终字符串
+          3、HttpResponse(最终字符串)
+          
+          
+          
+          用户：
+            URL -> HttpResponse, render
+            Ajax-> HttpResponse, render
+作业：
+    多对多，老师管理
+    1、查看
+        - 老师名称
+        - 老师名称， 课程A，课程B，课程C
+    2、添加
+        - 对话框：
+            输入老师名称
+            选择班级（多选）
+            
+        - URL：
+            
+    3、编辑
+        - 对话框：
+            
+            $('#sel').val([1,2,3])
+            var list = $('#sel').val();
+            
+        - URL： 
+            
+    4、
+        <select>
+            已经选中的
+        
+        <select>
+        
+        ->
+        <- 
+        
+        <select>
+            未选中
+            
+        </select>
+        
+        Ajax:
+        
+    5、如何上传图片（可选）
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+            
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        

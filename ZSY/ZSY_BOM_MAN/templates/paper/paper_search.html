@@ -1,0 +1,115 @@
+{% extends "layout.html" %} 
+{% block cur_navi %} 
+		<a href="{% url "index" %}">首页</a> &rsaquo; 
+		<a href="{% url "paper" %}">图纸</a> &rsaquo;
+		图纸检索
+		<span style="color:red">[图纸引用结果:{{ paperName }}-{{ paperVersion }}]</span>
+{% endblock %} 
+
+{% block content %}
+	<div class="content">
+	    <label>将选中的BOM单中包含的图纸往</label>
+
+	                <select id="paperSelect">
+				    {% for i in paper_item %}
+				        <option value ="{{ i }}">{{ i }}</option>
+				    {% endfor %}
+				    </select>
+				    <button id="modify_btn">变更</button>
+				    	    <br>
+				    	    <br>
+		<table border="1px">
+			<tr class="tabletitle">
+				<td>产品</td>
+				<td>BOM名</td>
+				<td>BOM版本</td>
+				<td>选择</td>
+			</tr>			
+			{% for i in bom_dict %}
+			<tr>
+				<td>{{ i.productName }}</td>
+				<td><a href="{% url "bom_detail" %}?bomName={{ i.bomName }}&bomVersion={{ i.bomVersion }}">{{ i.bomName }}</td>
+				<td><a href="{% url "bom_detail" %}?bomName={{ i.bomName }}&bomVersion={{ i.bomVersion }}">{{ i.bomVersion }}</td>
+				<td><input type="checkbox"></input></td>
+			</tr>
+			{% endfor %}
+
+		</table>
+	</div>
+	<div class="remove hide">
+	<label style="display: block; margin-top: 10px"><h1	style="color: red">该操作不可撤销，确定变更？</h1></label>
+	<div align="center">
+		<input style="text-align: center" id="modify_cancel" type="button"value="取消" /> 
+		<input style="text-align: center" id="modify_confirm" type="button" value="确定" />
+	</div>
+</div>
+{% endblock %} {% block js %}
+<script type="text/javascript">
+$(function() {
+	bindModifyConfirmEvent()
+	bindCancelEvent()
+	bindModifyEvent()
+});
+
+function  bindModifyConfirmEvent() {
+    $('#modify_confirm').click(function () {     
+    	var json_string= []
+    	var is_checked = false
+    	$('td input').each(function(){
+    		var item_json= JSON.parse("{}");
+      		if ($(this).is(":checked"))
+   			{
+    			item_json["bomName"] = $(this).parent().parent().children("td:eq(1)").text()
+    			item_json["bomVersion"] = $(this).parent().parent().children("td:eq(2)").text()
+    			item_json["paperName_old"] = "{{ paperName }}"
+    	  		item_json["paperVersion_old"] = "{{ paperVersion }}"
+    			item_json["paper_new"] = $("#paperSelect").val();
+    			json_string.push(item_json)
+    			is_checked = true
+  			}  
+    	});
+
+    	if (is_checked)
+    		{
+     	$.ajax({
+            url: "{% url "paper_edit" %}",
+            type: 'POST',
+            data: {csrfmiddlewaretoken:'{{ csrf_token }}', 'action':"modify", 'data': JSON.stringify(json_string)},
+            dataType: "JSON",
+            success: function (rep) {
+                if(!rep.status){
+                	if (rep.error == "errLogin"){
+             	        location.href = "{% url "login" %}?next="+location.pathname;
+                    }
+                	else
+                        alert(rep.error);
+                }else{
+                    $('remove').addClass('hide');
+                    location.reload();
+                }
+           }
+       });   
+    		}
+    	else
+    		{
+            $('remove').addClass('hide');
+            location.reload();
+    		}
+    });
+}
+
+function  bindCancelEvent() {
+    $('#modify_cancel').click(function () {
+        $('.modal,.shade,.remove').addClass('hide');
+    });
+}
+
+function bindModifyEvent()
+{
+	$("#modify_btn").click(function () {
+        $('.remove').removeClass('hide');
+	});
+}
+    
+</script>
+{% endblock %}

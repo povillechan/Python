@@ -1,0 +1,71 @@
+<!Doctype html>
+<html>
+<head>
+<meta charset="utf8">
+<title>二级联动</title>
+</head>
+<body>
+	<form action="./">
+		<select id="Provinces" name="ProvinceValue"
+			onchange="funProChange(selectedIndex)"></select> <select id="Citys"
+			name="CityValue"></select> <input type="submit" value="提交">
+	</form>
+	<script type="text/javascript">
+	
+		var sPositionInfo = '{' +
+			'	"数据": [{' +
+			'			"省份": "江苏",' +
+			'			"城市": "南京,苏州,昆山"' +
+			'		},' +
+			'		{' +
+			'			"省份": "浙江",' +
+			'			"城市": "杭州,嘉兴"' +
+			'		}' +
+			'	]' +
+			'}';
+	
+		function initOption(index) {
+			removeall();
+			var jPositionInfo = JSON.parse(sPositionInfo);
+			var elePro = document.getElementById("Provinces");
+			var itemindex = 0;
+			var allPositions = jPositionInfo["数据"];
+			for (var item in allPositions) {
+				var eleProOption = document.createElement("option", itemindex);
+				eleProOption.innerHTML = allPositions[item]["省份"];
+	
+				if (index == itemindex) {
+					eleProOption.selected = "selected";
+	
+					var cityOptions = allPositions[item]["城市"].split(',');
+// 					console.log(cityOptions);
+					var eleCity = document.getElementById("Citys");
+					for (var cityOptionIndex = 0; cityOptionIndex < cityOptions.length; cityOptionIndex++) {
+						var eleCityOption = document.createElement("option", cityOptionIndex);
+						eleCityOption.innerHTML = cityOptions[cityOptionIndex];
+						eleCity.appendChild(eleCityOption);
+					}
+				}
+				elePro.appendChild(eleProOption);
+				itemindex++;
+			}
+		}
+	
+		function removeall() {
+			var elePro = document.getElementById("Provinces");
+			elePro.options.length = 0;
+	
+			var eleCity = document.getElementById("Citys");
+			eleCity.options.length = 0;
+		}
+	
+	
+		initOption(1);
+	
+		function funProChange(index) {
+// 			console.log(index);
+			initOption(index);
+		}
+	</script>
+</body>
+</html>

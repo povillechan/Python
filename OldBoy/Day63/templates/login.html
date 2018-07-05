@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <h1>Form提交数据</h1>
+    <form method="POST" action="/login.html">
+        <p>
+            {{ oo.user }}
+            <span>{{ oo.errors.user.0 }}</span>
+
+        </p>
+        <p>
+            {{ oo.email }}
+            <span>{{ oo.errors.email.0 }}</span>
+        </p>
+        <p>
+            <input type="text" name="pwd" placeholder="密码" />
+        </p>
+        <input type="submit" value="提交"  /> {{ msg }}
+        <input id="ajax_submit" type="button" value="Ajax提交"  />
+    </form>
+    <script src="/static/jquery-2.1.4.min.js"></script>
+    <script>
+        $(function () {
+            
+            $('#ajax_submit').click(function () {
+                $.ajax({
+                    url:"/login.html",
+                    data: {user:'root', email: 'root@live.com', pwd: '123123'},
+                    type: 'POST',
+                    success:function (arg) {
+                        console.log(arg)
+                    }
+                })
+
+            })
+            
+        })
+    </script>
+</body>
+</html>

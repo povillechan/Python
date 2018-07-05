@@ -1,0 +1,91 @@
+{% extends "layoutComfirm.html" %} 
+{% block cur_navi %} 
+		<a href="{% url "index" %}">首页</a> &rsaquo;
+		<a href="{% url "bom" %}">BOM单</a> &rsaquo; BOM编辑
+{% endblock %} 
+{% block header %} 
+<script type="text/javascript" src="/static/bom-action.js"></script>
+{% endblock %} 
+{% block content %}
+<div id="content" class="content">
+	<table border="1px">
+		<tr>
+			<td>BOM名</td>
+			<td><input id="bomName" type="text"	value="{{ bom.bomName }}"></input></td>
+			<td class="hide">{{ bom.bomName }}</td>
+		</tr>
+		<tr>
+			<td>Bom版本</td>
+            <td><input id="bomVersion" type="text"	value="{{ bom.bomVersion }}"></input></td>
+            <td class="hide">{{ bom.bomVersion }}</td>
+		</tr>
+		<tr>
+			<td>Bom版本</td>
+            <td><input id="bomDiscrib" type="text"	value="{{ bom.bomDiscrib }}"></input></td>
+            <td class="hide">{{ bom.bomDiscrib }}</td>
+		</tr>
+	</table>
+
+	<br><br>
+	<ul class="object-tools">
+	   <li onclick="level1add(this)">增加组</li>
+	</ul>
+	<br><br>	
+</div>
+{% endblock %}
+
+{% block js %}
+    $(function() {
+ 		modifyTdEditable() 		
+    })		
+
+	var bomContext=jQuery.parseJSON({{ bom_Context | safe }});
+	addBomListLevel1(bomContext); 
+{% endblock %}
+    
+{% block comfirmAction %}          
+            if (!checkBomEdit())
+            {
+            	return
+            }            
+        	var str = '{"csrfmiddlewaretoken":"{{ csrf_token }}",  "action":"update"}';
+            var commitContent= JSON.parse(str);
+            var before = JSON.parse("{}")
+            var after = JSON.parse("{}")
+            var value = JSON.parse("{}")
+            
+            $("td input").each(function( val, index ) {
+            	after[$(this).attr("id")] = $(this).val();
+            	before[$(this).attr("id")] = $(this).parent().next()[0].innerHTML;
+            	}
+            );
+
+            after["bomContext"] = getBomEdit()
+            before["bomContext"] = {{ bom_Context | safe }}
+            
+            commitContent['id']="{{ bom.id }}"
+            commitContent['value']=JSON.stringify([before,after])
+            
+            console.log(commitContent)
+            
+         	 $.ajax({
+                url: "{% url "bom_edit" %}",
+                type: 'POST',
+                data:  commitContent,
+                dataType: "JSON",
+
+                success: function (rep) {                	
+                    if(!rep.status){
+                    	if (rep.error == "errLogin"){
+             	           location.href = "{% url "login" %}?next="+location.pathname;
+                        }
+                    	else{
+                            $("#msg")[0].innerHTML = rep.data;
+                    	}
+                    }
+                    else{
+                        location.href = "{% url "bom" %}";
+                    }
+               }
+          });
+{% endblock %}

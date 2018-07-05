@@ -1,0 +1,25 @@
+{% extends "layout.html" %} {% block cur_navi %}
+<a href="{% url "index" %}">首页</a>
+&rsaquo;登陆 
+{% endblock %} 
+{% block content %}
+<form action="{% url "login" %}" method="post">
+	<div class="content">
+		<div>
+			<label for="user">用户：</label> <input id="user" type="text"
+				name="user" />
+		</div>
+		<div>
+			<label for="pwd">密码：</label> <input id="pwd" type="password"
+				name="pwd" />
+		</div>
+		<input type="hidden" name="next" value="{{ next }}">
+		<div>
+			<label> </label> <input type="submit" value="登录" /> <span
+				style="color: red;">{{ msg }}</span>
+		</div>
+		
+		{%csrf_token%}
+	</div>
+</form>
+{% endblock %}

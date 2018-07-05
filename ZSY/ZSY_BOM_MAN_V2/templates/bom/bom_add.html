@@ -1,0 +1,87 @@
+{% extends "layoutComfirm.html" %} 
+{% block cur_navi %} 
+		<a href="{% url "index" %}">首页</a> &rsaquo;
+		<a href="{% url "bom" %}">BOM单</a> &rsaquo; 增加BOM
+{% endblock %} 
+{% block header %} 
+<script type="text/javascript" src="/static/bom-action.js"></script>
+{% endblock %} 
+{% block content %}
+<div id="content" class="content">
+	<table border="1px">
+		<tr>
+			<td>BOM名</td>
+			<td><input id="bomName" type="text"></input></td>
+		</tr>
+		<tr>
+			<td>Bom版本</td>
+            <td><input id="bomVersion" type="text"></input></td>
+		</tr>
+		<tr>
+			<td>Bom描述</td>
+            <td><input id="bomDiscrib" type="text"></input></td>
+		</tr>
+	</table>
+
+	<br><br>
+	<ul class="object-tools">
+	   <li onclick="level1add(this)">增加组</li>
+	</ul>
+	<br><br>	
+</div>
+{% endblock %}
+
+{% block js %}
+    $(function() {
+        if ("{{ bom_action }}" == "clone")
+        {
+            var bomContext=jQuery.parseJSON({{ bom_list | safe }});
+        	addBomListLevel1(bomContext);
+        }
+        else 
+        {
+        	level1add()
+        }
+    	
+ 		modifyTdEditable() 		
+    })
+{% endblock %}		 
+    
+{% block comfirmAction %}
+        	var str = '{"csrfmiddlewaretoken":"{{ csrf_token }}",  "action":"add"}';
+            var commitContent = JSON.parse(str);
+            var value = JSON.parse("{}")
+            if (!checkBomEdit())
+            {
+            	return
+            }            
+
+            value["bomName"] = $("#bomName").val();
+            value["bomVersion"] = $("#bomVersion").val();    
+            value["bomDiscrib"] = $("#bomDiscrib").val();        
+            value["bomContext"] = getBomEdit()
+
+            commitContent["value"] = JSON.stringify(value)
+            console.log(commitContent)
+
+         	 $.ajax({
+                url: "{% url "bom_edit" %}",
+                type: 'POST',
+                data:  commitContent,
+                dataType: "JSON",
+
+                success: function (rep) {                	
+                    if(!rep.status){
+                    	if (rep.error == "errLogin"){
+             	           location.href = "{% url "login" %}?next="+location.pathname;
+                        }
+                    	else{
+                            $("#msg")[0].innerHTML = rep.data;
+                    	}
+                    }
+                    else{
+                        location.href = "{% url "bom" %}";
+                    }
+               }
+          });
+{% endblock %}

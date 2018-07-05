@@ -1,0 +1,41 @@
+@charset "UTF-8";
+.div1 {
+	height: 1000px;
+	background-color: gray;
+}
+
+.div2 {
+	height: 200px;
+	background-color: green;
+}
+
+.t{
+background-color:yellow;
+}
+
+/* a { */
+/* 	position: fixed; */
+/* 	bottom: 10px; */
+/* 	right: 20px; */
+/* } */
+
+.tb {
+	background-color: #f4f7fa;
+	color: #369;
+	cursor: pointer;
+	float: left;
+	font-size: 14px;
+	height: 43px;
+	line-height: 43px;
+	margin-left: -1px;
+	position: relative;
+	text-align: center;
+	width: 103px;
+	z-index: 2;
+	border: 1px solid #dbe6f2;
+	border-bottom: 0
+}
+
+.set-tags .tb:hover {
+	text-decoration: underline
+}

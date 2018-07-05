@@ -1,0 +1,66 @@
+{% extends "layout.html" %} 
+{% block cur_navi %} 
+	<a href="{% url "index" %}">首页</a> &rsaquo;
+	<a href="{% url "paper" %}">图纸单</a> &rsaquo; 
+	变更图纸
+{% endblock %} 
+
+{% block content %}
+	<div class="content">	 
+	    <br>
+		    <table border="1px">
+			    {% for i in paper_item %}
+			    <tr>
+				    <td>{{ i.0 }}</td>				    
+				    <td><input type="text" name="{{ i.1 }}" value="{{ i.2 }}"></input</td>
+				    <td class="hide">{{ i.2 }}</td>
+			    </tr>
+			    {% endfor %}
+		    </table>
+            <input id="add_comfirm" type="button" value="提交"></input>  
+            <span id="msg" style="color: red;">{{ msg }}</span>
+    </div>
+{% endblock %}
+{% block js %}
+<script type="text/javascript">
+    $(function() {
+		bindConfirmEvent()
+    });
+    
+    function  bindConfirmEvent() {
+        $('#add_comfirm').click(function () {     
+        	var str = '{"csrfmiddlewaretoken":"{{ csrf_token }}",  "action":"update"}';
+            var commitContent= JSON.parse(str);
+            var before = JSON.parse("{}")
+            var after = JSON.parse("{}")
+            $("td input").each(function( val, index ) {
+            	after[$(this).attr("name")] = $(this).val();
+            	before[$(this).attr("name")] = $(this).parent().next()[0].innerHTML;
+            	}
+            );
+            commitContent['before']=before
+            commitContent['after']=after
+
+         	 $.ajax({
+                url: "{% url "paper_edit" %}",
+                type: 'POST',
+                data:  commitContent,
+                dataType: "JSON",
+                success: function (rep) {                	
+                    if(!rep.status){
+                    	if (rep.error == "errLogin"){
+                 	         location.href = "{% url "login" %}?next="+location.pathname;
+                        }
+                    	else{
+                            $("#msg")[0].innerHTML = rep.data;
+                    	}
+                    }else{
+                       location.href = "{% url "paper" %}";
+                    }
+               }
+          });
+        });
+    }  
+    
+</script>
+{% endblock %}

@@ -1,0 +1,51 @@
+<!DOCTYPE html PUBLIC '-//W3C//DTD HTML 4.01 Strict//EN' 'http://www.w3.org/TR/html4/strict.dtd'>
+<html>
+<head>
+<meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>
+<title>在此插入标题</title>
+<script type="text/javascript" src="/static/jquery-3.3.1.js">
+</script>
+</head>
+<body>
+	<div>
+		<button type="button" onclick="func1()">ajax提交</button>
+	</div>
+
+	<script type="text/javascript">
+		function test() {
+			/* 			$.post() */
+			$.get("/ajax_receive_jquery/?a=10")
+			$.get("/ajax_receive_jquery/", {
+				name : "alex"
+			})
+	
+			$.post("/ajax_receive_jquery/", {
+				name : "xiaohu"
+			}, function(data, stateText, obj) {
+				console.log(arguments)
+				console.log(data)
+				console.log(stateText)
+				console.log(obj)
+			})
+	
+			$.getScript("/static/func.js", function() {
+				hello();
+			}
+			)
+			
+			$.ajax({
+				url: "/ajax_receive_jquery/",
+				type:"POST",
+				data:{a:1,b:[2,4]},
+				traditional: true,
+/* 				contentType:text */
+			}
+			)
+		}
+	
+		function func1() {
+			test()
+		}
+	</script>
+</body>
+</html>

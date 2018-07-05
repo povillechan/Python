@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>
+<title>ZSYBOM管理系统</title>
+<script type="text/javascript" src="/static/jquery-3.3.1.js"></script>
+<style type="text/css">
+@import url("/static/site.css");
+</style>
+{% block header %} 
+{% endblock %}
+</head>
+<body>
+	<div class="breadcrumbs">
+	ZSY BOM 管理系统
+    <br>
+    <br>
+    {% block cur_navi %}
+    {% endblock %}
+    <span style="float:right;">用户：{{ cur_user }}|<a href="{% url "logout" %}">注销</a></span>
+	</div>
+    {% block content %}
+    {% endblock %}
+    
+    <div class="content">
+                <input id="add_comfirm" type="button" value="提交"></input>  
+            <span id="msg" style="color: red;">{{ msg }}</span>
+    </div>
+	<div class="modalDlg hide">
+		<label style="display: block; margin-top: 10px"><h1	style="color: red">确认 该操作？</h1></label>
+		<div align="center">
+			<input style="text-align: center" id="btn_cancel" type="button"value="取消" /> 
+			<input style="text-align: center" id="btn_confirm" type="button" value="确定" />
+		</div>
+	</div>
+<script type="text/javascript">
+    $(function() {
+		bindAddConfirmEvent()
+			   
+	    bindBtnCancelEvent()
+		bindBtnConfirmEvent()
+    });
+    
+    function  bindAddConfirmEvent() {
+    	$('#add_comfirm').click(function () {
+    	    $('.modalDlg').removeClass('hide');
+        });
+    }
+    
+    function  bindBtnCancelEvent() {
+        $('#btn_cancel').click(function () {
+            $('.modal,.shade,.modalDlg').addClass('hide');
+        });
+    }
+    
+    function  bindBtnConfirmEvent() {
+        $('#btn_confirm').click(function () {  
+            {% block comfirmAction %}
+            {% endblock %}
+        });
+    }
+    
+    {% block js %}
+    {% endblock %}
+ </script>
+ </body>
+</html>

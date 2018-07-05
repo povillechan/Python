@@ -1,0 +1,95 @@
+用户管理
+    1、用户登录
+    2、注册
+    3、注销
+    4、后台管理菜单
+    5、班级操作
+    6、老师、学生
+
+知识点：
+    1、Form表单
+    2、Ajax
+    3、布局，Django母板
+    4、序列化
+    5、Ajax相关
+    6、分页
+    7、XSS
+    8、CSRF
+    9、CBV
+    
+    
+上一节内容：
+    cookie
+        用户认证
+    session
+        用户认证
+        
+CBV：
+    Django:
+        url -> def 函数    FBV
+        url -> 类             
+        
+    注：chrome插件postman
+    CBV：
+        url -> 类.as_view()
+        
+        class Index(views.View):
+            
+            @...
+            def dispatch(self,request, *arg, **kwarg):
+                super...
+            
+            def get(self, request, *arg, **kwarg):
+                pass
+                
+            ...
+    总结：
+        如果对某一种请求做处理：单一装饰器
+        如果对请求做处理：      dispatch单一装饰器
+        
+后台管理菜单 + 母板
+    <a id=...>
+    
+    ...
+    
+向后台提交数据：
+    
+    莫泰对话框(数据少操作)：
+        form表单 ： 缺点，无法显示错误信息
+        Ajax提交 :  
+            - 有错误，显示错误；无错误，通过js的 location.relad() 刷新页面
+            - 有错误，显示错误；无错误，自己局部添加
+    单独页面（数据多，数据大操作）：
+        form表单： ..
+        
+jQuery事件绑定之ON
+        
+    
+自定义分页
+    - 数据从数据库来
+    - 
+    
+XSS
+    <script>
+    alert(123);
+    </script>
+            
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    
+    
+    

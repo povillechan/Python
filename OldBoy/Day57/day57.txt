@@ -1,0 +1,240 @@
+简单后台管理：老男孩管理
+
+    1. 登录注册
+    2. 
+       老师
+       班级管理
+       学员管理
+       
+    3. 增删改差
+
+Cookie：
+    就是保存在浏览器端的键值对
+    可以利用做登录
+    
+        1、保存在用户浏览器
+        2、可以主动清楚
+        3、也可以被“伪造”
+        4、跨域名cookie不共享
+        
+        5、浏览器设置不接受cookie
+        
+Cookie是什么？
+    客户端浏览器上保存的键值对
+    设置：
+        服务端操作的Cookie
+            obj.set_cookie('k1','v1')
+            obj.set_cookie('k1','v1',max_age=10)
+            
+            v = datetime.datetime.utcnow() + datetime.timedelta(seconds=10)
+            obj.set_cookie('k1','v1',max_age=10,expires=v)
+            
+            path: 
+                    /       表示，全局生效
+                    /xxxx/  表示，只有当前url生效
+                    
+            domian:
+                    obj.set_cookie('k4','v4',max_age=10,expires=v, domain='oldboy.com')
+                    
+                    
+                    obj.set_cookie('k1','v1')
+                    
+            httponly: 仅仅HTTP网络传输使用
+            ======================
+        客户端浏览器上操作cookie
+            dom          --> 麻烦
+            jquery插件   --> 
+                                jquery.cookie.js
+                                jquery.cookie.js
+                            ...
+                            expires: 
+                                        10
+                                        d = new Date()
+                                        d.
+                                        
+                                        
+Cookie三个重要点：
+            
+            
+        - 客户
+        - 服务端
+        - 保存在客户端
+        
+        
+Cookie的应用：
+    登录认证
+        普通cookie
+            - 敏感信息（直接看到），不宜放置在cookie中，敏感信息放在数据库，频繁操作数据库
+        签名的cookie
+            - 敏感信息（可能会解密），
+    
+                                   
+        不宜放置在cookie中，敏感信息放在数据库，频繁操作数据库
+        
+        ===========》 cookie时做认证时候，将不敏感的信息放在cookie中，频繁操作数据库 ===========
+                                        
+                                        
+                                        
+        
+Session：
+    session是服务器端的一个键值对
+    session内部机制依赖于cookie
+    
+    request.session['k']
+    request.session['k1'] = v
+    request.session['k2'] = v
+    
+    del request.session['k1']
+    request.session.clear()
+    
+    
+    # 获取、设置、删除Session中数据
+    request.session['k1']
+    request.session.get('k1',None)
+    
+    
+    
+    request.session['k1'] = 123
+    request.session.setdefault('k1',123) # 存在则不设置
+    del request.session['k1']
+
+    # 所有 键、值、键值对
+    request.session.keys()
+    request.session.values()
+    request.session.items()
+    request.session.iterkeys()
+    request.session.itervalues()
+    request.session.iteritems()
+
+
+    # 用户session的随机字符串
+    request.session.session_key
+
+    # 将所有Session失效日期小于当前日期的数据删除
+    request.session.clear_expired()
+
+    # 检查 用户session的随机字符串 在数据库中是否
+    request.session.exists("session_key")
+
+    # 删除当前用户的所有Session数据
+    request.session.delete("session_key")
+    
+#########################################
+# 登录 
+# 所有菜单：
+
+        班级管理  classes.html
+            - 获取数据库中所有的班级，表格
+            - 
+                <a>添加</a>
+                <table>
+                    {% for item in data %}
+                        <tr>
+                            <td>{{item.caption}}</td>
+                            <td>
+                                <a item_id="{{item.id}}" class='edit'>编辑</a> | <a class='del' item_id="{{item.id}}" >删除</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                
+                </table>
+                
+                
+                <div>
+                    <form>
+                        <input style='display:none' type='text' name='id' />
+                        <input type='text' name='caption' />
+                        确定
+                    <form>
+                </div>
+                
+                $('.del').click(function(){
+                    var row_id = $(this).attr('item_id');
+                    $.ajax({
+                        
+                    })
+                
+                })
+                
+                $('.edit').click(function(){
+                    var row_id = $(this).attr('item_id');
+                    // 打开模态对话框
+                    // 将当前编辑的表格中数据，填充到模态对话框的input中
+                
+                })
+                
+            - 模态对话框
+              增加、修改
+            
+            
+        学生管理
+            -   
+                <select>
+                    <option></option>
+                </select>
+                <input />
+        
+        老师管理    
+                多选
+                <select>
+                    
+                
+                </select>
+
+    
+    
+    
+    
+    
+开发：
+    1. 定义数据库表结构
+        - 表结构关系
+        
+        class Classes(models.Model):
+            
+            caption = models.CharField(max_length=32)
+            
+            
+        class Student(models.Model):
+            
+            name = models.CharField(max_length=32)
+            cls = models.ForignKey('Classes')
+            
+            username = models.CharField(max_length=32)
+            password = models.CharField(max_length=32)
+            
+        
+        class Teacher(models.Model):
+            name = models.CharField(max_length=32)
+            
+            username = models.CharField(max_length=32)
+            password = models.CharField(max_length=32)
+            
+            cls = models.ManytoMany('Classes')
+        
+        # 第三张
+        
+    2. 登录、注册
+        提交表单：
+            - Form
+            - Ajax
+        
+        - 登录
+            - 成功： 记住状态 <->保持会话
+            - 失败:  错误提示
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    

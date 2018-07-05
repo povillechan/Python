@@ -1,0 +1,114 @@
+{% extends "layout.html" %} 
+{% block cur_navi %} 
+		<a href="{% url "index" %}">首页</a> &rsaquo; BOM单
+{% endblock %} 
+
+{% block content %}
+	<div class="content">
+		<ul class="object-tools">
+		    <li><a href="{% url "bom_add" %}">增加</a></li>
+	    </ul>
+	    <br><br>
+		<table border="1px">
+			<tr class="tabletitle">
+				<td>BOM名</td>
+				<td>BOM版本</td>
+				<td>BOM描述</td>
+				<td style="text-align: center">操作</td>
+			</tr>
+			{% for i in bom_list %}
+			<tr>
+				<td><a href="{% url "bom_detail" %}?bomName={{ i.bomName }}&bomVersion={{ i.bomVersion }}">{{ i.bomName }}</a></td>
+				<td><a href="{% url "bom_detail" %}?bomName={{ i.bomName }}&bomVersion={{ i.bomVersion }}">{{ i.bomVersion }}</a></td>
+				<td>{{ i.bomDiscrib }}</td>
+			    <td><a class="td-edit">编辑</a> |
+			        <a class="td-clone">复制</a> |
+			        <a class="td-delete">删除</a> |
+			        <a class="td-history">履历</a></td>
+			   <td style="display:none">{{ i.id }}</td>
+			</tr>
+			{% endfor %}
+		</table>
+		
+	<div class="remove hide">
+	<label style="display: block; margin-top: 10px"><h1	style="color: red">将要删除！该操作不可恢复！</h1></label>
+	<div align="center">
+		<input style="text-align: center" id="remove_cancel" type="button"value="取消" /> 
+		<input style="text-align: center" id="remove_confirm" type="button" value="确定" />
+	</div>
+	<label  id="record_id" class="hide"></label >
+	</div>
+{% endblock %}
+{% block js %}
+<script type="text/javascript">
+    $(function() {
+		bindDeleteConfirmEvent()
+		bindCancelEvent()
+        bindTdDeleteEvent()
+        bindTdEditEvent()
+        bindTdCloneEvent()
+        bindTdHistoryEvent()
+    });
+    
+    function  bindDeleteConfirmEvent() {
+        $('#remove_confirm').click(function () {     
+        	var trs = $(this).parent().parent().children("#record_id")[0].innerHTML;
+        	
+        	$.ajax({
+                url: "{% url "bom_edit" %}",
+                type: 'POST',
+                data: {csrfmiddlewaretoken:'{{ csrf_token }}', 'action':"delete", 'id': trs },
+                dataType: "JSON",
+                success: function (rep) {
+                    if(!rep.status){
+                    	if (rep.error == "errLogin"){
+                 	        location.href = "{% url "login" %}?next="+location.pathname;
+                        }
+                    	else
+                            alert(rep.error);
+                    }else{
+                        $('remove').addClass('hide');
+                        location.reload();
+                    }
+               }
+           }); 
+        });
+    }
+    
+    function  bindCancelEvent() {
+        $('#remove_cancel').click(function () {
+            $('.modal,.shade,.remove').addClass('hide');
+        });
+    }
+    
+    function  bindTdDeleteEvent() {
+        $('table').on('click', '.td-delete', function () {
+            var trs = $(this).parent().parent().children().last().text()
+            $('.remove').removeClass('hide');
+            $('.remove').children('#record_id')[0].innerHTML = trs
+        })
+    }
+    
+    function  bindTdEditEvent() {
+        $('table').on('click', '.td-edit', function () {
+            var trs = $(this).parent().parent().children().last().text()
+            location.href = '{% url "bom_update" %}?id=' + trs
+        })
+    }
+    
+    function  bindTdHistoryEvent() {
+        $('table').on('click', '.td-history', function () {
+            var trs = $(this).parent().parent().children().last().text()
+            location.href = '{% url "history" %}?table={{ table }}&id=' + trs
+        })
+    }
+    
+    function  bindTdCloneEvent() {
+        $('table').on('click', '.td-clone', function () {
+            var trs = $(this).parent().parent().children()
+            location.href = '{% url "bom_clone" %}?bomName='+ $(trs[0]).children()[0].innerHTML+'&bomVersion='+ $(trs[1]).children()[0].innerHTML
+        })
+    }
+    
+</script>
+{% endblock %}

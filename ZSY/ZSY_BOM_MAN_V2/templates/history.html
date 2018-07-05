@@ -1,0 +1,27 @@
+{% extends "layout.html" %} 
+{% block cur_navi %} 
+	<a href="{% url "index" %}">首页</a> &rsaquo; 履历
+{% endblock %} 
+
+{% block content %}
+	<div class="content">
+		<table border="1px">
+			<tr class="tabletitle">
+				<td>修正者</td>
+				<td>修正时间</td>
+				<td>操作</td>
+				<td>修正内容</td>
+			</tr>
+			{% for i in history %}
+			<tr>
+				<td>{{ i.user }}</td>
+				<td>{{ i.historyTime }}</td>
+				<td>{{ i.historyAction }}</td>
+				<td>{{ i.history }}</td>
+			</tr>
+			{% endfor %}
+
+		</table>
+	</div>
+</div>
+{% endblock %}

@@ -1,0 +1,75 @@
+1、Model&Form&ModelForm
+    Model:用于数据库操作
+        
+    Form：用于用户请求的验证
+    
+    ModelForm：
+        用于数据库操作（部分）
+        用于用户请求的验证（部分）
+        
+2、Model操作：
+    a. 数据表操作
+        Code First
+            创建类 -> 自动生成表
+        DB First
+            创建表 -> 自动生成类
+        
+        ===================> 类
+        ##### 创建表  #####
+        class News(models.Model):
+            title = models.CharField(max_length=10)
+            favor = models.ManyToManyField('User',through="Favor",through_fields=("new_obj", 'user_obj'))
+
+        class User(models.Model):
+            name = models.CharField(max_length=10)
+            email = models.EmailField(max_length=10)
+            user_type = models.ForeignKey('UserType')  # 一对多
+
+            # user_profile = models.ForeignKey('UserDetail',unique=True)
+            user_profile = models.OneToOneField('UserDetail    ')
+
+        class UserDetail(models.Model):
+            pwd = models.CharField(max_length=32)
+
+
+        class Favor(models.Model):
+            new_obj = models.ForeignKey('News',related_name="n")
+            user_obj = models.ForeignKey('User',related_name='u')
+            name = models.CharField(max_length=64,null=True,blank=True)
+
+        class UserType(models.Model):
+            name = models.CharField(max_length=10)
+            
+        ########
+        python manage.py makemigrations
+        python manage.py migrate --fake
+        
+        ===================》字段
+        
+        数字
+        字符串（带正则的字段）
+        时间
+        文件
+        关系（一对一，一对多，多对多）
+        
+        ===================》参数
+        用于指定生成数据库列信息
+        用于验证（admin、ModelForm）
+        关系（一对一，一对多，多对多）
+        
+        
+            
+    b. 数据行操作
+    
+django-debug-toolbar
+    http://django-debug-toolbar.readthedocs.io/en/stable/installation.html#internal-ips
+
+
+参考博客地址：
+    http://www.cnblogs.com/wupeiqi/articles/6216618.html
+    http://www.cnblogs.com/wupeiqi/articles/6229414.html
+    http://www.cnblogs.com/wupeiqi/articles/6144178.html
+
+
+    
+        

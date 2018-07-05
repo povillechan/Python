@@ -1,0 +1,67 @@
+{% extends "layout.html" %} 
+{% block cur_navi %} 
+	<a href="{% url "index" %}">首页</a> &rsaquo;
+	<a href="{% url "product" %}">产品单</a> &rsaquo; 
+	增加产品
+{% endblock %} 
+
+{% block content %}
+	<div class="content">	 
+	    <br>
+		    <table border="1px">
+			    <tr>
+				    <td>产品名</td>				    
+				    <td><input id="productName" type="text"></input</td>
+			    </tr>
+			    <tr>
+				    <td>Bom名</td>				    
+                    <td>
+                    <select id="bomSelect">
+				    {% for i in bom_item %}
+				        <option value ="{{ i }}">{{ i }}</option>
+				    {% endfor %}
+				    </select>
+				    </td>
+		        </tr>
+		    </table>
+            <input id="add_comfirm" type="button" value="提交"></input>  
+            <span id="msg" style="color: red;">{{ msg }}</span>
+    </div>
+{% endblock %}
+{% block js %}
+<script type="text/javascript">
+    $(function() {
+		bindConfirmEvent()
+    });
+    
+    function  bindConfirmEvent() {
+        $('#add_comfirm').click(function () {     
+        	var str = '{"csrfmiddlewaretoken":"{{ csrf_token }}",  "action":"add"}';
+            var commitContent= JSON.parse(str);
+            commitContent["bomName"] = $("#bomSelect").val();
+            commitContent["productName"] = $("#productName").val();
+
+         	 $.ajax({
+                url: "{% url "product_edit" %}",
+                type: 'POST',
+                data:  commitContent,
+                dataType: "JSON",
+                success: function (rep) {                	
+                    if(!rep.status){
+                    	if (rep.error == "errLogin"){
+             	           location.href = "{% url "login" %}?next="+location.pathname;
+                        }
+                    	else{
+                            $("#msg")[0].innerHTML = rep.data;
+                    	}
+                    }
+                    else{
+                        location.href = "{% url "product" %}";
+                    }
+               }
+          });
+        });
+    }  
+    
+</script>
+{% endblock %}

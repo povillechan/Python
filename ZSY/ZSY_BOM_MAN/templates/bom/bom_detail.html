@@ -1,0 +1,77 @@
+{% extends "layout.html" %} 
+{% block cur_navi %} 
+		<a href="{% url "index" %}">首页</a> &rsaquo;
+		<a href="{% url "bom" %}">BOM单</a> &rsaquo; BOM详细
+		<span style="color:red">[BOM名:{{ bomName }}-{{ bomVersion }}]</span>
+{% endblock %} 
+
+{% block content %}
+<div id="content" class="content"></div>
+{% endblock %}
+
+{% block js %}
+	<script>
+	function addBomListLevel1(bomList){
+	  	for(key in bomList){	    		
+	   		console.log("level1:" + key)
+	   		$("#content").append('<div class="clearfix clearsection"><table border="1px"></table></div>')
+	   		addBomListLevel2(bomList[key])
+        }
+    } 
+	     
+	function addBomListLevel2(bomList){
+		for (key in bomList){
+		    var strTableItem="<tr>"
+		    if(key == "名称")
+		    {
+		     	strTableItem += "<td>" + bomList[key] + "</td>"
+		    }
+		   	else
+		   	{
+		   		strTableItem +="<td></td>"
+			    strTableItem +="<td>" + key + "</td>"
+		   		strTableItem = addBomListLevel3(bomList[key], strTableItem, key)
+		   	}
+		    strTableItem += "</tr>"
+		    $(".clearfix table").last().append(strTableItem);  
+	    }	    
+    }
+	      
+	function addBomListLevel3(bomList, strTable, mainKey){
+		strTableModify = strTable
+        var key_line = false
+  		for (key in bomList){		
+    
+            if(!key_line)
+            {            		
+                for (subKey in bomList[key])
+                {
+            		strTableModify += "<td>" + subKey + "</td>"   
+            	}       		
+           		key_line = true
+            }
+            strTableModify += "<tr><td></td><td></td>"
+            for (subKey in bomList[key])
+            {		           		
+                if (mainKey == "Bom" && subKey == "Bom名")
+                {         	
+                    strTableModify += "<td><a href=\"{% url "bom_detail" %}?bomName=" + bomList[key]["Bom名"]+"&bomVersion="+bomList[key]["版本"]+"\">"+ bomList[key][subKey]+"</a></td>"; 
+                }
+                else if (mainKey == "图纸" && subKey == "图纸名")
+                { 
+                    strTableModify += "<td><a href=\"{% url "paper" %}?paperName=" + bomList[key]["图纸名"]+"&paperVersion="+bomList[key]["版本"]+"\">"+ bomList[key][subKey]+"</a></td>"; 
+                }
+                else
+                {
+                    strTableModify +=  "<td>"+bomList[key][subKey]+"</td>"       
+                }
+            }
+            strTableModify += "</tr>"
+		}
+  	    return strTableModify
+    }
+		
+	var bomContext=jQuery.parseJSON({{ bom_list | safe }});
+	addBomListLevel1(bomContext); 
+	</script>
+{% endblock %}

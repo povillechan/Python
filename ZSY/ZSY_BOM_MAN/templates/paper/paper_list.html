@@ -1,0 +1,116 @@
+{% extends "layout.html" %} 
+{% block cur_navi %} 
+		<a href="{% url "index" %}">首页</a> &rsaquo; 
+		<a href="{% url "paper" %}">图纸</a> &rsaquo;
+{% endblock %} 
+
+{% block content %}
+<div class="content">
+	<ul class="object-tools">
+		<li><a href="{% url "paper_add" %}">增加</a></li>
+	</ul>
+	<br> <br>
+	<table border="1px">
+		<tr class="tabletitle">
+			<td>图纸名</td>
+			<td>图纸版本</td>
+			<td>图纸描述</td>
+			<td>图纸地址</td>
+			<td style="text-align: center">操作</td>
+		</tr>
+		{% for i in paper_list %}
+		<tr>
+			<td>{{ i.paperName }}</td>
+			<td>{{ i.paperVersion }}</td>
+			<td>{{ i.paperDiscrib }}</td>
+			<td><a href="{{ i.paperAddr }}">{{ i.paperAddr }}</a></td>
+			<td><a href="{% url "paper_search" %}?paperName={{ i.paperName }}&paperVersion={{i.paperVersion }}">检索</a> | <a
+				class="td-edit">编辑</a> | <a class="td-delete">删除</a></td>
+		</tr>
+		{% endfor %}
+	</table>
+
+
+</div>
+
+<div class="remove hide">
+	<label style="display: block; margin-top: 10px"><h1	style="color: red">将要删除！该操作不可恢复！</h1></label>
+	<div align="center">
+		<input style="text-align: center" id="remove_cancel" type="button"value="取消" /> 
+		<input style="text-align: center" id="remove_confirm" type="button" value="确定" />
+	</div>
+	<label  id="paperName" class="hide"></label >
+	<label  id="paperVersion" class="hide"></label >
+</div>
+{% endblock %}
+
+{% block js %}
+<script type="text/javascript">
+    $(function() {
+/* 		$("td").dblclick(function() {
+			obj_text = $(this).find("input:text"); // 判断单元格下是否有文本框
+			if (!obj_text.length) // 如果没有文本框，则添加文本框使之可以编辑
+				$(this).html("<input type='text' value='" + $(this).text() + "'>");
+
+			else // 如果已经存在文本框，则将其显示为文本框修改的值
+				$(this).html(obj_text.val());
+		});
+
+		 */
+		bindDeleteConfirmEvent()
+		bindCancelEvent()
+        bindTdDeleteEvent()
+        bindTdEditEvent()
+    });
+    
+    function  bindDeleteConfirmEvent() {
+        $('#remove_confirm').click(function () {     
+            paperName = $(this).parent().parent().children("#paperName")[0].innerHTML;
+            paperVersion = $(this).parent().parent().children("#paperVersion")[0].innerHTML;
+
+    
+        	$.ajax({
+                url: "{% url "paper_edit" %}",
+                type: 'POST',
+                data: {csrfmiddlewaretoken:'{{ csrf_token }}', 'action':"delete", 'paperName': paperName, 'paperVersion': paperVersion},
+                dataType: "JSON",
+                success: function (rep) {
+                    if(!rep.status){
+                    	if (rep.error == "errLogin"){
+                 	        location.href = "{% url "login" %}?next="+location.pathname;
+                        }
+                    	else
+                            alert(rep.error);
+                    }else{
+                        $('remove').addClass('hide');
+                        location.reload();
+                    }
+               }
+           }); 
+        });
+    }
+    
+    function  bindCancelEvent() {
+        $('#remove_cancel').click(function () {
+            $('.modal,.shade,.remove').addClass('hide');
+        });
+    }
+    
+    function  bindTdDeleteEvent() {
+        $('table').on('click', '.td-delete', function () {
+            var trs = $(this).parent().parent().children()
+            $('.remove').removeClass('hide');
+            $('.remove').children('#paperName')[0].innerHTML = trs[0].innerHTML
+            $('.remove').children('#paperVersion')[0].innerHTML = trs[1].innerHTML
+        })
+    }
+    
+    function  bindTdEditEvent() {
+        $('table').on('click', '.td-edit', function () {
+            var trs = $(this).parent().parent().children()
+            location.href = '{% url "paper_update" %}?paperName='+ trs[0].innerHTML + '&paperVersion=' + trs[1].innerHTML
+        })
+    }
+    
+</script>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "layout.html" %} 
+{% block cur_navi %} 
+首页
+{% endblock %} 
+
+{% block content %}
+<div class="content">
+	<ul>
+		<li><a href="{% url "product" %}">产品查看</a></li>
+		<li><a href="{% url "bom" %}">BOM单查看</a></li>
+		<li><a href="{% url "paper" %}">图纸查看</a></li>
+	</ul>
+</div>
+{% endblock %}

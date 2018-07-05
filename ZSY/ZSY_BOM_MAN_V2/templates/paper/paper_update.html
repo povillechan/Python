@@ -1,0 +1,72 @@
+{% extends "layoutComfirm.html" %} 
+{% block cur_navi %} 
+	<a href="{% url "index" %}">首页</a> &rsaquo;
+	<a href="{% url "paper" %}">图纸单</a> &rsaquo; 
+	变更图纸
+{% endblock %} 
+
+{% block content %}
+	<div class="content">	 
+	    <br>
+	    <table border="1px">
+		    <table border="1px">			    
+    		    <tr>
+			    <td>图纸名</td>				    
+			    <td><input id="paperName" type="text" style="width:100px" value = "{{ paper_item.paperName }}"></input></td>
+			    <td class="hide">{{ paper_item.paperName }}</td>
+		    </tr>
+		    <tr>
+			    <td>图纸版本</td>				    
+			    <td><input id="paperVersion" type="text" style="width:100px" value = "{{ paper_item.paperVersion }}"></input></td>
+			     <td class="hide">{{ paper_item.paperVersion }}</td>
+		    </tr>
+		    
+		    <tr>
+			    <td>图纸描述</td>				    
+			    <td><input id="paperDiscrib" type="text" style="width:400px" value = "{{ paper_item.paperDiscrib }}"></input></td>
+			     <td class="hide">{{ paper_item.paperDiscrib }}</td>
+		    </tr>			    
+		    <tr>
+			    <td>图纸地址</td>				    
+			    <td><input id="paperAddr" type="text" style="width:400px" value = "{{ paper_item.paperAddr }}"></input></td>
+			    <td class="hide">{{ paper_item.paperAddr }}</td>
+		    </tr>
+	    </table>
+	    </table>
+    </div>
+{% endblock %}
+{% block comfirmAction %}
+        	var str = '{"csrfmiddlewaretoken":"{{ csrf_token }}",  "action":"update"}';
+            var commitContent= JSON.parse(str);
+            var before = JSON.parse("{}")
+            var after = JSON.parse("{}")
+            var value = JSON.parse("{}")
+            
+            $("td input").each(function( val, index ) {
+            	after[$(this).attr("id")] = $(this).val();
+            	before[$(this).attr("id")] = $(this).parent().next()[0].innerHTML;
+            	}
+            );
+
+            commitContent['id']="{{ paper_item.id }}"
+            commitContent['value']=JSON.stringify([before,after])
+
+            $.ajax({
+                url: "{% url "paper_edit" %}",
+                type: 'POST',
+                data:  commitContent,
+                dataType: "JSON",
+                success: function (rep) {                	
+                    if(!rep.status){
+                    	if (rep.error == "errLogin"){
+                 	         location.href = "{% url "login" %}?next="+location.pathname;
+                        }
+                    	else{
+                            $("#msg")[0].innerHTML = rep.data;
+                    	}
+                    }else{
+                       location.href = "{% url "paper" %}";
+                    }
+               }
+          });
+{% endblock %}
