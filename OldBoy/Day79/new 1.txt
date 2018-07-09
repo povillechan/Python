@@ -1,0 +1,63 @@
+ 一、KindEditor
+    - 基本配置
+    - 上传文件
+    - XSS(单例模式)
+    
+ 二、“爬虫”
+    - requests模块
+        a. 基本参数：method,url,params,data,json,headers,cookies
+        b. 其他参数：files,auth,proxies....
+    ---> 自动登录抽屉，对某一篇文章点赞 <---
+    1. 访问登录页面，GET
+       -> 
+       r1 = requests.get('http://dig.chouti.com/',headers={},cookies={})
+       
+       r1.content
+       r1.encoding = "utf-8"
+       r1.text
+       r1.headers
+       r1.cookies.get_dict()
+       #  获取到所有的cookie，未生效
+       # str(字节,encoding='utf-8')
+       c1 = r1.cookies.get_dict() 
+       
+    2. 用户登录 POST
+        form_data = {
+            phone:86asdf
+            password:asdf
+            oneMonth:1
+        }
+        r2 = requests.post(url='http://dig.chouti.com/login',data=form_data, cookies=c1)
+        c2 = r2.cookies.get_dict()
+    3. 点赞 
+        c1.update(c2)
+    
+        r3 = requests.post(
+            url='http://dig.chouti.com/link/vote?linksId=10256241',
+            data={'linksId': 10256241},
+            cookies={}
+        }
+        print(r3.text)
+        
+    
+ 
+ 
+ 作业：
+    1. 示例搞明白
+    2. 额外的网站 https://leetcode.com/accounts/login/
+    3. 微信公众平台登录
+    Web微信
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 

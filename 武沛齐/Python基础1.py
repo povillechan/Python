@@ -39,8 +39,7 @@ for i in old_dict.keys():
     if i not in update_list:
         del_list.append(i)
 
-print (update_list,new_list,del_list)
-
+print (update_list, new_list, del_list)
 
 c = collections.Counter('abcdeabcdabcaba')
 print(c)
