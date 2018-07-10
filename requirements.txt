@@ -1,0 +1,13 @@
+django
+pylint
+pylint-django
+autopep8
+cryptography
+setuptools
+wheel
+pywin32
+scrapy
+pymysql
+pyOpenSSL
+lxml
+twisted
