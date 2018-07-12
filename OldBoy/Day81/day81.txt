@@ -1,0 +1,159 @@
+Day81   
+    http://www.cnblogs.com/wupeiqi/articles/6229292.html
+    http://www.cnblogs.com/wupeiqi/articles/4839959.html
+    
+安装：
+    pip3 install aiohttp
+    pip3 install grequests
+    
+    pip3 install wheel
+    
+    安装Twisted
+    a. http://www.lfd.uci.edu/~gohlke/pythonlibs/#twisted, 下载：Twisted-17.1.0-cp35-cp35m-win_amd64.whl
+    b. 进入文件所在目录
+    c. pip3 install Twisted-17.1.0-cp35-cp35m-win_amd64.whl
+    
+    
+    pip3 install scrapy
+    注意：
+        windows上scrapy依赖 https://sourceforge.net/projects/pywin32/files/
+    
+
+爬虫相关
+    
+一、异步IO
+    
+    1. asyncio + aiohttp + requests
+    
+    2. gevent+requests   grequests
+      
+    3. twisted
+    
+    4. tornado
+    
+    自定义异步IO：
+        - 基于socket，setblocking(False)
+        - IO多路复用
+            while True:
+                r,w,e = select.select([],[],[],1)
+                
+        req_list = [
+            ['1.1.1.1',80],
+            ['1.1.1.2',80],
+        ]
+        
+        
+        conn_sock_list= []
+        
+        sock_list = []
+        
+        class HttpContext(object):
+        
+            def __init__(self,sock):
+                self.sock = sock
+                self.buffer = []
+        
+            def fileno(self):
+                return self.sock.fileno()
+                
+        for i in req_list:
+            client = socket.socket()
+            client.setblocking(False)
+            try:
+                client.connect((i[0],i[1],))
+            except Exception as e:
+                pass
+            
+            obj = HttpContext(client)
+            sock_list.append(obj)
+            conn_sock_list.append(obj)
+        
+        while True:
+            r,w,e = select.select([socket.fileno,socket] -> [HttpContext.fileno,HttpContext] ,conn_sock_list,[],1)
+            # 当其他人给咱们发送数据时候，我们可以接受 r=[sk1]
+            for sk in r:
+                try:
+                    while True:
+                        data = sk.sock.recv(8096)
+                        sk.buffer.append(data)
+                        if not data:
+                            sock_list.remove(sk)
+                except Exception as e:
+                    pass
+            
+            # 连接成功的socket
+            for sk in w:
+                sk.sendall("""GET /index HTTP/1.0\r\nHost: www.baidu.com\r\n\r\n""")
+                conn_sock_list.remove(sk)
+                
+            if not sock_list:
+                break
+二、scrapy
+    
+    Linux
+        pip3 install scrapy 
+    Windows
+        1.
+            pip3 install wheel
+            安装Twisted
+            a. http://www.lfd.uci.edu/~gohlke/pythonlibs/#twisted, 下载：Twisted-17.1.0-cp35-cp35m-win_amd64.whl
+            b. 进入文件所在目录
+            c. pip3 install Twisted-17.1.0-cp35-cp35m-win_amd64.whl
+            
+        2.
+            pip3 install scrapy
+        3.
+            windows上scrapy依赖 https://sourceforge.net/projects/pywin32/files/
+    
+    
+    ########## scrapy ##########
+    Django
+        django-admin startproject mysite
+        cd mysite
+        python3 namage.py startapp app01
+        python3 namage.py startapp app02
+    scrapy 
+        scrapy startproject scy
+        cd scy
+        scrapy genspider chouti chouti.com
+    
+        scrapy crawl 名字 --nolog
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+        
