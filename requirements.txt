@@ -12,3 +12,10 @@ pyOpenSSL
 lxml
 twisted
 gevent
+pyquery
+selenium
+flask
+redis
+multidict
+aiohttp
+fake_useragent
