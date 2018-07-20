@@ -19,3 +19,8 @@ redis
 multidict
 aiohttp
 fake_useragent
+#https://pypi.douban.com/simple pandas
+tushare
+xlrd
+scrapy_redis
+pymongo
