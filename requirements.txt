@@ -1,3 +1,5 @@
+#https://pypi.douban.com/simple
+#https://pypi.tuna.tsinghua.edu.cn/simple
 django
 pylint
 pylint-django
@@ -18,7 +20,7 @@ redis
 multidict
 aiohttp
 fake_useragent
-#https://pypi.douban.com/simple pandas
+pandas
 pandas
 tushare
 xlrd

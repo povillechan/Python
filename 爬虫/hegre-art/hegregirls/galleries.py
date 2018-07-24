@@ -88,7 +88,7 @@ def get_file_path(image, year, month):
     rePng = re.compile(".*?\.png.*?", re.S)
     file_name = image['name'].replace('?', '_')
 
-    file_path = "E:\Picture\hergre-art\{year}\{month:0>2}\{name}.{suffix}"
+    file_path = "E:\Picture\hegre-art\hegregirls\galleries\{year}\{month:0>2}\{name}.{suffix}"
     
     if re.search(reJpg, image['url']):
         file_path = file_path.format(year=year,month=month,name=file_name, suffix='jpg')
