@@ -6,7 +6,6 @@ cryptography
 setuptools
 wheel
 pywin32
-scrapy
 pymysql
 pyOpenSSL
 lxml
@@ -24,3 +23,5 @@ tushare
 xlrd
 scrapy_redis
 pymongo
+pyinstaller
+scrapy
