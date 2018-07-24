@@ -19,6 +19,7 @@ multidict
 aiohttp
 fake_useragent
 #https://pypi.douban.com/simple pandas
+pandas
 tushare
 xlrd
 scrapy_redis
