@@ -30,3 +30,4 @@ scrapy_redis
 pymongo
 pyinstaller
 scrapy
+splash
