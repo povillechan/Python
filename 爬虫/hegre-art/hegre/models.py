@@ -269,6 +269,25 @@ def process_image(image):
     url = image.get('board_image')
     download_image(url, get_file_path(url, image.get('name') + '\\board_image'))
     
+    
+    for keys in ['galleries', 'films','massages']:
+        for keys_item in image.get(keys):
+            dir_name = dir_path.format(file_path=image.get('name')+'\\'+ keys+'\\'+ keys_item.get('name'))            
+#             print(dir_name)
+            if not os.path.exists(dir_name):
+                os.makedirs(dir_name)
+           
+            for subkeys in ['small','mid','large']:
+                url = keys_item.get(subkeys)
+                print(url)
+                if url:
+                     download_image(url, get_file_path(url, image.get('name')+'\\'+ keys+'\\'+ keys_item.get('name')+'\\'+subkeys))
+            with open(dir_name+'\\info.txt', 'w') as f:    
+                f.write(keys_item.get('url'))
+                if keys_item.get('date'):
+                    f.write('\n')
+                    f.write(keys_item.get('date'))
+    
 '''
 main
 
