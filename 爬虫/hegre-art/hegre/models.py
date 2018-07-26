@@ -12,7 +12,7 @@ from multiprocessing import Pool
 from bs4 import BeautifulSoup
 import os
 from urllib.parse import urljoin
-
+import json
 headers = {"User-Agent":"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36"}
 dir_path = "d:\Pictures\hegre-art\hegre\models\{file_path}"
 '''
@@ -256,12 +256,8 @@ def process_image(image):
         os.makedirs(dir_name)
         
     
-    with open(dir_name+'\\info.txt', 'w') as f:    
-        f.write(image.get('url'))
-        f.write('\n')
-        f.write(';'.join(image.get('products')))
-        f.write('\n')
-        f.write(';'.join(image.get('profile')))
+    with open(dir_name+'\\info.json', 'w') as f:    
+        json.dump(image, f)
         
     url = image.get('poster_image')
     download_image(url, get_file_path(url, image.get('name') + '\\poster_image'))
@@ -282,11 +278,6 @@ def process_image(image):
                 print(url)
                 if url:
                      download_image(url, get_file_path(url, image.get('name')+'\\'+ keys+'\\'+ keys_item.get('name')+'\\'+subkeys))
-            with open(dir_name+'\\info.txt', 'w') as f:    
-                f.write(keys_item.get('url'))
-                if keys_item.get('date'):
-                    f.write('\n')
-                    f.write(keys_item.get('date'))
     
 '''
 main
