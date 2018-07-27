@@ -82,16 +82,22 @@ def parse_page_detail(html):
     soup = BeautifulSoup(html, 'lxml')   
     #items
     board = None
-    for classStyle in ["video-player-wrapper", "content-overlay-wrapper"]:
-        item  = soup.find('div', class_=classStyle) 
-    
-        if item:       
-            #poster_image
-            style_text  = item.attrs['style']
-            board  = re.search("url\(\'(.*?)\'\)", style_text, re.S).group(1)
-            break
-    
-    image['board'] = board
+#     for classStyle in ["video-player-wrapper", "content-overlay-wrapper"]:
+        
+    item  = soup.find('div', class_="video-player-wrapper") 
+    if item:       
+        #poster_image
+        style_text  = item.attrs['style']
+        board  = re.search("url\(\'(.*?)\'\)", style_text, re.S).group(1)
+
+    if board:  
+        image['board'] = board
+    else:
+        item  = soup.find('div', class_="content-overlay-wrapper") 
+        if item:
+            style_text  = item.select_one('div[class="non-members"]').attrs['style']
+            board  = re.search("url\((.*?)\)", style_text, re.S).group(1)
+            
     Full = []
     items = soup.find_all('div', class_="resolution content ")
     for item in items:
@@ -126,6 +132,9 @@ def parse_page_detail(html):
             'large': large_url,   
             })
     image['stills'] = Stills
+    
+    
+    image['date'] = soup.find('span', class_="date").string
     return image
                        
 '''
@@ -262,7 +271,7 @@ def main(page):
 
 if __name__ == '__main__':   
     pool = Pool(3)      
-    pool.map(main,[i  for i in range(1,11)])
+    pool.map(main,[i  for i in range(10,0,-1)])
 
     pool.close()
     pool.join()

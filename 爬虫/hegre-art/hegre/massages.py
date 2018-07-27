@@ -123,6 +123,8 @@ def parse_page_detail(html):
             'large': large_url,   
             })
     image['stills'] = Stills
+    
+    image['date'] = soup.find('span', class_="date").string
     return image
                                           
 '''
