@@ -10,26 +10,16 @@ import re
 from requests.exceptions import RequestException
 from multiprocessing import Pool
 from bs4 import BeautifulSoup
-import os
 from urllib.parse import urljoin
 import json
 
-headers = {"User-Agent":"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36"}
-dir_path = "d:\Pictures\hegre-art\hegre\\photos\{file_path}"
-'''
-get_page
+import os,sys
+parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0,parentdir)
+from com_tools import utils
 
-@author: chenzf
-'''
-def get_page(url):         
-    try:
-        response = requests.get(url,headers=headers)
-        if response.status_code == 200:
-            return response.text
-        return None
-    except RequestException as e:
-        print(e)
-        return None
+utils.dir_path = "d:\\Pictures\\hegre-art\\hegre\\photos\\{file_path}"
+
 '''
 parse_page
 
@@ -96,70 +86,18 @@ def parse_page_detail(html):
     image['download'] = DownLoad   
     
     image['date'] = soup.find('span', class_="date").string
-    return image
-                   
+    return image                 
+
 '''
-download_file
+process_image
 
 @author: chenzf
-'''             
-def download_file(url, file_path):   
-    if url is None:
-        return 
-      
-    try:  
-        if os.path.exists(file_path):
-            print(file_path + " is omitted")
-            return       
-  
-        response = requests.get(url,headers=headers,timeout=30)
-        if response.status_code == 200:
-            save_file(response.content, file_path)
-        
-    except RequestException as e:            
-        return
-  
-'''
-get_file_path
-
-@author: chenzf
-'''         
-def get_file_path(url, file_name):
-    rePng = re.compile(".*?\.png.*?", re.S)
-    file_name = file_name.replace('?', '_')    
-    file_path = "{name}.{suffix}"
-    
-    if re.search(rePng, url):
-        file_path = file_path.format(name=file_name, suffix='png')
-    else:
-        file_path = file_path.format(name=file_name, suffix='jpg')
-    
-    file_path = dir_path.format(file_path = file_path)
-        
-    return file_path
-'''
-save_info
-
-@author: chenzf
-'''    
-def save_file(content, file_path, type='wb'):    
-    dir_name = os.path.dirname(file_path)
+'''  
+def process_image(image):
+    dir_name = utils.dir_path.format(file_path=image.get('name'))
     if not os.path.exists(dir_name):
         os.makedirs(dir_name)
-
-    if os.path.exists(file_path):
-        os.remove(file_path)
         
-    with open(file_path, type) as f:
-        f.write(content)
-
-    print(file_path + ' is done')
-    
-def process_image(image):
-    dir_name = dir_path.format(file_path=image.get('name'))
-    if not os.path.exists(dir_name):
-        os.makedirs(dir_name)        
-    
     
     with open(dir_name+'\\info.json', 'w') as f:    
         json.dump(image, f)
@@ -169,18 +107,18 @@ def process_image(image):
         url = image.get(subkeys)
   #      print(url)
         if url:
-             download_file(url, get_file_path(url, image.get('name')+
+             utils.download_file(url, utils.get_file_path(url, image.get('name')+
                                                '\\'+ subkeys))
     
     detail = image.get('detail')
     board = detail.get('board')
     if board:
-        download_file(board, get_file_path(board, image.get('name')+
+        utils.download_file(board, utils.get_file_path(board, image.get('name')+
                                                '\\board'))  
             
 def process_image_detail(url):
     detail = None
-    html = get_page(url)
+    html = utils.get_page(url)
     if html:
         detail = parse_page_detail(html)
       
@@ -193,7 +131,7 @@ main
 '''     
 def main(page):
     url = 'http://www.hegre.com/photos?galleries_page={page}'    
-    html = get_page(url.format(page=page))
+    html = utils.get_page(url.format(page=page))
     if html:
         images = parse_page(html)
         if images:
