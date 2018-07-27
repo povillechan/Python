@@ -176,7 +176,7 @@ def download_image(url, file_path):
         if os.path.exists(file_path):
             return       
   
-        response = requests.get(url,headers=headers,timeout=10)
+        response = requests.get(url,headers=headers,timeout=30)
         if response.status_code == 200:
             save_file(response.content, file_path)
         
