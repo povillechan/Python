@@ -81,13 +81,17 @@ def parse_page_detail(html):
 
     soup = BeautifulSoup(html, 'lxml')   
     #items
-    item  = soup.find('div', class_="video-player-wrapper")
+    board = None
+    for classStyle in ["video-player-wrapper", "non-members"]:
+        item  = soup.find('div', class_=classStyle) 
     
-    if item:       
-        #poster_image
-        style_text  = item.attrs['style']
-        image['board']  = re.search("url\(\'(.*?)\'\)", style_text, re.S).group(1)
+        if item:       
+            #poster_image
+            style_text  = item.attrs['style']
+            board  = re.search("url\(\'(.*?)\'\)", style_text, re.S).group(1)
+            break
     
+    image['board'] = board
     Full = []
     items = soup.find_all('div', class_="resolution content ")
     for item in items:
@@ -154,19 +158,21 @@ def get_file_path(url, file_name):
     rePng = re.compile(".*?\.png.*?", re.S)
     file_name = file_name.replace('?', '_')    
     file_path = "{name}.{suffix}"
-    
-    if re.search(rePng, url):
-        file_path = file_path.format(name=file_name, suffix='png')
-    else:
-        file_path = file_path.format(name=file_name, suffix='jpg')
-    
-    file_path = dir_path.format(file_path = file_path)
+    try:
+        if re.search(rePng, url):
+            file_path = file_path.format(name=file_name, suffix='png')
+        else:
+            file_path = file_path.format(name=file_name, suffix='jpg')
         
+        file_path = dir_path.format(file_path = file_path)
+    except Exception as e:
+        print(url)
+        print(e)
+            
  #   print(file_path)
     return file_path
 
 def get_video_file_path(url, file_name):
-    print(url)
     reMp4 = re.compile(".*?\.mp4.*?", re.S)
     file_name = file_name.replace('?', '_')    
     file_path = "{name}.{suffix}"
@@ -178,7 +184,6 @@ def get_video_file_path(url, file_name):
     
     file_path = dir_path.format(file_path = file_path)
         
-    print(file_path)
     return file_path   
 '''
 save_info
@@ -196,9 +201,10 @@ def save_file(content, file_path, type='wb'):
     with open(file_path, type) as f:
         f.write(content)
 
+    print(file_path + 'is done')
+    
 def process_image(image):
     dir_name = dir_path.format(file_path=image.get('name'))
-    print(dir_name)
     if not os.path.exists(dir_name):
         os.makedirs(dir_name)        
     
@@ -216,17 +222,16 @@ def process_image(image):
     
     detail = image.get('detail')
     board = detail.get('board')
-    download_image(board, get_file_path(board, image.get('name')+
+    if board:
+        download_image(board, get_file_path(board, image.get('name')+
                                                '\\board'))  
     trailer = detail.get('trailer') 
     if trailer:
         video = trailer[0]   
-        print(video)
         download_image(video, get_video_file_path(video, image.get('name')+
                                                '\\' + image.get('name'))) 
         
     stills = image.get('stills')  
-     
     if stills :
         for i, val in enumerate(stills):   
             download_image(val, get_file_path(val, image.get('name')+
