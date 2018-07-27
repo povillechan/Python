@@ -128,11 +128,11 @@ def parse_page_detail(html):
     return image
                                           
 '''
-download_image
+download_file
 
 @author: chenzf
 '''             
-def download_image(url, file_path):   
+def download_file(url, file_path):   
     if url is None:
         return 
       
@@ -164,10 +164,9 @@ def get_file_path(url, file_name):
     
     file_path = dir_path.format(file_path = file_path)
         
-    print(file_path)
     return file_path
+
 def get_video_file_path(url, file_name):
-    print(url)
     reMp4 = re.compile(".*?\.mp4.*?", re.S)
     file_name = file_name.replace('?', '_')    
     file_path = "{name}.{suffix}"
@@ -179,7 +178,6 @@ def get_video_file_path(url, file_name):
     
     file_path = dir_path.format(file_path = file_path)
         
-    print(file_path)
     return file_path   
 '''
 save_info
@@ -197,9 +195,10 @@ def save_file(content, file_path, type='wb'):
     with open(file_path, type) as f:
         f.write(content)
 
+    print(file_path + ' is done')
+    
 def process_image(image):
     dir_name = dir_path.format(file_path=image.get('name'))
-    print(dir_name)
     if not os.path.exists(dir_name):
         os.makedirs(dir_name)        
     
@@ -212,25 +211,25 @@ def process_image(image):
         url = image.get(subkeys)
   #      print(url)
         if url:
-             download_image(url, get_file_path(url, image.get('name')+
+             download_file(url, get_file_path(url, image.get('name')+
                                                '\\'+ subkeys))
     
     detail = image.get('detail')
     board = detail.get('board')
-    download_image(board, get_file_path(board, image.get('name')+
+    if board:
+        download_file(board, get_file_path(board, image.get('name')+
                                                '\\board'))  
     trailer = detail.get('trailer') 
     if trailer:
         video = trailer[0]   
         print(video)
-        download_image(video, get_video_file_path(video, image.get('name')+
+        download_file(video, get_video_file_path(video, image.get('name')+
                                                '\\' + image.get('name'))) 
         
     stills = image.get('stills')  
-     
     if stills :
         for i, val in enumerate(stills):   
-            download_image(val, get_file_path(val, image.get('name')+
+            download_file(val, get_file_path(val, image.get('name')+
                                                '\\'+ i)) 
     
 def process_image_detail(url):
@@ -240,16 +239,16 @@ def process_image_detail(url):
         detail = parse_page_detail(html)
       
     return detail
-
+     
 '''
 main
 
 @author: chenzf
 '''     
 def main(page):
-    url = 'https://www.hegre.com/massage?id=bondage-femdom-massage&massages_page={page}'        html = get_page(url.format(page=page))
-    if html:        
-     
+    url = 'https://www.hegre.com/massage?id=bondage-femdom-massage&massages_page={page}'    
+    html = get_page(url.format(page=page))
+    if html:
         images = parse_page(html)
         if images:
             for image in images:

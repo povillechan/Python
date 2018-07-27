@@ -13,6 +13,7 @@ from bs4 import BeautifulSoup
 import os
 from urllib.parse import urljoin
 import json
+
 headers = {"User-Agent":"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36"}
 dir_path = "d:\Pictures\hegre-art\hegre\\films\{file_path}"
 '''
@@ -61,7 +62,7 @@ def parse_page(html):
             large_url = large.attrs['href']   
 
         image.append({           
-            'name':name.strip().replace('\"','_').replace(':','_'),            
+            'name': name.strip().replace('\"','_').replace(':','_'),            
             'small': poster_image,
             'mid': mid_url,
             'large': large_url,   
@@ -133,16 +134,15 @@ def parse_page_detail(html):
             })
     image['stills'] = Stills
     
-    
     image['date'] = soup.find('span', class_="date").string
     return image
-                       
+                                          
 '''
-download_image
+download_file
 
 @author: chenzf
 '''             
-def download_image(url, file_path):   
+def download_file(url, file_path):   
     if url is None:
         return 
       
@@ -154,9 +154,8 @@ def download_image(url, file_path):
         if response.status_code == 200:
             save_file(response.content, file_path)
         
-    except RequestException as e:       
-        print(e)
-        return None
+    except RequestException as e:            
+        return
   
 '''
 get_file_path
@@ -167,18 +166,14 @@ def get_file_path(url, file_name):
     rePng = re.compile(".*?\.png.*?", re.S)
     file_name = file_name.replace('?', '_')    
     file_path = "{name}.{suffix}"
-    try:
-        if re.search(rePng, url):
-            file_path = file_path.format(name=file_name, suffix='png')
-        else:
-            file_path = file_path.format(name=file_name, suffix='jpg')
+    
+    if re.search(rePng, url):
+        file_path = file_path.format(name=file_name, suffix='png')
+    else:
+        file_path = file_path.format(name=file_name, suffix='jpg')
+    
+    file_path = dir_path.format(file_path = file_path)
         
-        file_path = dir_path.format(file_path = file_path)
-    except Exception as e:
-        print(url)
-        print(e)
-            
- #   print(file_path)
     return file_path
 
 def get_video_file_path(url, file_name):
@@ -210,7 +205,7 @@ def save_file(content, file_path, type='wb'):
     with open(file_path, type) as f:
         f.write(content)
 
-    print(file_path + 'is done')
+    print(file_path + ' is done')
     
 def process_image(image):
     dir_name = dir_path.format(file_path=image.get('name'))
@@ -226,24 +221,25 @@ def process_image(image):
         url = image.get(subkeys)
   #      print(url)
         if url:
-             download_image(url, get_file_path(url, image.get('name')+
+             download_file(url, get_file_path(url, image.get('name')+
                                                '\\'+ subkeys))
     
     detail = image.get('detail')
     board = detail.get('board')
     if board:
-        download_image(board, get_file_path(board, image.get('name')+
+        download_file(board, get_file_path(board, image.get('name')+
                                                '\\board'))  
     trailer = detail.get('trailer') 
     if trailer:
         video = trailer[0]   
-        download_image(video, get_video_file_path(video, image.get('name')+
+        print(video)
+        download_file(video, get_video_file_path(video, image.get('name')+
                                                '\\' + image.get('name'))) 
         
     stills = image.get('stills')  
     if stills :
         for i, val in enumerate(stills):   
-            download_image(val, get_file_path(val, image.get('name')+
+            download_file(val, get_file_path(val, image.get('name')+
                                                '\\'+ i)) 
     
 def process_image_detail(url):
@@ -275,3 +271,4 @@ if __name__ == '__main__':
 
     pool.close()
     pool.join()
+    

@@ -164,11 +164,11 @@ def parse_page(url, html):
     return image
                        
 '''
-download_image
+download_file
 
 @author: chenzf
 '''             
-def download_image(url, file_path):   
+def download_file(url, file_path):   
     if url is None:
         return 
       
@@ -260,10 +260,10 @@ def process_image(image):
         json.dump(image, f)
         
     url = image.get('poster_image')
-    download_image(url, get_file_path(url, image.get('name') + '\\poster_image'))
+    download_file(url, get_file_path(url, image.get('name') + '\\poster_image'))
        
     url = image.get('board_image')
-    download_image(url, get_file_path(url, image.get('name') + '\\board_image'))
+    download_file(url, get_file_path(url, image.get('name') + '\\board_image'))
     
     
     for keys in ['galleries', 'films','massages']:
@@ -277,7 +277,7 @@ def process_image(image):
                 url = keys_item.get(subkeys)
                 print(url)
                 if url:
-                     download_image(url, get_file_path(url, image.get('name')+'\\'+ keys+'\\'+ keys_item.get('name')+'\\'+subkeys))
+                     download_file(url, get_file_path(url, image.get('name')+'\\'+ keys+'\\'+ keys_item.get('name')+'\\'+subkeys))
     
 '''
 main
