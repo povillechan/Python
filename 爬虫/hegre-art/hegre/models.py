@@ -174,6 +174,7 @@ def download_file(url, file_path):
       
     try:  
         if os.path.exists(file_path):
+            print(file_path + " is omitted")
             return       
   
         response = requests.get(url,headers=headers,timeout=30)
