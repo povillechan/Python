@@ -82,7 +82,7 @@ def parse_page_detail(html):
     soup = BeautifulSoup(html, 'lxml')   
     #items
     board = None
-    for classStyle in ["video-player-wrapper", "non-members"]:
+    for classStyle in ["video-player-wrapper", "content-overlay-wrapper"]:
         item  = soup.find('div', class_=classStyle) 
     
         if item:       
