@@ -60,7 +60,7 @@ def parse_page(html):
 
         name = item.find('a', class_='open-in-content-overlay').attrs['title'].strip()
         images.append({
-			'name': name.strip().replace('\"','_').replace(':','_'),
+			'name': name.strip().replace('\"','_').replace(':','_').replace('?','_'),
             'small': poster_image,
             'mid': mid_url,
             'large': large_url,   
