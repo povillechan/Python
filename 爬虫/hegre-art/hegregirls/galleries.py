@@ -140,10 +140,11 @@ if __name__ == '__main__':
 
     for year in range(2002,2019):
         for month in range(1,13):
-            dateInfos.append({'year':year,
-                              'month':month
-                }
-                )
+            dateInfos.append(
+                {
+                    'year':year,
+                    'month':month
+                })
     
     pool = Pool(3)      
     for item in dateInfos:

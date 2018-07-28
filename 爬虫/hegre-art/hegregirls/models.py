@@ -10,122 +10,222 @@ import re
 from requests.exceptions import RequestException
 from multiprocessing import Pool
 from bs4 import BeautifulSoup
-import os
 from urllib.parse import urljoin
+import json
 
-headers = {"User-Agent":"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36"}
+import os,sys
+parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0,parentdir)
+from com_tools import utils
 
+utils.dir_path = "d:\\Pictures\\hegre-art\\hegregirls\\models\\{file_path}"
 
-def get_page(url):         
-    try:
-        response = requests.get(url, headers=headers)
-        if response.status_code == 200:
-            return response.text
-        return None
-    except RequestException as e:
-        print(e)
-        return None
+'''
+parse_page
 
-
-def parse_page(url, html):
+@author: chenzf
+''' 
+def parse_page(html):
     soup = BeautifulSoup(html, 'lxml')
     
     images = []
         
     main_div = soup.find('div', id="block-system-main")
     contents = main_div.find_all('div', class_='node-grid')
-    
-    for content in contents:  
-        image_content = content.find('img').attrs['src']                
- #       print(image_content.attrs['src'])
-        
-        name_content = content.find('div', class_='grid-meta').find('a').string
- #       print(name_content)
 
-        info_content = urljoin(url, content.find('div', class_='grid-meta').find('a').attrs['href'])
-        images.append({'url':  image_content,
-                       'name':  name_content,
-                       'info': info_content
+
+    for content in contents:  
+        try:
+            nick = None
+            if content.select_one('.grid-meta .nick'):
+                nick =  content.select_one('.grid-meta .nick').string
+            images.append({
+                    'name': content.find('div', class_='grid-meta').find('a').string,
+                    'url':  urljoin('http://hegregirls.com/', content.find('div', class_='grid-meta').find('a').attrs['href']),
+                    'board': content.find('img').attrs['src'],  
+                    'nick': nick,
+                    'stats': content.select_one('.grid-meta .stats').string,      
             })
-            
+        except Exception as e:
+            print(content.find('div', class_='grid-meta').find('a').string)
+            print("error")
     return images
 
-                       
-#             
-def download_image(images):
-    for image in images:
-        print(image)
-        try:
-            file_path = get_file_path(image)
-            if os.path.exists(file_path):
-                continue
+'''
+parse_page
+
+@author: chenzf
+''' 
+def parse_page_detail(html):
+    image = {}
+    soup = BeautifulSoup(html, 'lxml')   
+    #board_image
+    board_image  = soup.find('div', class_="field-name-model-board")
+    if board_image:
+        board_image = board_image.find('img').attrs['src']     
+  
+    image['board_image'] = board_image
+       
+    #poster_image
+    poster_image  = soup.find('div', class_="box border")
+    if poster_image:
+        poster_image = poster_image.find('img').attrs['src']
+
+    image['poster_image'] = poster_image
+    
+   
+    #profile    
+
+    labels = soup.find('div', class_="box border")
+    rows = labels.find_all('li')
+    profile = []
+    for row in rows:
+        profile.append(row.get_text().strip().replace('\n', '')) 
+    image['profile'] = profile    
+    
+    #wrapper
+    galleries_dict = []
+    films_dict=[]
+    
+    items = soup.select('#main-content .content .content .grid-4')
+    for item in items:
+        if re.search('galleries', item.attrs['about']):
+            date_release = ""
+            for s in item.find(class_="release-date").strings:
+                date_release += s
+
             
-            response = requests.get(image['url'], headers=headers, timeout=10)
-            if response.status_code == 200:
-                save_image(response.content, image)
-                pass
+            try:           
+                detail_url = item.select_one('.preview-link a')
+                if detail_url:
+                    detail_url = detail_url.attrs['href']
                 
-        except RequestException as e:
-            continue
-               
-         
-def get_file_path(image):
-    reJpg = re.compile(".*?\.jpg.*?", re.S)
-    rePng = re.compile(".*?\.png.*?", re.S)
-    file_name = image['name'].replace('?', '_')
+                if detail_url:
+                    detail_url = urljoin('http://hegregirls.com/', detail_url)
+                    
+                galleries_dict.append({
+                    'name': item.select_one('.grid-meta a').string,
+                    'date': date_release,
+                    'url': urljoin('http://hegregirls.com/', item.select_one('.field-name-coverl a').attrs['href']),
+                    'img':item.find('img').attrs['src'],
+                    'board': item.select_one('.field-name-coverl a').attrs['rel'],
+                    'detail': parse_galleries_detail(detail_url)
+                    })  
+            except:
+                print('galleries_dict dict error')                      
+                                    
+                                    
+        else:   
+            try:   
+                films_dict.append({
+                    'name': item.select_one('.grid-meta a').string,
+                    'url':  urljoin('http://hegregirls.com/', item.select_one('.field-name-movie-cover a').attrs['href']),
+                    'img':  item.select_one('.field-name-movie-cover a img').attrs['src'],
+                    'board': item.select_one('a.hegre-poster-zoom').attrs['href'],
+                    'url': urljoin('http://hegregirls.com/',item.select_one('.field-name-movie-cover a').attrs['href']),
+                    })        
+            except:
+                print('films_dict dict error')    
+#                 print(item.select_one('.grid-meta a').string)
+#                 print(item.select_one('.field-name-movie-cover a').attrs['href'])   
+#                 print(item.select_one('.field-name-movie-cover a img').attrs['src']) 
+#                 print(item.select_one('a.hegre-poster-zoom').attrs['href'])  
+#                 print(item.select_one('a.hegre-poster-zoom').attrs['rel'])
+                                   
+    image['galleries'] = galleries_dict  
+    image['films'] = films_dict  
 
-    file_path = "d:\Pictures\hegre-art\hegregirls\models\{name}\{name}.{suffix}"
-    
-    if re.search(reJpg, image['url']):
-        file_path = file_path.format(name=file_name, suffix='jpg')
-    elif re.search(rePng, image['url']):
-        file_path = file_path.format(name=file_name, suffix='png')
-    else:
-        file_path = file_path.format(name=file_name, suffix='jpg')
-        
-    print(file_path)
-    return file_path
+    return image               
 
-
-def save_image(content, image):
-    file_path = get_file_path(image)
-    
-    dir_name = os.path.dirname(file_path)
-#     print(dir_name)
-    if not os.path.exists(dir_name):
-        os.makedirs(dir_name)
-
-    if os.path.exists(file_path):
-        os.remove(file_path)
-        
-    with open(file_path, 'wb') as f:
-        f.write(content)
-        
-    with open(dir_name+'\info.txt', 'w') as f:
-        f.write(image['info'])
-
-
-def get_next_url(url, html):
-    soup = BeautifulSoup(html, 'lxml')
-    nextPage = soup.find('a', title="Go to next page")
-    
-    if nextPage:        
-        return urljoin(url, nextPage.attrs['href'])
-    else:
+def parse_galleries_detail(url):
+    if not url:
         return None
 
+    detail = {}
+    html = utils.get_page(url)
+    if not html:
+        return None;
+    
+    soup = BeautifulSoup(html, 'lxml')
+    #board_image
+    board_image  = soup.find('div', class_="preview-board")
+    if board_image:
+        board_image = board_image.find('img').attrs['src']    
 
-def main():
-    url = 'http://hegregirls.com/models'
-
-    while url:
-        html = get_page(url)
-        if html:
-            images = parse_page(url, html)
-            if images:
-                download_image(images)
-        url = get_next_url(url, html)
+  
+    detail['board_image'] = board_image
+    
+    images = []
+    items = soup.select('.bottom-border-solid .thumbnail')
+    if items:
+        for item in items:
+            images.append({
+                'small': item.find('img').attrs['src'],
+                'large': item.find('a').attrs['href']})
         
+    detail['images'] = images
+    return detail
+    
+
+'''
+process_image
+
+@author: chenzf
+'''  
+def process_image(image):
+    dir_name = utils.dir_path.format(file_path=image.get('name'))
+    if not os.path.exists(dir_name):
+        os.makedirs(dir_name)
+        
+    
+    with open(dir_name+'\\info.json', 'w') as f:    
+        json.dump(image, f)
+    
+    
+    for subkeys in ['small','mid','large']:
+        url = image.get(subkeys)
+  #      print(url)
+        if url:
+             utils.download_file(url, utils.get_file_path(url, image.get('name')+
+                                               '\\'+ subkeys))
+    
+    detail = image.get('detail')
+    board = detail.get('board')
+    if board:
+        utils.download_file(board, utils.get_file_path(board, image.get('name')+
+                                               '\\board'))  
             
-if __name__ == '__main__':
-    main()
+def process_image_detail(url):
+    detail = None
+    html = utils.get_page(url)
+    try:
+        if html:
+            detail = parse_page_detail(html)
+    except:
+        print('error-')
+        print(url) 
+    return detail
+
+
+'''
+main
+
+@author: chenzf
+'''     
+def main(page):
+    url = 'http://hegregirls.com/models?page={page}'    
+    html = utils.get_page(url.format(page=page))
+    if html:
+        images = parse_page(html)
+        if images:
+            for image in images:
+                image['detail'] = process_image_detail(image.get('url'))
+                print(image)
+ #               process_image(image)
+
+if __name__ == '__main__':   
+    pool = Pool(3)      
+    pool.map(main,[i  for i in range(0,5)])
+
+    pool.close()
+    pool.join()
