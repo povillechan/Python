@@ -69,11 +69,14 @@ def get_file_path(url, file_name):
 
 def get_video_file_path(url, file_name):
     reMp4 = re.compile(".*?\.mp4.*?", re.S)
+    rem4v = re.compile(".*?\.m4v", re.S)
     file_name = file_name.replace('?', '_')    
     file_path = "{name}.{suffix}"
-    
+    # print(url)
     if re.search(reMp4, url):
         file_path = file_path.format(name=file_name, suffix='mp4')
+    elif re.search(rem4v, url):
+        file_path = file_path.format(name=file_name, suffix='m4v')
     else:
         file_path = file_path.format(name=file_name, suffix='avi')
     
@@ -97,3 +100,26 @@ def save_file(content, file_path, type='wb'):
         f.write(content)
 
     print(file_path + ' is done')   
+
+'''
+get_page
+
+@author: chenzf
+'''
+from selenium import webdriver
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+def get_page_by_chrome(url, css_ele):         
+    try:
+        browser = webdriver.Chrome()
+        wait = WebDriverWait(browser, 10)
+        browser.get(url)
+        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, css_ele)))
+        return browser.page_source
+    except TimeoutException as e:
+        return None
+    finally:
+        browser.close()
+        browser.quit()
