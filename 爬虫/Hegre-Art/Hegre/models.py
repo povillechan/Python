@@ -18,7 +18,8 @@ parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fi
 sys.path.insert(0,parentdir)
 from com_tools import utils
 
-utils.dir_path = "d:\\Pictures\\hegre-art\\hegre\\models\\{file_path}"
+save_dir = os.path.basename(sys.argv[0]).split(".")[0]
+utils.dir_path = "d:\\Pictures\\Hegre-Art\\Hegre\\"+save_dir+"\\{file_path}"
 
 '''
 parse_page
@@ -87,7 +88,7 @@ def parse_page(url, html):
                 large_url = large.attrs['href']        
             
             galleries_dict.append({
-                'name': item.find('img').attrs['alt'].strip(),
+                'name':  utils.format_name(item.find('img').attrs['alt']),
                 'url': urljoin('http://www.hegre.com/', item.find('a').attrs['href']),
                 'small': item.find('img').attrs['src'],
                 'mid': mid_url,
@@ -117,7 +118,7 @@ def parse_page(url, html):
                 large_url = large.attrs['href']        
             
             films_dict.append({
-                'name': item.find('img').attrs['alt'].strip(),
+                'name': utils.format_name(item.find('img').attrs['alt']),
                 'url': urljoin('http://www.hegre.com/', item.find('a').attrs['href']),
                 'small': item.find('img').attrs['src'],
                 'mid': mid_url,
@@ -144,9 +145,9 @@ def parse_page(url, html):
                 large_url = large.attrs['href']        
             
             massages_dict.append({
-                'name': item.find('img').attrs['alt'].strip(),
+                'name': utils.format_name(item.find('img').attrs['alt']),
                 'url': urljoin('http://www.hegre.com/', item.find('a').attrs['href']),
-                'small': item.find('img').attrs['src'],
+#              'small': item.find('img').attrs['src'],
                 'mid': mid_url,
                 'large': large_url,      
                 })
@@ -176,11 +177,14 @@ process_page
 @author: chenzf
 '''  
 def process_page(page):
-    html = utils.get_page(page)
-    if html:
-        image = parse_page(page, html)   
-        if image:
-            process_image(image)
+    try:
+        html = utils.get_page(page)
+        if html:
+            image = parse_page(page, html)   
+            if image:
+                process_image(image)
+    except:
+        print('error occured in parse %s' %page)        
             
 '''
 process_image
@@ -202,19 +206,26 @@ def process_image(image):
     url = image.get('board_image')
     utils.download_file(url, utils.get_file_path(url, image.get('name') + '\\board_image'))
     
-    
     for keys in ['galleries', 'films','massages']:
         for keys_item in image.get(keys):
-            dir_name = dir_path.format(file_path=image.get('name')+'\\'+ keys+'\\'+ keys_item.get('name'))            
-#             print(dir_name)
+            dir_name = utils.dir_path.format(file_path=image.get('name')+'\\'+ keys+'\\'+ keys_item.get('name'))            
+
             if not os.path.exists(dir_name):
                 os.makedirs(dir_name)
-           
-            for subkeys in ['small','mid','large']:
+
+            for subkeys in ['large']:
                 url = keys_item.get(subkeys)
-                print(url)
+#
                 if url:
-                     utils.download_file(url, utils.get_file_path(url, image.get('name')+'\\'+ keys+'\\'+ keys_item.get('name')+'\\'+subkeys))
+                    utils.download_file(url, utils.get_file_path(url, image.get('name')+'\\'+ keys+'\\'+ keys_item.get('name') + '\\board'))
+                    break
+
+            for subkeys in ['mid','small']:
+                url = keys_item.get(subkeys)
+#
+                if url:
+                    utils.download_file(url, utils.get_file_path(url, image.get('name')+'\\'+ keys+'\\'+ keys_item.get('name') + '\\' + keys_item.get('name')))
+                    break 
     
 '''
 main

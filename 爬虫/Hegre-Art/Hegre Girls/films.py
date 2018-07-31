@@ -18,7 +18,8 @@ parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fi
 sys.path.insert(0,parentdir)
 from com_tools import utils
 
-utils.dir_path = "d:\\Pictures\\hegre-art\\hegregirls\\massages\\{file_path}"
+save_dir = os.path.basename(sys.argv[0]).split(".")[0]
+utils.dir_path = "d:\\Pictures\\Hegre-Art\\Hegre Girls\\"+save_dir+"\\{file_path}"
 
 '''
 parse_page
@@ -57,13 +58,24 @@ def parse_page_detail(html):
 
         video = soup.select_one('.mejs-mediaelement video source')
         if video:
-            video = soup.select_one('.mejs-mediaelement video source').get('src')
+            video = video.get('src')
         else:
             video = None
+
+        mid = soup.select_one('.mejs-mediaelement video')
+        if mid:
+            mid = soup.select_one('.mejs-mediaelement video').get('poster')
+        else:
+            mid = soup.select_one('.featured img')
+            if mid:
+                mid = mid.get('src')
+            else:
+                mid = None
+
         image = {
-            'small':soup.select_one('.field-name-massage-board a img').get('src'),
-            'mid':soup.select_one('.mejs-mediaelement video').get('poster'),
-            'large':soup.select_one('.field-name-massage-board a').get('href'),
+            'small':soup.select_one('.field-name-movie-cover a img').get('src'),
+            'mid':mid,
+            'large':soup.select_one('.field-name-movie-cover a').get('href'),
             'video':video,
             'date':date_release
         }
@@ -85,24 +97,39 @@ def process_image(image):
         json.dump(image, f)
     
     
-    for subkeys in ['board']:
-        url = image.get(subkeys)
-        if url:
-             utils.download_file(url, utils.get_file_path(url, image.get('name')+
-                                               '\\'+ subkeys))
+#     for subkeys in ['board']:
+#         url = image.get(subkeys)
+#         if url:
+#              utils.download_file(url, utils.get_file_path(url, image.get('name')+
+#                                                '\\'+ subkeys))
     
     detail = image.get('detail')
     if detail:
-        for subkeys in ['small', 'mid', 'large']:
+        for subkeys in ['large', 'small']:
             url = detail.get(subkeys)
             if url:
                 utils.download_file(url, utils.get_file_path(url, image.get('name')+
                                                '\\'+ subkeys))
-
+                break
+            
+        for subkeys in ['mid']:
+            url = detail.get(subkeys)
+            if url:
+                utils.download_file(url, utils.get_file_path(url, image.get('name')+
+                                               '\\'+ subkeys))
+                break
+            
         video = detail.get('video')
         if video:
             utils.download_file(video, utils.get_video_file_path(video, image.get('name')+
-                                               '\\video'))                           
+                                               '\\video'))     
+    else:
+        for subkeys in ['board']:
+            url = image.get(subkeys)
+            if url:
+                utils.download_file(url, utils.get_file_path(url, image.get('name')+
+                                               '\\'+ subkeys))
+                            
 
 '''
 process_image_detail
@@ -123,7 +150,7 @@ main
 @author: chenzf
 '''     
 def main(page):
-    url = 'http://hegregirls.com/massage?page={page}'    
+    url = 'http://hegregirls.com/films?page={page}'    
     html = utils.get_page(url.format(page=page))
     if html:
         images = parse_page(html)
@@ -134,7 +161,7 @@ def main(page):
 
 if __name__ == '__main__':   
     pool = Pool(3)      
-    pool.map(main,[i  for i in range(0,2)])
+    pool.map(main,[i  for i in range(0,9)])
 
     pool.close()
     pool.join()

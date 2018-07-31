@@ -18,7 +18,8 @@ parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fi
 sys.path.insert(0,parentdir)
 from com_tools import utils
 
-utils.dir_path = "d:\\Pictures\\hegre-art\\hegregirls\\models\\{file_path}"
+save_dir = os.path.basename(sys.argv[0]).split(".")[0]
+utils.dir_path = "d:\\Pictures\\Hegre-Art\\Hegre Girls\\"+save_dir+"\\{file_path}"
 
 '''
 parse_page
@@ -226,13 +227,13 @@ def process_image(image):
                                                '\\board_image'))  
                          
                     if detail_s.get('images'):
-                        for i, val in enumerate(detail_s.get('images')):   
-                            if val.get('small'):
-                                utils.download_file(val.get('small'), utils.get_file_path(val.get('small'), image.get('name')+'\\galleries\\'+gallery.get('name')+'\\'+ str(i) +
-                                               '_small'))  
-                            if val.get('large'):
-                                utils.download_file(val.get('large'), utils.get_file_path(val.get('large'), image.get('name')+'\\galleries\\'+gallery.get('name')+'\\'+ str(i) +
-                                               '_large'))  
+                        for i, val in enumerate(detail_s.get('images')):                              
+                            for subkeys_val in ['large','small']:                 
+                                image_url = val.get(subkeys_val)
+                                if image_url:
+                                    utils.download_file(image_url, utils.get_file_path(image_url, image.get('name')+'\\galleries\\'+gallery.get('name')+'\\'+ str(i+1)))
+                                    break
+
         films =  detail.get('films')
         if films:
             for film in films:

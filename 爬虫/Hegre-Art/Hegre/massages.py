@@ -18,7 +18,8 @@ parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fi
 sys.path.insert(0,parentdir)
 from com_tools import utils
 
-utils.dir_path = "d:\\Pictures\\hegre-art\\hegre\\massages\\{file_path}"
+save_dir = os.path.basename(sys.argv[0]).split(".")[0]
+utils.dir_path = "d:\\Pictures\\Hegre-Art\\Hegre\\"+save_dir+"\\{file_path}"
 
 '''
 parse_page
@@ -52,7 +53,7 @@ def parse_page(html):
             large_url = large.attrs['href']   
 
         image.append({           
-            'name': name.strip().replace('\"','_').replace(':','_'),            
+            'name':  utils.format_name(name),            
             'small': poster_image,
             'mid': mid_url,
             'large': large_url,   
@@ -74,11 +75,14 @@ def parse_page_detail(html):
     #items
     item  = soup.find('div', class_="video-player-wrapper")
     
+    board = None
     if item:       
         #poster_image
         style_text  = item.attrs['style']
-        image['board']  = re.search("url\(\'(.*?)\'\)", style_text, re.S).group(1)
+        board  = re.search("url\(\'(.*?)\'\)", style_text, re.S).group(1)
     
+    image['board'] = board      
+
     Full = []
     items = soup.find_all('div', class_="resolution content ")
     for item in items:
@@ -102,16 +106,16 @@ def parse_page_detail(html):
             else:
                 small_url = small.attrs['src']   
                   
-            large = item.find('a')
+            large = still.find('a')
             if not large:
                 large_url = None;
             else:
                 large_url = large.attrs['href']   
  
-        Stills.append({           
-            'small': small_url,            
-            'large': large_url,   
-            })
+            Stills.append({           
+                'small': small_url,            
+                'large': large_url,   
+                })
     image['stills'] = Stills
     
     image['date'] = soup.find('span', class_="date").string
@@ -131,29 +135,39 @@ def process_image(image):
         json.dump(image, f)
     
     
-    for subkeys in ['small','mid','large']:
+    for subkeys in ['mid','small']:
         url = image.get(subkeys)
   #      print(url)
         if url:
-             utils.download_file(url, utils.get_file_path(url, image.get('name')+
-                                               '\\'+ subkeys))
+            utils.download_file(url, utils.get_file_path(url, image.get('name')+
+                                               '\\'+ image.get('name')))
+            break
     
     detail = image.get('detail')
     board = detail.get('board')
     if board:
         utils.download_file(board, utils.get_file_path(board, image.get('name')+
-                                               '\\board'))  
+                                               '\\board'))
+    elif image.get('large'):
+        board = image.get('large')
+        utils.download_file(board, utils.get_file_path(board, image.get('name')+
+                                               '\\board'))
     trailer = detail.get('trailer') 
     if trailer:
         video = trailer[0]   
         utils.download_file(video, utils.get_video_file_path(video, image.get('name')+
                                                '\\' + image.get('name'))) 
         
-    stills = image.get('stills')  
+    stills = detail.get('stills')  
     if stills :
-        for i, val in enumerate(stills):   
-            utils.download_file(val, utils.get_file_path(val, image.get('name')+
-                                               '\\'+ i)) 
+        for i, val in enumerate(stills):             
+            for subkeys_val in ['large','small']:                 
+                image_url = val.get(subkeys_val)
+                if image_url:
+                    utils.download_file(image_url, utils.get_file_path(image_url, image.get('name')+
+                                               '\\'+ str(i+1))) 
+                    break
+
 '''
 process_image_detail
 
@@ -173,15 +187,18 @@ main
 @author: chenzf
 '''     
 def main(page):
-    url = 'https://www.hegre.com/massage?id=bondage-femdom-massage&massages_page={page}'    
-    html = utils.get_page(url.format(page=page))
-    if html:
-        images = parse_page(html)
-        if images:
-            for image in images:
-                image['detail'] = process_image_detail(image.get('url'))
-                process_image(image)
-
+    try:
+        url = 'https://www.hegre.com/massage?id=bondage-femdom-massage&massages_page={page}'    
+        html = utils.get_page(url.format(page=page))
+        if html:
+            images = parse_page(html)
+            if images:
+                for image in images:
+                    image['detail'] = process_image_detail(image.get('url'))
+                    process_image(image)
+    except:
+        print('error occured in parse (%s)' %url.format(page=page))
+        
 if __name__ == '__main__':   
     pool = Pool(3)      
     pool.map(main,[i  for i in range(1,5)])

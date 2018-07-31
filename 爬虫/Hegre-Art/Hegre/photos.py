@@ -18,7 +18,8 @@ parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fi
 sys.path.insert(0,parentdir)
 from com_tools import utils
 
-utils.dir_path = "d:\\Pictures\\hegre-art\\hegre\\photos\\{file_path}"
+save_dir = os.path.basename(sys.argv[0]).split(".")[0]
+utils.dir_path = "d:\\Pictures\\Hegre-Art\\Hegre\\"+save_dir+"\\{file_path}"
 
 '''
 parse_page
@@ -50,7 +51,7 @@ def parse_page(html):
 
         name = item.find('a', class_='open-in-content-overlay').attrs['title'].strip()
         images.append({
-			'name': name.strip().replace('\"','_').replace(':','_').replace('?','_'),
+			'name': utils.format_name(name),
             'small': poster_image,
             'mid': mid_url,
             'large': large_url,   
@@ -103,16 +104,21 @@ def process_image(image):
         json.dump(image, f)
     
     
-    for subkeys in ['small','mid','large']:
+    for subkeys in ['large','mid','small']:
         url = image.get(subkeys)
-  #      print(url)
+
         if url:
-             utils.download_file(url, utils.get_file_path(url, image.get('name')+
-                                               '\\'+ subkeys))
+            utils.download_file(url, utils.get_file_path(url, image.get('name')+
+                                               '\\'+ image.get('name')))
+            break
     
     detail = image.get('detail')
     board = detail.get('board')
     if board:
+        utils.download_file(board, utils.get_file_path(board, image.get('name')+
+                                               '\\board'))  
+    elif image.get('mid'):
+        board = image.get('mid')
         utils.download_file(board, utils.get_file_path(board, image.get('name')+
                                                '\\board'))  
             
