@@ -70,7 +70,7 @@ def parse_page_detail(html):
                 mid = mid.get('src')
             else:
                 mid = None
-        print('mid')
+
         image = {
             'small':soup.select_one('.field-name-movie-cover a img').get('src'),
             'mid':mid,
