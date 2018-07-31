@@ -101,6 +101,9 @@ def save_file(content, file_path, type='wb'):
 
     print(file_path + ' is done')   
 
+def format_name(name):
+    return name.strip().replace('\"','_').replace(':','_').replace(',','_')
+
 '''
 get_page
 
@@ -115,6 +118,7 @@ def get_page_by_chrome(url, css_ele):
     try:
         browser = webdriver.Chrome()
         wait = WebDriverWait(browser, 10)
+        browser.set_window_size(0,0)
         browser.get(url)
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, css_ele)))
         return browser.page_source

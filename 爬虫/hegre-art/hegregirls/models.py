@@ -40,7 +40,7 @@ def parse_page(html):
             if content.select_one('.grid-meta .nick'):
                 nick =  content.select_one('.grid-meta .nick').string
             images.append({
-                    'name': content.find('div', class_='grid-meta').find('a').string.strip().replace('\"','_').replace(':','_'),
+                    'name': utils.format_name(content.find('div', class_='grid-meta').find('a').string),
                     'url':  urljoin('http://hegregirls.com/', content.find('div', class_='grid-meta').find('a').attrs['href']),
                     'board': content.find('img').attrs['src'],  
                     'nick': nick,
@@ -104,7 +104,7 @@ def parse_page_detail(html):
                     detail_url = urljoin('http://hegregirls.com/', detail_url)
                     
                 galleries_dict.append({
-                    'name': item.select_one('.grid-meta a').string.replace('\"','_').replace(':','_'),
+                    'name': utils.format_name(item.select_one('.grid-meta a').string),
                     'date': date_release,
                     'url': urljoin('http://hegregirls.com/', item.select_one('.field-name-coverl a').attrs['href']),
                     'img':item.find('img').attrs['src'],
@@ -118,7 +118,7 @@ def parse_page_detail(html):
         else:   
             try:   
                 films_dict.append({
-                    'name': item.select_one('.grid-meta a').string.replace('\"','_').replace(':','_'),
+                    'name': utils.format_name(item.select_one('.grid-meta a').string),
                     'img':  item.select_one('.field-name-movie-cover a img').attrs['src'],
                     'board': item.select_one('a.hegre-poster-zoom').get('href')[0],
                     'url': urljoin('http://hegregirls.com/',item.select_one('.field-name-movie-cover a').attrs['href']),
