@@ -40,7 +40,7 @@ def parse_page(html):
             if content.select_one('.grid-meta .nick'):
                 nick =  content.select_one('.grid-meta .nick').string
             images.append({
-                    'name': content.find('div', class_='grid-meta').find('a').string.replace('\"','_').replace(':','_'),
+                    'name': content.find('div', class_='grid-meta').find('a').string.strip().replace('\"','_').replace(':','_'),
                     'url':  urljoin('http://hegregirls.com/', content.find('div', class_='grid-meta').find('a').attrs['href']),
                     'board': content.find('img').attrs['src'],  
                     'nick': nick,

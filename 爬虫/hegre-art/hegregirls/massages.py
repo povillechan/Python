@@ -34,7 +34,7 @@ def parse_page(html):
     
     for item in items: 
         image.append({           
-            'name': item.select_one('.grid-meta h4 a').string,            
+            'name': item.select_one('.grid-meta h4 a').string.strip().replace('\"','_').replace(':','_'),            
             'board': item.select_one('.content .field-type-image a img').get('src'),
             'url':  urljoin('http://www.hegregirls.com/', item.select_one('.content .field-type-image a').get('href')),
             })
