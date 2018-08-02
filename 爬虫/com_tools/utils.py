@@ -70,6 +70,7 @@ def get_file_path(url, file_name):
 def get_video_file_path(url, file_name):
     reMp4 = re.compile(".*?\.mp4.*?", re.S)
     rem4v = re.compile(".*?\.m4v", re.S)
+    reFlv = re.compile(".*?\.flv", re.S)
     file_name = file_name.replace('?', '_')    
     file_path = "{name}.{suffix}"
     # print(url)
@@ -77,6 +78,8 @@ def get_video_file_path(url, file_name):
         file_path = file_path.format(name=file_name, suffix='mp4')
     elif re.search(rem4v, url):
         file_path = file_path.format(name=file_name, suffix='m4v')
+    elif re.search(reFlv, url):
+        file_path = file_path.format(name=file_name, suffix='flv')
     else:
         file_path = file_path.format(name=file_name, suffix='avi')
     

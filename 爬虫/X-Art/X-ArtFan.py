@@ -18,7 +18,8 @@ parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0,parentdir)
 from com_tools import utils
 
-utils.dir_path = "d:\\Pictures\\18OnlyGirls\\movies\\{file_path}"
+save_dir = os.path.basename(sys.argv[0]).split(".")[0]
+utils.dir_path = "d:\\Pictures\\X-Art\\"+save_dir+"\\{file_path}"
 
 '''
 parse_page
@@ -26,42 +27,48 @@ parse_page
 @author: chenzf
 ''' 
 def parse_page(html):
-    image = []  
-
+    image = []
     try:
         a = pq(html)   
         #items
-        items = a('#content li.box-shadow')
+        items = a('li.g1-collection-item')
     
         for item in items.items():
-     #       img = item('img').attr('src')
-    #         srcset = item('img').attr('srcset')
-            url = item('a').attr('href')
-            name = item('a').attr('title')
-            mid = item('img').attr('src')
-            result = re.findall('[a-zA-z]+://[^\s]*', str(item('img').attr('srcset')))
+            url = item('a[rel=bookmark]').attr('href')
+            name = item('a[rel=bookmark]').text()
+            result = re.findall('[a-zA-z]+://[^\s]*', str(item('img.attachment-bimber-grid-standard').attr('srcset')))
 
             b = pq(url)
-    #        video = b('video source').attr('src')
-            video = b('video a').attr('href')
+             
+            video = None
+            player = b('div.flowplayer')
+            if player:
+                src = json.loads(player.attr('data-item')).get('sources')[0].get('src')     
+                board = re.search('background-image: url\((.*?)\)', player.attr('style')).group(1)
+                video = {
+                    'src':src,
+                    'board':board
+                    }
     
-            previews = b('.ngg-gallery-thumbnail a')
+            previews = b('div.tiled-gallery-item a')
             details = []
             for preview in previews.items():
                 details.append({
-                    'large': preview('a').attr('data-src'),
-                    'small': preview('a').attr('data-thumbnail')
+                    'large': preview('img').attr('data-large-file'),
+                    'mid': preview('img').attr('data-medium-file'),
+                    'small': preview('img').attr('src'),                    
                     }
                     )
                    
             image.append({           
                 'name': utils.format_name(name),
-                'small': result[1] if result and len(result) >= 2 else None,
-                'mid':   mid,
-                'large':  result[2] if result and len(result) >= 3 else None,  
+#                 'small': result[1] if result and len(result) >= 2 else None,
+#                 'mid':   mid,
+#                 'large':  result[2] if result and len(result) >= 3 else None,  
                 'url':  url,
                 'video': video,
-                'detail':details
+                'detail':details,
+                'image_set': result
                 })
     except:
         print('error in parse')
@@ -92,16 +99,19 @@ def process_image(image):
         if url:
             utils.download_file(url, utils.get_file_path(url, image.get('name')+
                                                '\\'+ image.get('name')))
+            
             break
     
     video = image.get('video')
     if video:  
-        utils.download_file(video, utils.get_video_file_path(video, image.get('name')+
-                                           '\\video'))            
+        utils.download_file(video.get('src'), utils.get_video_file_path(video.get('src'), image.get('name')+
+                                           '\\video'))     
+        utils.download_file(video.get('board'), utils.get_file_path(video.get('board'), image.get('name')+
+                                               '\\video_board'))       
     stills = image.get('detail')  
     if stills :
         for i, val in enumerate(stills):   
-            for subkeys_val in ['large','small']:                 
+            for subkeys_val in ['large','mid','small']:                 
                 image_url = val.get(subkeys_val)
                 if image_url:
                     utils.download_file(image_url, utils.get_file_path(image_url, image.get('name')+
@@ -114,7 +124,7 @@ main
 @author: chenzf
 '''     
 def main(page):
-    url = 'https://www.18onlygirlsblog.com/category/movies/page/{page}/'    
+    url = 'https://xartfan.com/page/{page}/'    
     try:
         html = utils.get_page(url.format(page=page))
     
@@ -128,7 +138,7 @@ def main(page):
 
 if __name__ == '__main__':   
     pool = Pool(3)      
-    pool.map(main,[i  for i in range(1,44)])
+    pool.map(main,[i  for i in range(1,53)])
 
     pool.close()
     pool.join()
