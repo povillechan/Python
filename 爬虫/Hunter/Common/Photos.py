@@ -4,17 +4,16 @@ Created on 2018年6月1日
 
 @author: chenzf
 '''
-
-import requests
-import re
-from requests.exceptions import RequestException
 from multiprocessing import Pool
 from concurrent.futures import ThreadPoolExecutor
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
-import json
+import json, re
 from pyquery import PyQuery as pq
-import os,sys
+import os,sys,time,requests,threading
+from requests.exceptions import RequestException
+import vthread 
+
 parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0,parentdir)
 from com_tools import utils
@@ -26,9 +25,12 @@ parse_page
 
 @author: chenzf
 ''' 
-def parse_page(urls):
+def parse_page(urls_gen):
     try:
-        for url in urls:
+        while True:
+            url = next(urls_gen)
+            if not url:
+                return None
             html = utils.get_page(url)
             if html:
                 a = pq(html)   
@@ -88,8 +90,10 @@ def parse_page(urls):
 process_image
 
 @author: chenzf
-'''      
+'''    
+@vthread.pool(3)  
 def process_image(image):
+#     print('tid:',threading.currentThread().ident)
     try:
         sub_dir_name = "%s\\%s\\%s" %(image.get('site'), image.get('model'), image.get('name'))
         dir_name = utils.dir_path.format(file_path=sub_dir_name)
@@ -142,19 +146,24 @@ main
 
 @author: chenzf
 '''     
-def main(urls):
+def main(urls_gen):
     try:
-        images = parse_page(urls) 
-        pool = ThreadPoolExecutor(max_workers=3)       
-        for image in images:
+        images = parse_page(urls_gen)  
+        while True:
+            image = next(images)
             if image:
-                pool.submit(process_image,image)
+                process_image(image)
             else:
                 break
     except:
         print('error occured in parse %s' %urls)
 
            
+def urls_genarator(url, start, end):
+    for i in range(start,end):
+        yield url.format(page=i)
+    yield None
+    
 def call_process(url, start, end):
-    main([url.format(page=i) for i in range(start, end)])
+    main(urls_genarator(url, start, end))
 

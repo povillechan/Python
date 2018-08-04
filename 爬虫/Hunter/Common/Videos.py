@@ -15,6 +15,8 @@ from urllib.parse import urljoin
 import json
 from pyquery import PyQuery as pq
 import os,sys
+import vthread 
+
 parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0,parentdir)
 from com_tools import utils
@@ -89,6 +91,7 @@ process_image
 
 @author: chenzf
 '''      
+@vthread.pool(3)
 def process_image(image):
     try:
         sub_dir_name = "%s\\%s\\%s" %(image.get('site'), image.get('model'), image.get('name'))
@@ -143,11 +146,10 @@ main
 '''     
 def main(urls):
     try:
-        images = parse_page(urls) 
-        pool = ThreadPoolExecutor(max_workers=3)       
+        images = parse_page(urls)  
         for image in images:
             if image:
-                pool.submit(process_image,image)
+                process_image(image)
             else:
                 break
     except:
