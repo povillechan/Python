@@ -17,7 +17,7 @@ def Job_Start(url = None):
     if url is None:
         url = work_url
 #    total_page = PageCount.page_count(url)
-    Videos.call_process('%s/%s' %(url,"page/{page}/"), 1, 34)
+    Videos.call_process('%s/%s' %(url,"page/{page}/"), 1, 10)
     
 if __name__ == '__main__':   
     Job_Start()

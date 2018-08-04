@@ -10,7 +10,7 @@ sys.path.insert(0,parentdir)
 
 from Common import Photos_Single
 
-work_url = 'https://www.w4bhub.com/'
+work_url = 'https://www.mplhunter.com/'
 
 def Job_Start(url = None):
     print(__file__, "start!")
