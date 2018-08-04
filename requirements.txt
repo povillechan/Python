@@ -31,3 +31,4 @@ pymongo
 pyinstaller
 scrapy
 splash
+threadpool   

@@ -10,16 +10,22 @@ import re
 from requests.exceptions import RequestException
 import os
 
-headers = {"User-Agent":"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36"}
+default_headers = {"User-Agent":"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36"}
 dir_path = "d:\\Pictures\\hegre-art\\hegre\\{catalog}\\{file_path}"
 '''
 get_page
 
 @author: chenzf
 '''
-def get_page(url):         
+def get_page(url, headers=None):         
     try:
-        response = requests.get(url,headers=headers)
+        if headers:
+            new_headers = default_headers.copy()
+            new_headers.update(headers)
+            response = requests.get(url,headers=new_headers,timeout=30)
+        else:
+            response = requests.get(url,headers=default_headers)
+            
         if response.status_code == 200:
             return response.text
         return None
@@ -32,16 +38,24 @@ download_file
 
 @author: chenzf
 '''             
-def download_file(url, file_path):   
+def download_file(url, file_path, headers=None):   
     if url is None:
         return 
       
     try:  
         if os.path.exists(file_path):
-            print(file_path + " is omitted")
-            return       
+            if  os.path.getsize(file_path) > 0:
+                print(file_path + " is omitted")
+                return
+            else:
+                os.remove(file_path)     
   
-        response = requests.get(url,headers=headers,timeout=30)
+        if headers:
+            new_headers = default_headers.copy()
+            new_headers.update(headers)
+            response = requests.get(url,headers=new_headers,timeout=30)
+        else:
+            response = requests.get(url,headers=default_headers,timeout=30)
         if response.status_code == 200:
             save_file(response.content, file_path)
         
@@ -71,6 +85,7 @@ def get_video_file_path(url, file_name):
     reMp4 = re.compile(".*?\.mp4.*?", re.S)
     rem4v = re.compile(".*?\.m4v", re.S)
     reFlv = re.compile(".*?\.flv", re.S)
+    reWebm = re.compile(".*?\.webm", re.S)
     file_name = file_name.replace('?', '_')    
     file_path = "{name}.{suffix}"
     # print(url)
@@ -80,6 +95,8 @@ def get_video_file_path(url, file_name):
         file_path = file_path.format(name=file_name, suffix='m4v')
     elif re.search(reFlv, url):
         file_path = file_path.format(name=file_name, suffix='flv')
+    elif re.search(reWebm, url):
+        file_path = file_path.format(name=file_name, suffix='webm')
     else:
         file_path = file_path.format(name=file_name, suffix='avi')
     
