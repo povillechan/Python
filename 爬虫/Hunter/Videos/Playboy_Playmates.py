@@ -7,9 +7,8 @@ Created on 2018年6月1日
 import os,sys
 parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0,parentdir)
+
 from Common import Videos
-
-
 work_url = 'https://www.pmatehunter.com/archive'
 
 def Job_Start(url = None):

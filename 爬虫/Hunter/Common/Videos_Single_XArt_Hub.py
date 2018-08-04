@@ -4,14 +4,17 @@ Created on 2018年6月1日
 
 @author: chenzf
 '''
+
+import requests
+import re
+from requests.exceptions import RequestException
 from multiprocessing import Pool
 from concurrent.futures import ThreadPoolExecutor
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
-import json, re
+import json
 from pyquery import PyQuery as pq
-import os,sys,time,requests,threading
-from requests.exceptions import RequestException
+import os,sys
 import vthread 
 
 parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -25,26 +28,20 @@ parse_page
 
 @author: chenzf
 ''' 
-def parse_page(urls_gen):
+def parse_page(urls):
     try:
-        while True:
-            url = next(urls_gen)
-            if not url:
-                return None
+        for url in urls:
             html = utils.get_page(url)
             if html:
                 a = pq(html)   
                 #items
-                items = a('nav.pagination-a').prev_all('ul li')
-            
+                items = a('ul.gallery-a li')
+
                 for item in items.items():
-                    if item.hasClass('vid'):
-                        continue
-                    
                     url = item('a').attr('href')
-                    discrib = item('a').attr('title')
+                    discrib = item('img').attr('alt')
                     result = re.findall('[a-zA-z]+://[^\s]*', str(item('img').attr('srcset')))
-        
+
                     b = pq(url)
                         
                     art_site_info = b('#breadcrumbs li')
@@ -56,15 +53,19 @@ def parse_page(urls_gen):
                         site = info_string[0]
                         model = info_string[1]
                         name = info_string[2]
-                    
-                    previews = b('ul.gallery-b  li')
-                    details = []
-                    for preview in previews.items():
-                        details.append({
-                            'large': preview('a').attr('href'),
-                            'small': preview('img').attr('src'),                    
-                            }
-                            )
+                        
+                    video = None
+                    video_item = b('video')
+                    if video_item:
+                        src = []
+
+                        for src_item in video_item('source').items():
+                            src.append(src_item.attr('src'))
+                        video={
+                            'src': src,
+                            'poster':video_item.attr('poster')
+                            }                                    
+
                            
                     image = {    
                         'site':  site,
@@ -72,12 +73,11 @@ def parse_page(urls_gen):
                         'model': utils.format_name(model),  
                         'discrib': utils.format_name(discrib),
                         'small': result[1] if result and len(result) >= 2 else None,
-                        'mid':   item('a').attr('src'),
+                        'mid':   item('img').attr('src'),
                         'large':  result[0] if result and len(result) >= 2 else None,  
                         'url':  url,
-                        'detail':details,
-                        'image_set': result,
-        
+                        'image_set': result,       
+                        'video': video 
                         }            
                     yield image
     except:
@@ -90,10 +90,9 @@ def parse_page(urls_gen):
 process_image
 
 @author: chenzf
-'''    
+'''      
 @vthread.pool(3)  
 def process_image(image):
-#     print('tid:',threading.currentThread().ident)
     try:
         sub_dir_name = "%s\\%s\\%s" %(image.get('site'), image.get('model'), image.get('name'))
         dir_name = utils.dir_path.format(file_path=sub_dir_name)
@@ -119,25 +118,24 @@ def process_image(image):
                 
                 break
         
-    #     video = image.get('video')
-    #     if video:  
-    #         utils.download_file(video.get('src'), utils.get_video_file_path(video.get('src'), image.get('name')+
-    #                                            '\\video'))     
-    #         utils.download_file(video.get('board'), utils.get_file_path(video.get('board'), image.get('name')+
-    #                                                '\\video_board'))       
-        stills = image.get('detail')  
-        if stills :
-            for i, val in enumerate(stills):   
-                for subkeys_val in ['large','mid','small']:                 
-                    image_url = val.get(subkeys_val)
-                    if image_url:
-                        utils.download_file(image_url, 
-                                            utils.get_file_path(image_url, 
-                                                                "%s\\%s" %(sub_dir_name,str(i+1))
-                                                                ),                                                                     
-                                            headers={'Referer':image.get('url')}
-                                            )
-                        break
+        video = image.get('video')
+        if video:  
+            for video_item in video.get('src'):
+                utils.download_file(video_item, 
+                                    utils.get_video_file_path(video_item,  
+                                                              "%s\\%s" %(sub_dir_name, 'video')
+                                                              ),
+                                    headers={'Referer':image.get('url')}                                                            
+                                    ) 
+                break
+            utils.download_file(video.get('poster'), 
+                                utils.get_file_path(video_item,  
+                                                         "%s\\%s" %(sub_dir_name, 'poster')
+                                                         ),
+                                headers={'Referer':image.get('url')}                                                            
+                                )      
+
+    
     except:
         print('process_image error occured!')
      
@@ -146,11 +144,10 @@ main
 
 @author: chenzf
 '''     
-def main(urls_gen):
+def main(urls):
     try:
-        images = parse_page(urls_gen)  
-        while True:
-            image = next(images)
+        images = parse_page(urls) 
+        for image in images:
             if image:
                 process_image(image)
             else:
@@ -159,11 +156,6 @@ def main(urls_gen):
         print('error occured in parse %s' %urls)
 
            
-def urls_genarator(url, start, end):
-    for i in range(start,end):
-        yield url.format(page=i)
-    yield None
-    
-def call_process(url, start, end):
-    main(urls_genarator(url, start, end))
+def call_process(url):
+    main([url])
 
