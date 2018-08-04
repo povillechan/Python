@@ -24,7 +24,7 @@ def get_page(url, headers=None):
             new_headers.update(headers)
             response = requests.get(url,headers=new_headers,timeout=30)
         else:
-            response = requests.get(url,headers=default_headers)
+            response = requests.get(url,headers=default_headers,timeout=30)
             
         if response.status_code == 200:
             return response.text

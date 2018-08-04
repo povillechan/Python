@@ -46,20 +46,40 @@ def parse_page(urls_gen):
                     board = item('img').attr('src')
                     name = item('a.title').text()
                   
-                    b = pq(url)
+                    b = pq(url,headers=utils.default_headers, timeout=30)
                     poster = b('div.left div.photo img').attr('src')
                     profile=[]
                     profile_info = b('div.right li')
                     for profile_item in profile_info.items():
-                        print(profile_item.text())
+                        profile.append(profile_item.text())             
                     
                     details = []
-
-                           
+                    videos_info = b('div.content div.item')
+                    if videos_info:
+                        for video_item in videos_info.items():
+                            video_url = video_item('a.thumb').attr('href')
+                            video_name = video_item('a.thumb').attr('title')
+                            video_img  = re.search('(.*?)-\d.jpg$', video_item('img').attr('src'), re.S)                              
+                            
+                            c = pq(video_url,headers=utils.default_headers, timeout=30)
+                            video_poster = c('video').attr('poster')
+                            src = []                         
+                            for src_item in c('video source').items():
+                                src.append(src_item.attr('src'))
+                            
+                            details.append({
+                                'url':video_url,
+                                'name':utils.format_name(video_name),  
+                                'image_set': [ '%s-%s.jpg' %(video_img,i) for i in range(1,10)],
+                                'poster': video_poster,
+                                'src': src
+                                })
+                                                       
                     image = {    
                         'name': utils.format_name(name),  
                         'board': board,
                         'url':  url,
+                        'profile':profile,
                         'detail':details,
                     }            
                     yield image
