@@ -155,7 +155,7 @@ def main(urls_gen):
             else:
                 break
     except:
-        print('error occured in parse %s' %urls)
+        print('error occured in parse images')
 
            
 def urls_genarator(url, start, end):

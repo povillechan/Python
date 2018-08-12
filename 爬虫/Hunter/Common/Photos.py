@@ -91,7 +91,7 @@ process_image
 
 @author: chenzf
 '''    
-@vthread.pool(3)  
+@vthread.pool(8)  
 def process_image(image):
 #     print('tid:',threading.currentThread().ident)
     try:
