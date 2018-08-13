@@ -20,3 +20,14 @@ class CWebParserMultiUrl(CWebParser):
         for i in range(self.start, self.end):
             yield self.url.format(page=i)
         yield None
+        
+
+class CWebParserSingleUrl(CWebParser):    
+    def __init__(self, url):
+        self.url = url
+        self.start = None
+        self.end = None    
+               
+    def urls_genarator(self):
+        yield self.url
+        return None

@@ -9,7 +9,7 @@ import os, sys, re, json
 parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, parentdir)
 
-from Common.CWebParserMultiUrl import CWebParserMultiUrl
+from Common.CWebParserUrl import CWebParserMultiUrl
 from Common.CWebSpiderUtils import CWebSpiderUtils
 
 from bs4 import BeautifulSoup
@@ -121,7 +121,6 @@ class CWebParserSite(CWebParserMultiUrl):
     
     @author: chenzf
     '''  
-
     @vthread.pool(8)
     def process_data(self, data):
         dir_name = self.savePath.format(filePath=data.get('name'))
