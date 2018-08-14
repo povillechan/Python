@@ -16,7 +16,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 import vthread
 
-class CWebParserSite(CWebParserSingleUrl):
+class CWebParserSite(CWebParserMultiUrl):
         
     def __init__(self, url, savePath):
         super(CWebParserSingleUrl, self).__init__(url)
@@ -37,55 +37,50 @@ class CWebParserSite(CWebParserSingleUrl):
                     return None
                 
                 html = self.utils.get_page(url)                
-                if html:          
-                    data = {}
-                    soup = BeautifulSoup(html, 'lxml')   
-                    #board_image
-                    board_image  = soup.find('div', class_="board_image")
-                    if board_image:
-                        name  = board_image.find('img').attrs['alt'].strip()
-                        board_image = board_image.find('img').attrs['src']     
-                    else:
-                        name = None
-                        board_image = None
-                   
-                    data['name']  = name
-                    data['url']   = url
-                    data['board'] = board_image
-   
-                    #poster_image
-                    poster_image  = soup.find('div', class_="poster_image")
-                    if poster_image:
-                        poster_image = poster_image.find('img').attrs['src']
-                    else:
-                        poster_image = None
-                
-                    data['poster'] = poster_image
-                                        
-                    #profile    
-                    labels = soup.find('div', class_="labels")
-                    rows = labels.find_all('div', class_="row")
-                    profile = []
-                    for row in rows:
-                        profile.append(row.get_text().strip().replace('\n', '')) 
-                    data['profile'] = profile     
-                    
-                    #products  
-                    details = soup.find('div', class_="details")
-                    counts = details.find('div', class_="counts")
-                    items = counts.find_all('a')
-                    products = []
-                    for item in items:
-                        products.append(item.get_text().strip())
-                                
-                    data['products'] = products                    
+                if html:        
+                    soup = BeautifulSoup(html, 'lxml')     
+                    main_div = soup.find('div', id="block-system-main")
+                    contents = main_div.find_all('div', class_='node-grid')
 
-                    #detail product                                                  
-                    data['galleries'] = self.parse_galleries(soup)            
-                    data['films'] = self.parse_films(soup)      
-                    data['massages'] = self.parse_massages(soup)      
-                    
-                    yield data        
+                    for content in contents:
+                        data = {}
+                           #board_image
+                        board_image  = content.find('div', class_="board_image")
+                        if board_image:
+                            name  = board_image.find('img').attrs['alt'].strip()
+                            board_image = board_image.find('img').attrs['src']     
+                        else:
+                            name = None
+                            board_image = None
+                       
+                        data['name']  = name
+                        data['url']   = url
+                        data['board'] = board_image 
+                                                                    
+                        #profile    
+                        labels = soup.find('div', class_="labels")
+                        rows = labels.find_all('div', class_="row")
+                        profile = []
+                        for row in rows:
+                            profile.append(row.get_text().strip().replace('\n', '')) 
+                        data['profile'] = profile     
+                        
+                        #products  
+                        details = soup.find('div', class_="details")
+                        counts = details.find('div', class_="counts")
+                        items = counts.find_all('a')
+                        products = []
+                        for item in items:
+                            products.append(item.get_text().strip())
+                                    
+                        data['products'] = products                    
+    
+                        #detail product                                                  
+                        data['galleries'] = self.parse_galleries(soup)            
+                        data['films'] = self.parse_films(soup)      
+                        data['massages'] = self.parse_massages(soup)      
+                        
+                        yield data        
         except:
             print('error in parse %s' % url)
             yield None    
@@ -428,25 +423,10 @@ class CWebParserSite(CWebParserSingleUrl):
                                     '%s\\%s\\%s\\%s' % (modelName, 'films', item.get('name'), item.get('name'))
                                      )   
                     break
-    '''     
-    urls_genarator
-    
-    @author: chenzf
-    '''                
-    def urls_genarator(self):
-        html = self.utils.get_page(self.url)
-        soup = BeautifulSoup(html, 'lxml')
-        item_div = soup.find_all('div', class_="item")   
-        
-        for item in item_div:
-            url  = urljoin('http://www.hegre.com/',  item.find('a', class_='artwork').attrs['href'].strip())
-            yield url
-        return None
-
     
 def Job_Start():
     print(__file__, "start!")
-    job = CWebParserSite('https://www.hegre.com/models', 'd:\\Pictures\\WebSpider\\Hegre-Art\\Hegre\\Models\\{filePath}')
+    job = CWebParserSite('http://hegregirls.com/models?page={page}', 1, 5, 'd:\\Pictures\\WebSpider\\Hegre-Art\\HegreGirls\\Models\\{filePath}')
     job.call_process()
     
 if __name__ == '__main__':   
