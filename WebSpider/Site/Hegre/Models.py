@@ -31,61 +31,72 @@ class CWebParserSite(CWebParserSingleUrl):
     def parse_page(self):
         try:
             urlsGen = self.urls_genarator()
+     
             while True: 
-                url = next(urlsGen)
-                if not url:
-                    return None
-                
-                html = self.utils.get_page(url)                
-                if html:          
-                    data = {}
-                    soup = BeautifulSoup(html, 'lxml')   
-                    #board_image
-                    board_image  = soup.find('div', class_="board_image")
-                    if board_image:
-                        name  = board_image.find('img').attrs['alt'].strip()
-                        board_image = board_image.find('img').attrs['src']     
-                    else:
-                        name = None
-                        board_image = None
-                   
-                    data['name']  = name
-                    data['url']   = url
-                    data['board'] = board_image
+                try:
+                    url = next(urlsGen)
+                    if not url:
+                        return None
+                    
+                    html = self.utils.get_page(url)                
+                    if html:          
+                        data = {}
+                        soup = BeautifulSoup(html, 'lxml')
+                        step = 1   
+                        #board_image
+                        board_image  = soup.find('div', class_="board_image")
+                        if board_image:
+                            name  = board_image.find('img').attrs['alt'].strip()
+                            board_image = board_image.find('img').attrs['src']     
+                        else:
+                            name = None
+                            board_image = None
+                        step = 2 
+                        data['name']  = name
+                        data['url']   = url
+                        data['board'] = board_image
+                        step = 3
+                        #poster_image
+                        poster_image  = soup.find('div', class_="poster_image")
+                        if poster_image:
+                            poster_image = poster_image.find('img').attrs['src']
+                        else:
+                            poster_image = None
+                    
+                        data['poster'] = poster_image
+                        step = 4                   
+                        #profile    
+                        labels = soup.find('div', class_="labels")
+                        rows = labels.find_all('div', class_="row")
+                        profile = []
+                        for row in rows:
+                            profile.append(row.get_text().strip().replace('\n', '')) 
+                        data['profile'] = profile     
+                        step = 5 
+                        #products  
+                        details = soup.find('div', class_="details")
+                        counts = details.find('div', class_="counts")
+                        items = counts.find_all('a')
+                        products = []
+                        for item in items:
+                            products.append(item.get_text().strip())
+                                    
+                        data['products'] = products      
    
-                    #poster_image
-                    poster_image  = soup.find('div', class_="poster_image")
-                    if poster_image:
-                        poster_image = poster_image.find('img').attrs['src']
-                    else:
-                        poster_image = None
-                
-                    data['poster'] = poster_image
-                                        
-                    #profile    
-                    labels = soup.find('div', class_="labels")
-                    rows = labels.find_all('div', class_="row")
-                    profile = []
-                    for row in rows:
-                        profile.append(row.get_text().strip().replace('\n', '')) 
-                    data['profile'] = profile     
-                    
-                    #products  
-                    details = soup.find('div', class_="details")
-                    counts = details.find('div', class_="counts")
-                    items = counts.find_all('a')
-                    products = []
-                    for item in items:
-                        products.append(item.get_text().strip())
-                                
-                    data['products'] = products                    
-
-                    #detail product                                                  
-                    data['galleries'] = self.parse_galleries(soup)            
-                    data['films'] = self.parse_films(soup)      
-                    data['massages'] = self.parse_massages(soup)      
-                    
-                    yield data        
+                        step = 6
+                        #detail product                                                  
+                        data['galleries'] = self.parse_galleries(soup)   
+                        step = 7         
+                        data['films'] = self.parse_films(soup)
+                        step = 8      
+                        data['massages'] = self.parse_massages(soup)     
+                        step = 9 
+                        yield data       
+                except:
+                    errMsg = 'error in parse %s , step %s' % (url, step)
+                    self.log(errMsg)         
+                    print(errMsg)
+                             
         except:
             print('error in parse %s' % url)
             yield None    
