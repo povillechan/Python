@@ -9,7 +9,11 @@ import requests
 import re
 from requests.exceptions import RequestException
 import os
-
+from selenium import webdriver
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
 class CWebSpiderUtils(object):
     m_defHeaders = {"User-Agent":"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36"}
     m_defTimeout = 30
@@ -63,12 +67,12 @@ class CWebSpiderUtils(object):
             if headers:
                 new_headers = self.m_defHeaders.copy()
                 new_headers.update(headers)
-                response = requests.get(url,headers=new_headers,timeout=self.m_defTimeout)
+                response = requests.get(url,headers=new_headers,timeout=self.m_defTimeout, stream=True)
             else:
-                response = requests.get(url,headers=self.m_defHeaders,timeout=self.m_defTimeout)
+                response = requests.get(url,headers=self.m_defHeaders,timeout=self.m_defTimeout, stream=True)
                 
             if response.status_code == self.m_defSuccessCode:
-                self.save_file(response.content, filePath)
+                self.save_file(response, filePath)
             
         except RequestException as e:            
             return
@@ -115,7 +119,7 @@ class CWebSpiderUtils(object):
     
     @author: chenzf
     '''    
-    def save_file(self, content, filePath, type='wb'):    
+    def save_file(self, response, filePath, type='wb'):    
         dirName = os.path.dirname(filePath)
         if not os.path.exists(dirName):
             os.makedirs(dirName)
@@ -123,8 +127,12 @@ class CWebSpiderUtils(object):
         if os.path.exists(filePath):
             os.remove(filePath)
             
+        chunk_size = 512 
         with open(filePath, type) as f:
-            f.write(content)
+#             f.write(content)
+            for content in response.iter_content(chunk_size=chunk_size):
+                f.write(content)
+                f.flush()
     
         print(filePath + ' is done')   
  
@@ -137,21 +145,53 @@ class CWebSpiderUtils(object):
         return name.strip().replace('\"','_').replace(':','_').replace(',','_')
     
     '''
+    init_chrome
+    
+    @author: chenzf
+    '''
+    def init_chrome(self): 
+        chrome_options = webdriver.ChromeOptions()
+        chrome_options.add_argument('--headless')
+        chrome_options.add_argument('--disable-gpu')
+        chrome_options.add_argument('--disable-software-rasterizer')
+        self.browser = webdriver.Chrome(chrome_options=chrome_options)
+        self.wait = WebDriverWait(self.browser, 10)
+            
+    '''
+    get_chrome
+    
+    @author: chenzf
+    '''
+    def get_chrome(self, url, cssElement):         
+        try:
+            self.browser.get(url)
+            self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, cssElement)))
+            return self.browser.page_source
+        except Exception as e:
+            print(e)
+            return None
+    '''
+    close_chrome
+    
+    @author: chenzf
+    '''
+    def close_chrome(self):         
+        self.browser.close()           
+                
+            
+    '''
     get_page
     
     @author: chenzf
     '''
-    from selenium import webdriver
-    from selenium.common.exceptions import TimeoutException
-    from selenium.webdriver.support.ui import WebDriverWait
-    from selenium.webdriver.support import expected_conditions as EC
-    from selenium.webdriver.common.by import By
-    @classmethod
     def get_page_by_chrome(self, url, cssElement):         
         try:
-            browser = webdriver.Chrome()
+            chrome_options = webdriver.ChromeOptions()
+            chrome_options.add_argument('--headless')
+#             chrome_options.add_argument('--disable-gpu')
+            browser = webdriver.Chrome(chrome_options=chrome_options)
             wait = WebDriverWait(browser, 10)
-            browser.set_window_size(0,0)
+#             browser.set_window_size(0,0)
             browser.get(url)
             wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, cssElement)))
             return browser.page_source
@@ -159,4 +199,6 @@ class CWebSpiderUtils(object):
             return None
         finally:
             browser.close()
-            browser.quit()
+            
+            
+    

@@ -5,7 +5,7 @@ Created on 2018年6月1日
 @author: chenzf
 '''
 import os, sys, re, json
-
+import argparse
 parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, parentdir)
 
@@ -310,7 +310,7 @@ class CWebParserSite(CWebParserMultiUrl):
         poster = data.get('poster')
         if poster:
             self.utils.download_file(poster,
-                                    '%s\\%s' % (data.get('name'), 'poster')
+                                    '%s\\%s' % (data.get('name'), data.get('name'))
                                      )   
 
         self.process_galleries(data)
@@ -430,7 +430,14 @@ class CWebParserSite(CWebParserMultiUrl):
     
 def Job_Start():
     print(__file__, "start!")
-    job = CWebParserSite('http://hegregirls.com/models?page={page}', 0, 5, 'd:\\Pictures\\WebSpider\\Hegre-Art\\HegreGirls\\Models\\{filePath}')
+    parser = argparse.ArgumentParser(description='manual to this script')
+    parser.add_argument('-s', type=int, default = 1)
+    parser.add_argument('-e', type=int, default= 168)
+    parser.add_argument('-f', type=str, default= 'd:\\Pictures\\WebSpider\\PornVidHub\\Models\\{filePath}')
+    args = parser.parse_args()
+    print(args)
+    
+    job = CWebParserSite('http://hegregirls.com/models?page={page}', args.s, args.e, args.f)
     job.call_process()
     
 if __name__ == '__main__':   

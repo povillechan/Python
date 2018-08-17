@@ -7,6 +7,7 @@ Created on 2018年6月1日
 import vthread
 import os
 import time
+import json
 
 class CWebParser(object):
     
@@ -65,7 +66,14 @@ class CWebParser(object):
                     break
         except:
             print('error occured in parse image')
-    
+            
+    def save_info(self, data):
+        dir_name = self.savePath.format(filePath=data.get('name'))
+        if not os.path.exists(dir_name):
+            os.makedirs(dir_name)
+        
+        with open(dir_name + '\\info.json', 'w') as f:    
+            json.dump(data, f)
                
     def urls_genarator(self):
         return None

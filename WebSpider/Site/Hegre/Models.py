@@ -5,7 +5,7 @@ Created on 2018年6月1日
 @author: chenzf
 '''
 import os, sys, re, json
-
+import argparse
 parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, parentdir)
 
@@ -37,7 +37,7 @@ class CWebParserSite(CWebParserSingleUrl):
                     url = next(urlsGen)
                     if not url:
                         return None
-                    
+             
                     html = self.utils.get_page(url)                
                     if html:          
                         data = {}
@@ -127,6 +127,7 @@ class CWebParserSite(CWebParserSingleUrl):
                     large_url = large.attrs['href']     
                     
                 url = urljoin('http://www.hegre.com/', item.find('a').attrs['href'])
+                
                 html = self.utils.get_page(url)    
                 soup = BeautifulSoup(html, 'lxml')   
                 
@@ -334,7 +335,7 @@ class CWebParserSite(CWebParserSingleUrl):
         poster = data.get('poster')
         if poster:
             self.utils.download_file(poster,
-                                    '%s\\%s' % (data.get('name'), 'poster')
+                                    '%s\\%s' % (data.get('name'), data.get('name'))
                                      )   
 
         self.process_galleries(data)
@@ -448,12 +449,13 @@ class CWebParserSite(CWebParserSingleUrl):
         html = self.utils.get_page(self.url)
         soup = BeautifulSoup(html, 'lxml')
         item_div = soup.find_all('div', class_="item")   
-        
+         
         for item in item_div:
             url  = urljoin('http://www.hegre.com/',  item.find('a', class_='artwork').attrs['href'].strip())
             yield url
-        return None
-
+        yield None
+#         yield 'http://www.hegre.com/models/muriel'
+#         yield None
     
 def Job_Start():
     print(__file__, "start!")

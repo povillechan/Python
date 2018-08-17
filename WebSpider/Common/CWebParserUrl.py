@@ -17,7 +17,7 @@ class CWebParserMultiUrl(CWebParser):
         self.end = end
                
     def urls_genarator(self):
-        for i in range(self.start, self.end):
+        for i in range(self.start, self.end+1):
             yield self.url.format(page=i)
         yield None
         
