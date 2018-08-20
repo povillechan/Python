@@ -57,13 +57,13 @@ class CWebSpiderUtils(object):
             if not filePath:
                 return
                                      
-            if os.path.exists(filePath):
-                if  os.path.getsize(filePath) > 0:
-                    print(filePath + " is omitted")
-                    return
-                else:
-                    os.remove(filePath)     
-      
+#             if os.path.exists(filePath):
+#                 if  os.path.getsize(filePath) > 0:
+#                     print(filePath + " is omitted")
+#                     return
+#                 else:
+#                     os.remove(filePath)     
+#       
             if headers:
                 new_headers = self.m_defHeaders.copy()
                 new_headers.update(headers)
@@ -72,6 +72,15 @@ class CWebSpiderUtils(object):
                 response = requests.get(url,headers=self.m_defHeaders,timeout=self.m_defTimeout, stream=True)
                 
             if response.status_code == self.m_defSuccessCode:
+                content_size = int(response.headers['content-length'])
+#                 print('recevice size = %s'%content_size)
+                if os.path.exists(filePath):
+                    if  os.path.getsize(filePath) == content_size:
+                        print(filePath + " is omitted")
+                        return
+                    else:
+                        os.remove(filePath)         
+      
                 self.save_file(response, filePath)
             
         except RequestException as e:            
@@ -128,11 +137,17 @@ class CWebSpiderUtils(object):
             os.remove(filePath)
             
         chunk_size = 512 
-        with open(filePath, type) as f:
-#             f.write(content)
-            for content in response.iter_content(chunk_size=chunk_size):
-                f.write(content)
-                f.flush()
+        try:
+            with open(filePath, type) as f:
+    #             f.write(content)
+                for content in response.iter_content(chunk_size=chunk_size):
+                    f.write(content)
+                    f.flush()
+        except:
+            if os.path.exists(filePath):
+                os.remove(filePath)
+            print(filePath + ' is abort')
+            return
     
         print(filePath + ' is done')   
  

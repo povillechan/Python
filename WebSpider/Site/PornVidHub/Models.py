@@ -164,8 +164,8 @@ class CWebParserSite(CWebParserMultiUrl):
     '''  
     @vthread.pool(8)
     def process_data(self, data):
-        self.save_info(data)
-        print(data.get('videos')[0].get('name'))
+#         self.save_info(data)
+#         print(data.get('videos')[0].get('name'))
         board = data.get('board')
         if board:
             self.utils.download_file(board,
