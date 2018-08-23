@@ -14,15 +14,23 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
+import socket 
+from requests.adapters import HTTPAdapter
 class CWebSpiderUtils(object):
-    m_defHeaders = {"User-Agent":"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36"}
-    m_defTimeout = 30
+    m_defHeaders = {
+                    "User-Agent":"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36",
+                    "Accept":"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+                    "Accept-Encoding":"gzip, deflate, br",
+                    "Accept-Language":"zh-CN,zh;q=0.9",
+                    "Cache-Control":"max-age=0",
+                    "Connection":"keep-alive",
+                    }
+    m_defTimeout = (10,30)
     m_defSuccessCode = 200
     m_dirPath = ''
     
     def __init__(self, dirPath):
         self.dirPath = dirPath
-
     '''
     get_page
     
@@ -30,17 +38,22 @@ class CWebSpiderUtils(object):
     '''
     def get_page(self, url, headers=None):         
         try:
+            s = requests.Session()
+            s.mount('http://', HTTPAdapter(max_retries=3))
+            s.mount('https://', HTTPAdapter(max_retries=3))
+ 
             if headers:
                 new_headers = self.m_defHeaders.copy()
                 new_headers.update(headers)
-                response = requests.get(url,headers=new_headers,timeout=self.m_defTimeout)
+                response = s.get(url,headers=new_headers,timeout=self.m_defTimeout)
             else:
-                response = requests.get(url,headers=self.m_defHeaders,timeout=self.m_defTimeout)
+                response = s.get(url,headers=self.m_defHeaders,timeout=self.m_defTimeout)
                 
             if response.status_code == self.m_defSuccessCode:
                 return response.text
             return None
         except RequestException as e:
+            print(e)
             return None
                                          
     '''
@@ -63,13 +76,16 @@ class CWebSpiderUtils(object):
 #                     return
 #                 else:
 #                     os.remove(filePath)     
-#       
+#                   s = requests.Session()
+            s = requests.Session()
+            s.mount('http://', HTTPAdapter(max_retries=3))
+            s.mount('https://', HTTPAdapter(max_retries=3))
             if headers:
                 new_headers = self.m_defHeaders.copy()
                 new_headers.update(headers)
-                response = requests.get(url,headers=new_headers,timeout=self.m_defTimeout, stream=True)
+                response = s.get(url,headers=new_headers,timeout=self.m_defTimeout, stream=True)
             else:
-                response = requests.get(url,headers=self.m_defHeaders,timeout=self.m_defTimeout, stream=True)
+                response = s.get(url,headers=self.m_defHeaders,timeout=self.m_defTimeout, stream=True)
                 
             if response.status_code == self.m_defSuccessCode:
                 content_size = int(response.headers['content-length'])
@@ -82,8 +98,11 @@ class CWebSpiderUtils(object):
                         os.remove(filePath)         
       
                 self.save_file(response, filePath)
+
+            del response
             
-        except RequestException as e:            
+        except RequestException as e:   
+            print(e)         
             return
     
     '''

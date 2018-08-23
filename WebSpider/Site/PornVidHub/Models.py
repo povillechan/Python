@@ -162,7 +162,7 @@ class CWebParserSite(CWebParserMultiUrl):
     
     @author: chenzf
     '''  
-    @vthread.pool(8)
+#     @vthread.pool(8)
     def process_data(self, data):
 #         self.save_info(data)
 #         print(data.get('videos')[0].get('name'))

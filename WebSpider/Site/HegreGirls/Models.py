@@ -34,7 +34,7 @@ class CWebParserSite(CWebParserMultiUrl):
             try:
                 url = next(urlsGen)
                 if not url:
-                    return None
+                    yield None
                 
                 html = self.utils.get_page(url)                
                 if html:        
@@ -291,7 +291,7 @@ class CWebParserSite(CWebParserMultiUrl):
     
     @author: chenzf
     '''  
-    @vthread.pool(8)
+#     @vthread.pool(8)
     def process_data(self, data):
 #         print(data)
         dir_name = self.savePath.format(filePath=data.get('name'))

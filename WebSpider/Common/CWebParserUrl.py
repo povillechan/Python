@@ -30,4 +30,4 @@ class CWebParserSingleUrl(CWebParser):
                
     def urls_genarator(self):
         yield self.url
-        return None
+        yield None
