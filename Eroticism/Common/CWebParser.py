@@ -12,6 +12,7 @@ import threading
 from multiprocessing import cpu_count
 import socket 
 from enum import Enum
+from copy import deepcopy
 
 class CParseType(Enum):
     Parse_Entire   = 0
@@ -36,10 +37,14 @@ class CWebParser(object):
         return None
     
     def parse_brief(self):
-        return None
+        return self.parse_page()
     
     def parse_detail(self):
-        return None
+        for item in self.dbUtils.get_db_item():
+            data = deepcopy(item) 
+            data.pop('_id')
+            yield data
+        yield None   
     
     def parse_detail_data(self):
         for item in self.dbUtils.get_db_detail_item():

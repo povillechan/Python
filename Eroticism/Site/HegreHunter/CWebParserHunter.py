@@ -73,7 +73,6 @@ class CWebParserHunterCommon(object):
                 
         return data 
     
-    
     def parse_detail_fr_brief(self, item):
         data = None
         url = item.get('url')
@@ -212,23 +211,7 @@ class CWebParserHunterMultiUrl(CWebParserMultiUrl):
                 self.log( 'error in parse url %s' % url)         
                 yield None    
         
-        yield None                
-    
-    def parse_brief(self):
-        return self.parse_page()
-    
-    def parse_detail(self):
-        while True: 
-            try:
-                for item in self.dbUtils.get_db_item():
-                    data = self.common.parse_detail_fr_brief(item)       
-                    yield data                                
-            except:
-                self.log('error in parse url %s' % url)         
-                yield None    
-         
-        yield None     
-    
+        yield None   
         
     '''
     process_image
@@ -243,9 +226,13 @@ class CWebParserHunterMultiUrl(CWebParserMultiUrl):
             datatmp = deepcopy(data)
             self.dbUtils.insert_db_item(datatmp)
         elif self.parseOnly == CParseType.Parse_Detail:
-            self.dbUtils.switch_db_item(item)
-            datatmp = deepcopy(data)
-            self.dbUtils.insert_db_detail_item(datatmp)
+            try:
+                dataDetail = self.common.parse_detail_fr_brief(data)  
+                if dataDetail:
+                    self.dbUtils.switch_db_item(data)
+                    self.dbUtils.insert_db_detail_item(dataDetail)
+            except:
+                self.log('error in parse detail_fr_brief item')       
 
 class CWebParserHunterSingleUrl(CWebParserSingleUrl):    
     def __init__(self, url, savePath, parseOnly):
@@ -286,23 +273,7 @@ class CWebParserHunterSingleUrl(CWebParserSingleUrl):
                 self.log( 'error in parse url %s' % url)         
                 yield None    
         
-        yield None                
-    
-    def parse_brief(self):
-        return self.parse_page()
-    
-    def parse_detail(self):
-        while True: 
-            try:
-                for item in self.dbUtils.get_db_item():
-                    data = self.common.parse_detail_fr_brief(item)       
-                    yield data                                
-            except:
-                self.log('error in parse item')         
-                yield None    
-         
-        yield None    
-    
+        yield None  
         
     '''
     process_image
@@ -317,99 +288,11 @@ class CWebParserHunterSingleUrl(CWebParserSingleUrl):
             datatmp = deepcopy(data)
             self.dbUtils.insert_db_item(datatmp)
         elif self.parseOnly == CParseType.Parse_Detail:
-            self.dbUtils.switch_db_item(item)
-            datatmp = deepcopy(data)
-            self.dbUtils.insert_db_detail_item(datatmp)
-         
-class CWebParserHunterDb(CWebParser):    
-    def __init__(self, savePath, parseOnly):
-        self.savePath = savePath
-        self.utils = CWebSpiderUtils(savePath)  
-        self.parseOnly = parseOnly  
-        self.common = CWebParserHunterCommon(self)    
-        self.dbUtils = CWebDataDbUtis('HegreHunter')
-                          
-    '''
-    parse_page
-     
-    @author: chenzf
-    ''' 
-    def parse_page(self):
-        while True: 
             try:
-                if self.parseOnly == 1:
-                    for item in self.dbUtils.get_db_item():
-                        try:
-                            url = item.get('url')
-                            board = item.get('board')
-                            discrib = item.get('discrib')
-                            html = self.utils.get_page(url)     
-                            if html:
-                                b = pq(html)
-                         
-                                art_site_info = b('#breadcrumbs li')
-                                info_string = []
-                                for it in art_site_info.items(): 
-                                    info_string.append(it.text())
-                                     
-                                if len(info_string) >=3:
-                                    site, model, name  = info_string[0], info_string[1], info_string[2]
-                                 
-                                video = None
-                                stills = []
-                                video_item = b('video')
-                                if video_item:
-                                    src = []
-                         
-                                    for src_item in video_item('source').items():
-                                        src.append(src_item.attr('src'))
-                                    video={
-                                            'src': src,
-                                            'poster':video_item.attr('poster')
-                                            }  
-                                else:                                
-                                    previews = b('ul.gallery-b  li')
-                                    for preview in previews.items():
-                                        stills.append([ preview('a').attr('href'), preview('img').attr('src')])
-                                         
-                                data = {    
-                                    'site'    :  site,
-                                    'name'    :  self.utils.format_name(name),  
-                                    'model'   :  self.utils.format_name(model),  
-                                    'discrib' :  self.utils.format_name(discrib),
-                                    'board'   :  board,
-                                    'url'     :  url,
-                                    'stills'  :  stills,      
-                                    'video'   :  video      
-                                    }        
-                                self.dbUtils.switch_db_item(item)
-                                datatmp = deepcopy(data)
-                                self.dbUtils.insert_db_detail_item(datatmp)
-                                yield data
-                                
-                        except:
-                            self.log('error in parse item %s' % url)         
-                            continue
-                else:
-                    for item in self.dbUtils.get_db_detail_item():
-                        data = deepcopy(item)
-                        data.pop("_id")
-                        yield data
+                dataDetail = self.common.parse_detail_fr_brief(data)  
+                if dataDetail:
+                    self.dbUtils.switch_db_item(data)
+                    self.dbUtils.insert_db_detail_item(dataDetail)
             except:
-                self.log('error in parse url %s' % url)         
-                yield None    
-         
-        yield None     
-     
-
-    '''
-    process_image
-     
-    @author: chenzf
-    '''    
-    def process_data(self, data):
-        if self.parseOnly == 1:
-            return 
-        
-        if self.common.process_data(data):
-            self.dbUtils.switch_db_detail_item(data)
+                self.log('error in parse detail_fr_brief item')       
+ 

@@ -106,9 +106,22 @@ class CWebParserPornVidHubCommon(object):
         yield None         
 
     def parse_detail_fr_brief(self, item):
-        data = None       
+        data = deepcopy(item)
 
-        return data
+        url = data.get('videos').get('url')
+        if url:
+            video, still= self.parse_video_detail(url)
+                        
+            video_item =  {
+                            'name'   :  data.get('videos').get('name'),
+                            'url'    :  url,
+                            'video'  :  video,     
+                            'stills' :  still                      
+                            }      
+            data['videos'] =  video_item     
+            return data
+
+        return None
                         
     def parse_video(self, data, url):
 #         videos_dict = []
@@ -195,7 +208,7 @@ class CWebParserPornVidHubCommon(object):
 #     @vthread.pool(8)
     def process_data(self, data):
         result = True
-        if self.parseOnly == 1:
+        if self.webParser.parseOnly == CParseType.Parse_Brief:
            return 
        
         board = data.get('board')
@@ -212,23 +225,23 @@ class CWebParserPornVidHubCommon(object):
         videos = data.get('videos')
         modelName = data.get('name')
         result = True
-        for item in videos:
-            stills = item.get('stills')
-            for i, val in enumerate(stills, start=1): 
-                for subVal in val:
-                    if subVal:
-                        result &= self.webParser.utils.download_file(subVal,
-                                    '%s\\%s\\%s' % (modelName, item.get('name'), str(i))
-                                     )   
-                        break  
-                    
-            video = item.get('video')
-            if video:
-                result &= self.webParser.utils.download_file(video,
-                                    '%s\\%s\\%s' % (modelName, item.get('name'), item.get('name')),
-                                    headers={'Referer':data.get('url')}       
-                                     )   
-                break
+
+        stills = videos.get('stills')
+        for i, val in enumerate(stills, start=1): 
+            for subVal in val:
+                if subVal:
+                    result &= self.webParser.utils.download_file(subVal,
+                                '%s\\%s\\%s' % (modelName, videos.get('name'), str(i))
+                                 )   
+                    break  
+                
+        video = videos.get('video')
+        if video:
+            result &= self.webParser.utils.download_file(video,
+                                '%s\\%s\\%s' % (modelName, videos.get('name'), videos.get('name')),
+                                headers={'Referer':data.get('url')}       
+                                 )   
+
         return result
         
         
@@ -286,16 +299,20 @@ class CWebParserSite(CWebParserMultiUrl):
         return self.parse_page()
     
     def parse_detail(self):
-        while True: 
-            try:
-                for item in self.dbUtils.get_db_item():
-                    data = self.common.parse_detail_fr_brief(item)       
-                    yield data                                
-            except:
-                self.log('error in parse item')         
-                yield None    
-         
-        yield None      
+        for item in self.dbUtils.get_db_item():
+#             try:
+#                 data = self.common.parse_detail_fr_brief(item) 
+#                 yield data
+#                 else:
+#                     continue                                
+#             except:
+#                 self.log('error in parse item')         
+#                 continue   
+            data = deepcopy(item) 
+            data.pop('_id')
+            yield data
+        yield None   
+        
     '''
     process_image
     
@@ -309,9 +326,14 @@ class CWebParserSite(CWebParserMultiUrl):
             datatmp = deepcopy(data)
             self.dbUtils.insert_db_item(datatmp)
         elif self.parseOnly == CParseType.Parse_Detail:
-            self.dbUtils.switch_db_item(item)
-            datatmp = deepcopy(data)
-            self.dbUtils.insert_db_detail_item(datatmp)
+            try:
+                dataDetail = self.common.parse_detail_fr_brief(data)  
+                if dataDetail:
+                    self.dbUtils.switch_db_item(data)
+                    self.dbUtils.insert_db_detail_item(dataDetail)
+            except:
+                self.log('error in parse detail_fr_brief item')       
+                
                     
 def Job_Start():
     print(__file__, "start!")
