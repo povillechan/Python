@@ -26,7 +26,7 @@ class CWebSpiderUtils(object):
                     "Connection":"keep-alive",
                     }
     m_defTimeout = (10,30)
-    m_defSuccessCode = 200
+    m_defSuccessCode = [200, 204, 206]
     m_dirPath = ''
     
     def __init__(self, dirPath):
@@ -49,7 +49,7 @@ class CWebSpiderUtils(object):
             else:
                 response = s.get(url,headers=self.m_defHeaders,timeout=self.m_defTimeout)
                 
-            if response.status_code == self.m_defSuccessCode:
+            if response.status_code in self.m_defSuccessCode:
                 return response.text
             return None
         except RequestException as e:
@@ -87,7 +87,7 @@ class CWebSpiderUtils(object):
             else:
                 response = s.get(url,headers=self.m_defHeaders,timeout=self.m_defTimeout, stream=True)
                 
-            if response.status_code == self.m_defSuccessCode:
+            if response.status_code in self.m_defSuccessCode:
                 content_size = int(response.headers['content-length'])
 #                 print('recevice size = %s'%content_size)
                 if os.path.exists(filePath):
@@ -97,7 +97,9 @@ class CWebSpiderUtils(object):
                     else:
                         os.remove(filePath)         
       
-                return self.save_file(response, filePath)            
+                return self.save_file(response, filePath)  
+            else:
+                return False          
         except Exception as e:   
             print(e)         
             return False
@@ -174,7 +176,7 @@ class CWebSpiderUtils(object):
     @author: chenzf
     ''' 
     def format_name(self, name):
-        return name.strip().replace('\"','_').replace(':','_').replace(',','_').replace('!',' ')
+        return name.strip().replace('\"','_').replace(':','_').replace(',','_').replace('!','_').replace('?','_')
     
     '''
     init_chrome

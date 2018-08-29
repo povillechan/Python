@@ -199,6 +199,20 @@ class CWebParserPornVidHubCommon(object):
         if video_script:
             video = video_script.group(1)
         return video, Stills    
+    
+    def parse_video_realaddr(self, data):
+        video_url = data.get('videos').get('url')
+        html = self.webParser.utils.get_page(video_url)       
+        if not html:
+            return None
+                
+        video = None
+        video_script = re.search('var q=.*?:"(.*?)"', html, re.S)
+        if video_script:
+            data_tmp = deepcopy(data)
+            data_tmp.get('videos')['video'] = video_script.group(1)
+            return data_tmp
+        return None        
       
     '''
     process_image
@@ -241,6 +255,7 @@ class CWebParserPornVidHubCommon(object):
                                 '%s\\%s\\%s' % (modelName, videos.get('name'), videos.get('name')),
                                 headers={'Referer':data.get('url')}       
                                  )   
+        
 
         return result
         
@@ -319,9 +334,18 @@ class CWebParserSite(CWebParserMultiUrl):
     @author: chenzf
     '''    
     def process_data(self, data):
-        if self.parseOnly == CParseType.Parse_Entire or self.parseOnly == CParseType.Parse_RealData:
+        if self.parseOnly == CParseType.Parse_Entire:
             if self.common.process_data(data):
-                self.dbUtils.switch_db_detail_item(data)            
+                self.dbUtils.switch_db_detail_item(data)   
+        elif self.parseOnly == CParseType.Parse_RealData: 
+            data_real = self.common.parse_video_realaddr(data)
+            if data_real:
+                if self.common.process_data(data_real):
+                    self.dbUtils.switch_db_detail_item(data)   
+            else:
+                if self.common.process_data(data):
+                    self.dbUtils.switch_db_detail_item(data)     
+                        
         elif self.parseOnly == CParseType.Parse_Brief:
             datatmp = deepcopy(data)
             self.dbUtils.insert_db_item(datatmp)

@@ -7,7 +7,7 @@ Created on 2018年6月1日
 import os, sys, re, json
 import argparse
 from copy import deepcopy
-parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, parentdir)
 
 from Common.CWebParser import CParseType,CWebParser,CWebParserMultiUrl,CWebParserSingleUrl
@@ -45,13 +45,14 @@ class CWebParserSiteCommon(object):
     
                 video = None
                 video_item = b('video')
-                stills = []
+
                 if video_item:
                     video = video_item.attr('src') 
-                else:                                
-                    previews = b('div.ngg-gallery-thumbnail')
-                    for preview in previews.items():
-                        stills.append([ preview('a').attr('href'), preview('img').attr('src')])
+                                   
+                stills = []            
+                previews = b('div.ngg-gallery-thumbnail')
+                for preview in previews.items():
+                    stills.append([ preview('a').attr('href'), preview('img').attr('src')])
                        
                 data = {    
                     'board'   : poster,
@@ -73,13 +74,13 @@ class CWebParserSiteCommon(object):
 
             video = None
             video_item = b('video')
-            stills = []
             if video_item:
                 video = video_item.attr('src') 
-            else:                                
-                previews = b('div.ngg-gallery-thumbnail')
-                for preview in previews.items():
-                    stills.append([ preview('a').attr('href'), preview('img').attr('src')])
+                                   
+            stills = []            
+            previews = b('div.ngg-gallery-thumbnail')
+            for preview in previews.items():
+                stills.append([ preview('a').attr('href'), preview('img').attr('src')])
                    
             product_data = {    
                 'board': item.get('product').get('board'),
@@ -115,30 +116,25 @@ class CWebParserSiteCommon(object):
         result &=  self.webParser.utils.download_file(board,
                                 '%s\\%s' % (sub_dir_name, data.get('product').get('name')),
                                 headers={'Referer':data.get('product').get('url')}        
-                                 )  
-
-               
+                                 )                 
         
         if data.get('product').get('video'):
             result &= self.webParser.utils.download_file(data.get('product').get('video'),
                             '%s\\%s' % (sub_dir_name, data.get('product').get('name')),
                             headers={'Referer':data.get('product').get('url')}        
-                             ) 
-            
-        else:        
-            stills = data.get('product').get('stills')
-            for i, val in enumerate(stills, start=1): 
-                for subVal in val:
-                    if subVal:
-                        result &= self.webParser.utils.download_file(subVal,
-                                         '%s\\%s' % (sub_dir_name, str(i)),
-                                         headers={'Referer':data.get('product').get('url')}     
-                                 )   
-                        break
+                             )             
+     
+        stills = data.get('product').get('stills')
+        for i, val in enumerate(stills, start=1): 
+            for subVal in val:
+                if subVal:
+                    result &= self.webParser.utils.download_file(subVal,
+                                     '%s\\%s' % (sub_dir_name, str(i)),
+                                     headers={'Referer':data.get('product').get('url')}     
+                             )   
+                    break
         
-        return result
-        
-        
+        return result      
         
 class CWebParserSite(CWebParserSingleUrl):    
     def __init__(self, url, savePath, parseOnly):
