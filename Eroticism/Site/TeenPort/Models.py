@@ -28,82 +28,57 @@ class CWebParserSiteCommon(object):
     def parse_item(self, item):   
         data = None   
 
-        board =  item('img').attr('src')
-        url =  item('a').attr('href')
-        result = re.search('.*?(\?\d+x\d+x\d+)', item('a').attr('href'))
-        if result:
-            url = url.replace(result.group(1),'')        
-        
-        url   =  urljoin('http://www.hotxart.com/', url)   
-        name  =  item('img').attr('alt')  
-        
+        board        = 'http:'+ item('img').attr('src')
+        result       =  re.search('url=(.*?)&p', item.attr('href'), re.S)
+        product_url  =  result.group(1)
         if self.webParser.parseOnly == CParseType.Parse_Brief:                             
             data = { 
-                'url'  : url,
-                'name' : self.webParser.utils.format_name(name),   
-                'board': board    
+                'url'  : product_url,
+                'board': board  ,  
+                'site' : "TeenPort",
             }   
         else:
-            html = self.webParser.utils.get_page(url)   
+            html = self.webParser.utils.get_page(product_url)   
             if html:
-                b = pq(html)                          
-                
-                photos = b('body table:nth-child(2) table td>a')
-                stills = []
-                for photo in photos.items():
-                    detail_url = urljoin('http://www.hotxart.com/', photo.attr('href')) 
-                    small = photo('img').attr('src')
-                    detail_html = self.webParser.utils.get_page(detail_url)   
-                    large = None
-                    if detail_html:
-                        c = pq(detail_html)                        
-                        large = c('span.galprov img').attr('src')
-                        
-                    stills.append([large, small])
-                
-                if len(stills) > 0:
-                    data = {    
-                    'url'  : item.get('url'),
-                    'name' : item.get('name'),   
-                    'board': item.get('board'),
-                    'stills' :  stills
-                    } 
-        return data    
+                b = pq(html) 
+                stills = []            
+                for index in range(1, 13):
+                    stills.append(["%s/%02d.jpg"%(product_url, index) , "%s/%02dt.jpg"%(product_url, index)])
+                   
+                product_name = b('div.title').text().replace(' «', '').replace(b('div.title a').text(),'')
+                    
+                data = {    
+                    'board'   :  board,
+                    'url'     :  product_url,
+                    'name'    :  self.webParser.utils.format_name(product_name),
+                    'stills'  :  stills,  
+                    'site'    :  "TeenPort",
+                }    
+                    
+        return data 
     
     def parse_detail_fr_brief(self, item):
-        data = None     
-        url = item.get('url')        
-        html = self.webParser.utils.get_page(url, headers={'Referer':'http://www.hotxart.com/'})        
+        data = deepcopy(item)
         
+        product_url = item.get('product').get('url')
+        
+        html = self.webParser.utils.get_page(product_url)   
         if html:
-            b = pq(html)                          
+            b = pq(html) 
+            stills = []            
+            for index in range(1, 13):
+                stills.append(["%s/%02d.jpg"%(product_url, index) , "%s/%02dt.jpg"%(product_url, index)])
+               
+            product_name = b('div.title').text().replace(' «', '').replace(b('div.title a').text(),'')
+                
+            data.get('product')['stills']= stills 
+            data.get('product')['name'] =  self.webParser.utils.format_name(product_name)
 
-            photos = b('body table:nth-child(2) table td>a')
-            stills = []
-            for photo in photos.items():
-                detail_url = urljoin('http://www.hotxart.com/', photo.attr('href')) 
-                small = photo('img').attr('src')
-                detail_html = self.webParser.utils.get_page(detail_url)   
-                large = None
-                if detail_html:
-                    c = pq(detail_html)                        
-                    large = c('span.galprov img').attr('src')
-                    
-                stills.append([large, small])
-            
-            if len(stills) > 0:
-                data = {    
-                'url'  : item.get('url'),
-                'name' : item.get('name'),   
-                'board': item.get('board'),
-                'stills' :  stills
-                } 
         return data         
 
     def process_data(self, data):
-#         print(data)
         result = True
-        sub_dir_name = "%s" %(data.get('name'))
+        sub_dir_name = "%s\\%s" %(data.get('product').get('site'),data.get('name'))
        
         dir_name = self.webParser.savePath.format(filePath=sub_dir_name)
         if not os.path.exists(dir_name):
@@ -114,31 +89,34 @@ class CWebParserSiteCommon(object):
             
         board = data.get('board')
         result &=  self.webParser.utils.download_file(board,
-                                '%s\\%s' % (sub_dir_name, data.get('name')),
-                                headers={'Referer':'http://www.hotxart.com/'}
+                                '%s\\%s' % (sub_dir_name, data.get('name')),    
                                  )                 
         
    
      
-        stills = data.get('stills')
+        stills = data.get('product').get('stills')
         for i, val in enumerate(stills, start=1): 
             for subVal in val:
                 if subVal:
                     result &= self.webParser.utils.download_file(subVal,
-                                     '%s\\%s' % (sub_dir_name, str(i)),
-                                     headers={'Referer':'http://www.hotxart.com/'}
+                                     '%s\\galleries\\%s %s\\%s' % (sub_dir_name, data.get('name'), data.get('product').get('name'),str(i)),
                              )   
                     break
+                
+        board = data.get('product').get('board')
+        result &=  self.webParser.utils.download_file(board,
+                                     '%s\\galleries\\%s %s\\%s' % (sub_dir_name, data.get('name'), data.get('product').get('name'),data.get('product').get('name')),
+                                 )    
         
-        return result      
-        
+        return result   
+    
 class CWebParserSite(CWebParserSingleUrl):    
     def __init__(self, url, savePath, parseOnly):
         super().__init__(url, savePath)
         self.utils = CWebSpiderUtils(self.savePath)  
         self.parseOnly = CParseType(parseOnly)  
         self.common = CWebParserSiteCommon(self)    
-        self.dbUtils = CWebDataDbUtis('HotXArt')
+        self.dbUtils = CWebDataDbUtis('TeenPortGirls')
         
     '''
     parse_page
@@ -153,14 +131,30 @@ class CWebParserSite(CWebParserSingleUrl):
                 if not url:
                     yield None
                 
-                html = self.utils.get_page(url)     
+                html = self.utils.get_page(url, headers={"Accept-Encoding":"",})     
                 if html:
                     a = pq(html)   
                     #items
-                    items = a('ul.picmain li')
+                    items = a('a.model_item')
+                    
                     for item in items.items():
-                        data = self.common.parse_item(item)                            
-                        yield data
+                        modelurl = item.attr('href')
+                        name     = item('img').attr('alt')
+                        board    = item('img').attr('src')
+
+                        html = self.utils.get_page(modelurl)        
+                        if html:
+                            b = pq(html)                
+                            products = b('div.gallery_box a')
+                            for product in products.items():
+                                product_data = self.common.parse_item(product)    
+                                data = {
+                                        'name': self.utils.format_name(name),
+                                        'url' : modelurl,
+                                        'board': board,
+                                        'product': product_data}
+                                                    
+                                yield data
                     
                     self.log('parsed url %s' % url)      
                 else:
@@ -196,14 +190,19 @@ class CWebParserSite(CWebParserSingleUrl):
                     
 def Job_Start():
     print(__file__, "start!")
+   
+    job_list = [
+    ('S', 'https://www.teenport.com/girls/'), 
+    ]
+    
     parser = argparse.ArgumentParser(description='manual to this script')
-    parser.add_argument('-f', type=str, default=  'HotXArt\\Photos\\{filePath}')
-    parser.add_argument('-p', type=int, default=  '0')
+    parser.add_argument('-f', type=str, default='TeenPort\\{filePath}')
+    parser.add_argument('-p', type=int, default='0')
     args = parser.parse_args()
     print(args)
-
-    job = CWebParserSite('http://www.hotxart.com/', args.f, args.p)
-    job.call_process()
-    
+    for job_item in job_list:
+        job = CWebParserSite(job_item[1], args.f, args.p)
+        job.call_process()
+        
 if __name__ == '__main__':   
     Job_Start() 

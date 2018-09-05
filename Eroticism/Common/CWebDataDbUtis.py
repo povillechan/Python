@@ -13,11 +13,26 @@ class CWebDataDbUtis(object):
     def __init__(self, clientName):
         self.dbclient = pymongo.MongoClient("mongodb://localhost:27017/")
         self.dbname      = self.dbclient[clientName]
+        self.dbUrl    = self.dbname["datas_url"]
         self.dbBriefJob    = self.dbname["datas_brief"]
         self.dbBriefJobParsed = self.dbname["datas_brief_parsed"]      
         self.dbDetailJob    = self.dbname["datas_detail"]
         self.dbDetailJobParsed = self.dbname["datas_detail_parsed"]     
-                 
+     
+                     
+    def put_db_url(self, url):
+        data = {'url': url}
+        if self.dbUrl.find_one(data):
+            pass
+        else:
+            self.dbUrl.insert_one(data)
+    
+    def get_db_url(self,url):
+        data = {'url': url} 
+        if self.dbUrl.find_one(data):
+            return data
+        return None
+                
     def get_db_item(self):
         return self.dbBriefJob.find()  
     

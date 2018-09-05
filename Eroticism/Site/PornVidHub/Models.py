@@ -94,10 +94,12 @@ class CWebParserPornVidHubCommon(object):
     #                                 data['videos'] = []                            
     #                                 yield data 
     #                             step = 7
+                    except (GeneratorExit, StopIteration):
+                        break
                     except Exception as e:
-                        self.webParser.log('parse video error')
+                        self.webParser.log('parse video error in step %s'% step)
                         print(e) 
-                        continue
+                        break
         except Exception as e:
             print(e)
             self.webParser.log('error in parse content in step' % step)
@@ -263,9 +265,8 @@ class CWebParserPornVidHubCommon(object):
 class CWebParserSite(CWebParserMultiUrl):
         
     def __init__(self, url, start, end, savePath, parseOnly):
-        super(CWebParserMultiUrl, self).__init__(url, start, end)
-        self.savePath = savePath
-        self.utils = CWebSpiderUtils(savePath)  
+        super().__init__(url, start, end, savePath)
+        self.utils = CWebSpiderUtils(self.savePath)  
         self.parseOnly = CParseType(parseOnly)  
         self.common = CWebParserPornVidHubCommon(self)    
         self.dbUtils = CWebDataDbUtis("PornVidHub")    
@@ -282,6 +283,9 @@ class CWebParserSite(CWebParserMultiUrl):
                 url = next(urlsGen)
                 if not url:
                     return None
+                
+                if self.dbUtils.get_db_url(url):
+                    continue
                 
                 html = self.utils.get_page(url)                
                 if html:        
@@ -303,6 +307,7 @@ class CWebParserSite(CWebParserMultiUrl):
                             self.log( 'error in item in url %s' % url)         
                             continue     
                     self.log('parsed url %s' % url)  
+                    self.dbUtils.put_db_url(url) 
                 else:
                     self.log('request %s error' %url)         
             except:
@@ -364,7 +369,7 @@ def Job_Start():
     parser = argparse.ArgumentParser(description='manual to this script')
     parser.add_argument('-s', type=int, default = 1)
     parser.add_argument('-e', type=int, default=  168)
-    parser.add_argument('-f', type=str, default=  'd:\\Pictures\\WebSpider\\PornVidHub\\Models\\{filePath}')
+    parser.add_argument('-f', type=str, default=  'PornVidHub\\Models\\{filePath}')
     parser.add_argument('-p', type=int, default=  '0')
     args = parser.parse_args()
     print(args)

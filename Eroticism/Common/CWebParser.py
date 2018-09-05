@@ -21,13 +21,11 @@ class CParseType(Enum):
     Parse_RealData = 3
 
     
-class CWebParser(object):
-    
-    def __init__(self, url, start=None, end=None):
-        self.url = url
-        self.start = start
-        self.end = end
+class CWebParser(object):    
+    def __init__(self, savePath):
         self.parseOnly = 0
+        self.savePath= 'H:\\Pictures\\' + savePath
+        
     '''
     parse_page
     
@@ -263,7 +261,8 @@ class CWebParser(object):
         self.process()        
         
 class CWebParserMultiUrl(CWebParser):    
-    def __init__(self, url, start, end):
+    def __init__(self, url, start, end, savePath):
+        super().__init__(savePath)
         self.url = url
         self.start = start
         self.end = end
@@ -275,7 +274,8 @@ class CWebParserMultiUrl(CWebParser):
         
 
 class CWebParserSingleUrl(CWebParser):    
-    def __init__(self, url):
+    def __init__(self, url, savePath):
+        super().__init__(savePath)
         self.url = url
         self.start = None
         self.end = None    

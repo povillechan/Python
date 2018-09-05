@@ -28,121 +28,96 @@ class CWebParserSiteCommon(object):
     def parse_item(self, item):   
         data = None   
 
-        board =  item('img').attr('src')
-        product_url  =  item('a').attr('href')
-        product_name = item('a').attr('title')
-        
+        board        =  item('img').attr('src')
+        product_url  =  item.attr('href')
+        product_name =  item.text()
+       
         if self.webParser.parseOnly == CParseType.Parse_Brief:                             
             data = { 
-                'board': board,
-                'url'  : product_url,
-                'name' : self.webParser.utils.format_name(product_name)        
+            'board'   :  board,
+            'url'     :  product_url,
+            'name'    :  self.webParser.utils.format_name(product_name),
             }   
-        else:
-            html = self.webParser.utils.get_page(product_url, headers={"Accept-Encoding":"",})   
+        else:            
+            stills = []            
+            for index in range(1, 13):
+                stills.append(["%s/%02d.jpg"%(product_url, index) , "%s/%02dt.jpg"%(product_url, index)])
+               
+            site = ''    
+            html = self.webParser.utils.get_page(product_url)   
             if html:
-                b = pq(html)                          
-    
-                video = None
-                video_item = b('video')
-
-                if video_item:
-                    video = video_item.attr('src') 
-                                   
-                stills = []            
-                previews = b('div.ngg-gallery-thumbnail')
-                for preview in previews.items():
-                    stills.append([ preview('a').attr('href'), preview('img').attr('src')])
-                       
-                data = {    
-                    'board'   : poster,
-                    'url'     : product_url,
-                    'name'    : self.webParser.utils.format_name(product_name),
-                    'stills'  :  stills,      
-                    'video'   :  video      
-                   }    
+                b = pq(html)   
+                site = b('div.title a:last-child').attr('title')
+                
+            data = {    
+                'board'   :  board,
+                'url'     :  product_url,
+                'name'    :  self.webParser.utils.format_name(product_name),
+                'stills'  :  stills,  
+                'site'    :  site,
+            }    
                 
         return data 
     
     def parse_detail_fr_brief(self, item):
-        data = None     
-        url = item.get('product').get('url')        
-        html = self.webParser.utils.get_page(url, headers={"Accept-Encoding":"",})        
+        data = deepcopy(item)
         
+        product_url = item.get('product').get('url')
+        
+        html = self.webParser.utils.get_page(product_url)   
         if html:
-            b = pq(html)                          
-
-            video = None
-            video_item = b('video')
-            if video_item:
-                video = video_item.attr('src') 
-                                   
+            b = pq(html) 
             stills = []            
-            previews = b('div.ngg-gallery-thumbnail')
-            for preview in previews.items():
-                stills.append([ preview('a').attr('href'), preview('img').attr('src')])
-                   
-            product_data = {    
-                'board': item.get('product').get('board'),
-                'url'  : item.get('product').get('url'),
-                'name' : self.webParser.utils.format_name(item.get('product').get('name')),
-                'stills'  :  stills,      
-                'video'   :  video      
-               }    
-            
-            data = {
-                'name': item.get('name'),
-                'url' : item.get('url'),
-                'product': product_data
-                }
-        return data         
+            for index in range(1, 13):
+                stills.append(["%s/%02d.jpg"%(product_url, index) , "%s/%02dt.jpg"%(product_url, index)])
+                 
+            data.get('product')['stills']= stills 
+            data.get('product')['site']  = b('div.title a:last-child').attr('title') 
+
+        return data  
+     
 
     def process_data(self, data):
-#         print(data)
         result = True
-        if data.get('video'):
-            sub_dir_name = "%s\\films\\%s %s" %(data.get('name'), data.get('name'), data.get('product').get('name'))
-        else:
-            sub_dir_name = "%s\\galleries\\%s %s" %(data.get('name'), data.get('name'), data.get('product').get('name'))
+        sub_dir_name = "%s\\%s" %(data.get('product').get('site'),data.get('name'))
        
         dir_name = self.webParser.savePath.format(filePath=sub_dir_name)
         if not os.path.exists(dir_name):
             os.makedirs(dir_name)
         
-        with open(dir_name + '\\..\\info.json', 'w') as f:    
+        with open(dir_name + '\\info.json', 'w') as f:    
             json.dump(data, f)
             
-        board = data.get('product').get('board')
+        board = data.get('board')
         result &=  self.webParser.utils.download_file(board,
-                                '%s\\%s' % (sub_dir_name, data.get('product').get('name')),
-                                headers={'Referer':data.get('product').get('url')}        
+                                '%s\\%s' % (sub_dir_name, data.get('name')),    
                                  )                 
         
-        if data.get('product').get('video'):
-            result &= self.webParser.utils.download_file(data.get('product').get('video'),
-                            '%s\\%s' % (sub_dir_name, data.get('product').get('name')),
-                            headers={'Referer':data.get('product').get('url')}        
-                             )             
+   
      
         stills = data.get('product').get('stills')
         for i, val in enumerate(stills, start=1): 
             for subVal in val:
                 if subVal:
                     result &= self.webParser.utils.download_file(subVal,
-                                     '%s\\%s' % (sub_dir_name, str(i)),
-                                     headers={'Referer':data.get('product').get('url')}     
+                                     '%s\\galleries\\%s %s\\%s' % (sub_dir_name, data.get('name'), data.get('product').get('name'),str(i)),
                              )   
                     break
+                
+        board = data.get('product').get('board')
+        result &=  self.webParser.utils.download_file(board,
+                                     '%s\\galleries\\%s %s\\%s' % (sub_dir_name, data.get('name'), data.get('product').get('name'),data.get('product').get('name')),
+                                 )    
         
-        return result      
+        return result   
         
 class CWebParserSite(CWebParserSingleUrl):    
     def __init__(self, url, savePath, parseOnly):
-        super().__init__(url,savePath)
+        super().__init__(url, savePath)
         self.utils = CWebSpiderUtils(self.savePath)  
         self.parseOnly = CParseType(parseOnly)  
         self.common = CWebParserSiteCommon(self)    
-        self.dbUtils = CWebDataDbUtis('18OnlyGirls')
+        self.dbUtils = CWebDataDbUtis('TeenPort')
         
     '''
     parse_page
@@ -161,20 +136,23 @@ class CWebParserSite(CWebParserSingleUrl):
                 if html:
                     a = pq(html)   
                     #items
-                    items = a('ul.links li')
+                    items = a('a.list_model')
                     
                     for item in items.items():
-                        modelurl = item('a').attr('href')
-                        name = item('a').attr('title')
+                        modelurl = item.attr('href')
+                        name     = item('b').text()
+                        board    = item('img').attr('src')
 
-                        html = self.utils.get_page(modelurl, headers={"Accept-Encoding":"",})        
+                        html = self.utils.get_page(modelurl)        
                         if html:
                             b = pq(html)                
-                            products = b('li.box-shadow')
+                            products = b('a.list_model2')
                             for product in products.items():
                                 product_data = self.common.parse_item(product)    
-                                data = {'name': self.utils.format_name(name),
+                                data = {
+                                        'name': self.utils.format_name(name),
                                         'url' : modelurl,
+                                        'board': board,
                                         'product': product_data}
                                                     
                                 yield data
@@ -213,14 +191,35 @@ class CWebParserSite(CWebParserSingleUrl):
                     
 def Job_Start():
     print(__file__, "start!")
+   
+    job_list = [
+#     ('S', 'http://www.teenport.com/galleries/wow-girls/'),
+    ('S', 'http://www.teenport.com/galleries/teen-mega-world'),
+    ('S', 'http://www.teenport.com/galleries/x-art'),
+#     ('S', 'http://www.teenport.com/galleries/18-only-girls'),
+    ('S', 'http://www.teenport.com/galleries/anal-angels'),
+    ('S', 'http://www.teenport.com/galleries/tricky-masseur'),
+    ('S', 'http://www.teenport.com/galleries/watch-me-fucked'),
+    ('S', 'http://www.teenport.com/galleries/first-bgg'),
+    ('S', 'http://www.teenport.com/galleries/cream-pie-angels'),
+#     ('S', 'http://www.teenport.com/galleries/sexy-patty-cake'),
+#     ('S', 'http://www.teenport.com/galleries/young-legal-porn'),
+    ('S', 'http://www.teenport.com/galleries/18-stream'),
+    ('S', 'http://www.teenport.com/galleries/nubiles/'),
+    ('S', 'http://www.teenport.com/galleries/club-seventeen/'),
+    
+#     http://teenport.com/galleries/sandy-fair/
+  
+    ]
+    
     parser = argparse.ArgumentParser(description='manual to this script')
-    parser.add_argument('-f', type=str, default=  '18OnlyGirls\\Models\\{filePath}')
-    parser.add_argument('-p', type=int, default=  '0')
+    parser.add_argument('-f', type=str, default='TeenPort\\{filePath}')
+    parser.add_argument('-p', type=int, default='0')
     args = parser.parse_args()
     print(args)
-
-    job = CWebParserSite('https://www.18onlygirlsblog.com/models-list/', args.f, args.p)
-    job.call_process()
-    
+    for job_item in job_list:
+        job = CWebParserSite(job_item[1], args.f, args.p)
+        job.call_process()
+        
 if __name__ == '__main__':   
     Job_Start() 

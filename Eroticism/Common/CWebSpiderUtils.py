@@ -176,7 +176,7 @@ class CWebSpiderUtils(object):
     @author: chenzf
     ''' 
     def format_name(self, name):
-        return name.strip().replace('\"','_').replace(':','_').replace(',','_').replace('!','_').replace('?','_')
+        return name.strip().replace('\"','_').replace(':','_').replace(',','_').replace('!','_').replace('?','_').replace('/', ' ')
     
     '''
     init_chrome
