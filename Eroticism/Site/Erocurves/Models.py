@@ -111,6 +111,9 @@ class CWebParserSite(CWebParserMultiUrl):
                 if not url:
                     yield None
                 
+                if self.dbUtils.get_db_url(url):
+                    continue
+                
                 html = self.utils.get_page(url)     
                 if html:
                     a = pq(html)   
@@ -136,6 +139,7 @@ class CWebParserSite(CWebParserMultiUrl):
                                                     
                                 yield data     
                     self.log('parsed url %s' % url)      
+                    self.dbUtils.put_db_url(url) 
                 else:
                     self.log('request %s error' %url)         
             except:
