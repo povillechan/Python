@@ -27,75 +27,50 @@ class CWebParserSiteCommon(object):
 #    
     def parse_item(self, item):   
         data = None   
-        url = item('a.title').attr('href')
-        name = item('a.title').attr('title')
+        url = item('a').attr('href')
+        name = item('a').attr('title')
+        still = item('img').attr('src')
+        stills = []
+        result = re.search('(https.*?/)\d.jpg',still, re.S).group(1)
 
+        for i in range(1,6):
+            stills.append(
+                result + str(i)+'.jpg'                          
+                )
+            
         if self.webParser.parseOnly == CParseType.Parse_Brief:                             
             data = { 
                 'productName' : self.webParser.utils.format_name(name),   
-                'productUrl'  : url
+                'productUrl'  : url,
+                'stills'      : stills
                 }   
         else:
-            html = self.webParser.utils.get_page(url)   
+            html = self.webParser.utils.get_page_by_chrome(url, 'video.fp-engine')   
             if html:
-                b = pq(html)                          
-                
-                video  = []
-                videos = b('#videoPlayer')
-                for vid in videos('source').items():
-                    video.append(vid.attr('src'))
-                
-                stills = []
-                poster = videos.attr('poster')
-                result = re.search('https.*?(\d+b).jpg', poster, re.S)
-                large  = poster.replace(result.group(1), '{index}b')
-                small  = poster.replace(result.group(1), '{index}')
-
-                for i in range(1,11):
-                    stills.append(
-                        [
-                        large.format(index=i),
-                        small.format(index=i)                            
-                        ])
-
+                b = BeautifulSoup(html, 'lxml')                         
+                 
+                video  = b.select_one('video.fp-engine').get('src')               
+    
                 data = { 
                     'productName' : self.webParser.utils.format_name(name),   
                     'productUrl'  : url,
                     'video': video,
                     'stills': stills
                     }  
-                
+            
         return data 
     
     def parse_detail_fr_brief(self, item):
         data = None
         
         url = item.get('productUrl')
-        html = self.webParser.utils.get_page(url)   
+        html = self.webParser.utils.get_page_by_chrome(url, 'video.fp-engine')   
         if html:
-            b = pq(html)                          
-            
-            video  = []
-            videos = b('#videoPlayer')
-            for vid in videos('source').items():
-                video.append(vid.attr('src'))
-            
-            stills = []
-            poster = videos.attr('poster')
-            result = re.search('https.*?(\d+b).jpg', poster, re.S)
-            large  = poster.replace(result.group(1), '{index}b')
-            small  = poster.replace(result.group(1), '{index}')
-
-            for i in range(1,11):
-                stills.append(
-                    [
-                    large.format(index=i),
-                    small.format(index=i)                            
-                    ])
-
+            b = BeautifulSoup(html, 'lxml')                         
+             
+            video  = b.select_one('video.fp-engine').get('src')               
             data = deepcopy(item)
             data['video']= video
-            data['stills']= stills
 
         return data        
 
@@ -110,30 +85,21 @@ class CWebParserSiteCommon(object):
         with open(dir_name + '\\info.json', 'w') as f:    
             json.dump(data, f)
             
-        board = data.get('board')
-        if board:
-            result &=  self.webParser.utils.download_file(board,
-                                '%s\\..\\%s' % (sub_dir_name, data.get('model')),
-                                headers={'Referer':data.get('url')}
-                                 )  
-     
         stills = data.get('stills')
-        for i, val in enumerate(stills, start=1): 
-            for subVal in val:
-                if subVal:
-                    result &= self.webParser.utils.download_file(subVal,
-                                     '%s\\%s' % (sub_dir_name, str(i)),
-                                    headers={'Referer':data.get('productUrl')}
-                             )   
-                    break    
+        for i, subVal in enumerate(stills, start=1):
+            if subVal:
+                result &= self.webParser.utils.download_file(subVal,
+                                 '%s\\%s' % (sub_dir_name, str(i)),
+                                headers={'Referer':data.get('productUrl')}
+                         )   
+
                 
-        videos = data.get('video')
-        for video in videos:
+        video = data.get('video')
+        if video:
             result &=  self.webParser.utils.download_file(video,
                                 '%s\\%s' % (sub_dir_name, data.get('productName')),
                                 headers={'Referer':data.get('productUrl')}
                                  ) 
-            break      
  
         return result      
         
@@ -143,7 +109,7 @@ class CWebParserSite(CWebParserMultiUrl):
         self.utils = CWebSpiderUtils(self.savePath)  
         self.parseOnly = CParseType(parseOnly)  
         self.common = CWebParserSiteCommon(self)    
-        self.dbUtils = CWebDataDbUtis('Xerotica')
+        self.dbUtils = CWebDataDbUtis('WatchMyGF')
         
     '''
     parse_page
@@ -165,13 +131,13 @@ class CWebParserSite(CWebParserMultiUrl):
                 if html:
                     a = pq(html)   
                     #items
-                    items = a('div.content div.modelItem')
+                    items = a('span.model_items')
                     
                     for item in items.items():
-                        modelurl = item('a.title').attr('href')
-                        model = item('a.title').text()
-                        board = item('img').attr('src')
-                        
+                        modelurlText = item.attr('onclick')
+                        modelurl = re.search('\'(http.*?)\'', modelurlText, re.S).group(1)
+                        model = item.attr('title')
+
                         html2 = self.utils.get_page(modelurl)      
                         if html2:
                             b = pq(html2)
@@ -181,7 +147,7 @@ class CWebParserSite(CWebParserMultiUrl):
                                 if data:
                                     data['url']   = modelurl      
                                     data['model'] = model
-                                    data['board'] = board                                          
+                                      
                                 yield data
                     
                     self.log('parsed url %s' % url)     
@@ -221,13 +187,13 @@ def Job_Start():
     print(__file__, "start!")
     parser = argparse.ArgumentParser(description='manual to this script')
     parser.add_argument('-s', type=int, default = 1)
-    parser.add_argument('-e', type=int, default = 136)
-    parser.add_argument('-f', type=str, default = 'Xerotica\\{filePath}')
+    parser.add_argument('-e', type=int, default = 34)
+    parser.add_argument('-f', type=str, default = 'WatchMyGF\\{filePath}')
     parser.add_argument('-p', type=int, default = '0')
     args = parser.parse_args()
     print(args)
 
-    job = CWebParserSite('https://www.xerotica.com/models/page{page}.html', args.s, args.e, args.f, args.p)
+    job = CWebParserSite('https://watch-my-gf.com/girls.html?mode=async&function=get_block&block_id=list_models_models_list&section=&sort_by=avg_videos_popularity&from={page}', args.s, args.e, args.f, args.p)
     job.call_process() 
     
 if __name__ == '__main__':   

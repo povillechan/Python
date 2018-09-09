@@ -282,7 +282,7 @@ class CWebParserSite(CWebParserMultiUrl):
             try:
                 url = next(urlsGen)
                 if not url:
-                    return None
+                    yield None                    
                 
                 if self.dbUtils.get_db_url(url):
                     continue
