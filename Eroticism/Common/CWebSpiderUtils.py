@@ -17,6 +17,7 @@ from selenium.webdriver.common.by import By
 import socket 
 from requests.adapters import HTTPAdapter
 from copy import deepcopy
+from pydoc import browse
 class CWebSpiderUtils(object):
     m_defHeaders = {
                     "User-Agent":"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36",
@@ -219,13 +220,21 @@ class CWebSpiderUtils(object):
     
     @author: chenzf
     '''
-    def get_page_by_chrome(self, url, cssElement):      
+    def get_page_by_chrome(self, url, cssElement, headless=True):      
         html = None   
         try:
+            use_option = False
             chrome_options = webdriver.ChromeOptions()
-            chrome_options.add_argument('--headless')
+            if headless:
+                 chrome_options.add_argument('--headless')
+                 use_option = True
+#             chrome_options.add_argument('--headless')
 #             chrome_options.add_argument('--disable-gpu')
-            browser = webdriver.Chrome(chrome_options=chrome_options)
+            if use_option:
+                browser = webdriver.Chrome(chrome_options=chrome_options)
+            else:
+                browser = webdriver.Chrome()
+                browser.set_window_size(0,0)
             wait = WebDriverWait(browser, 10)
 #             browser.set_window_size(0,0)
             browser.get(url)
@@ -234,6 +243,11 @@ class CWebSpiderUtils(object):
             browser.close()
             return html
         except TimeoutException as e:
+            browser.close()
+            return None
+        except Exception as e:
+            print(e)
+            browser.close()
             return None
 
             

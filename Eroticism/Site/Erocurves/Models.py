@@ -27,12 +27,11 @@ class CWebParserSiteCommon(object):
 #    
     def parse_item(self, item):   
         data = None   
-        product_name = item('img').attr('alt')
+#         product_name = item('img').attr('alt')
         product_url  = item.attr('href')
         
         if self.webParser.parseOnly == CParseType.Parse_Brief:                             
             data = { 
-                'name' : self.webParser.utils.format_name(product_name),
                 'url'  : product_url,
             }   
         else:
@@ -44,7 +43,7 @@ class CWebParserSiteCommon(object):
                 stills = []
                 for preview in previews.items():
                     stills.append(preview.attr('href'))  
-
+                product_name = b('h1.single_title').text()
                 data = {   
                     'name' : self.webParser.utils.format_name(product_name), 
                     'url'  : product_url,
@@ -65,14 +64,15 @@ class CWebParserSiteCommon(object):
             stills = []
             for preview in previews.items():
                 stills.append(preview.attr('href'))                                 
-
+               
+            product_name = b('h1.single_title').text()
             data.get('product')['stills']= stills 
-             
+            data.get('product')['name']= self.webParser.utils.format_name(product_name)
         return data         
 
     def process_data(self, data):
         result = True
-        sub_dir_name = "%s\\%s" %(data.get('model'), data.get('productName'))
+        sub_dir_name = "%s\\%s" %(data.get('name'), data.get('product').get('name'))
        
         dir_name = self.webParser.savePath.format(filePath=sub_dir_name)
         if not os.path.exists(dir_name):
@@ -81,12 +81,17 @@ class CWebParserSiteCommon(object):
         with open(dir_name + '\\info.json', 'w') as f:    
             json.dump(data, f)
             
-        stills = data.get('stills')
+        board = data.get('board')
+        if board:
+            result &=  self.webParser.utils.download_file(board,
+                                     '%s\\..\\%s' % (sub_dir_name, data.get('name'))
+                                     )   
+        
+        stills = data.get('product').get('stills')
         for i, subVal in enumerate(stills, start=1):
             if subVal:
                 result &= self.webParser.utils.download_file(subVal,
-                                 '%s\\%s' % (sub_dir_name, str(i)),
-                                headers={'Referer':data.get('productUrl')}
+                                 '%s\\%s' % (sub_dir_name, str(i))                                
                          )   
         return result      
         
@@ -144,7 +149,7 @@ class CWebParserSite(CWebParserMultiUrl):
                     self.log('request %s error' %url)         
             except:
                 self.log( 'error in parse url %s' % url)         
-                yield None    
+                continue
         
         yield None  
         

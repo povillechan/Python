@@ -369,7 +369,7 @@ def Job_Start():
     parser = argparse.ArgumentParser(description='manual to this script')
     parser.add_argument('-s', type=int, default = 1)
     parser.add_argument('-e', type=int, default=  168)
-    parser.add_argument('-f', type=str, default=  'PornVidHub\\Models\\{filePath}')
+    parser.add_argument('-f', type=str, default=  'PornVidHub\\{filePath}')
     parser.add_argument('-p', type=int, default=  '0')
     args = parser.parse_args()
     print(args)

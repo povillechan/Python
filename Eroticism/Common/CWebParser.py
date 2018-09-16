@@ -120,7 +120,7 @@ class CWebParser(object):
             t.start()
             thread_list.append(t)
             thread_num = cpu_count() - 1
-            
+#             thread_num = 1
 #             if self.parseOnly == 1 or self.parseOnly == 2:
 #                 thread_num = 0
 

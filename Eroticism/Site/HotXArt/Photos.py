@@ -197,7 +197,7 @@ class CWebParserSite(CWebParserSingleUrl):
 def Job_Start():
     print(__file__, "start!")
     parser = argparse.ArgumentParser(description='manual to this script')
-    parser.add_argument('-f', type=str, default=  'HotXArt\\Photos\\{filePath}')
+    parser.add_argument('-f', type=str, default=  'HotXArt\\{filePath}')
     parser.add_argument('-p', type=int, default=  '0')
     args = parser.parse_args()
     print(args)
