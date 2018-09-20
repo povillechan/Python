@@ -13,6 +13,7 @@ from multiprocessing import cpu_count
 import socket 
 from enum import Enum
 from copy import deepcopy
+import sys
 
 class CParseType(Enum):
     Parse_Entire   = 0
@@ -25,7 +26,7 @@ class CWebParser(object):
     def __init__(self, savePath):
         self.parseOnly = 0
         self.savePath= 'H:\\Pictures\\' + savePath
-        
+        self.thread_num = None
     '''
     parse_page
     
@@ -39,26 +40,35 @@ class CWebParser(object):
     
     def parse_detail(self):
         for item in self.dbUtils.get_db_item():
-            data = deepcopy(item) 
-            data.pop('_id')
-            yield data
+            yield item
         yield None   
     
     def parse_detail_data(self):
         for item in self.dbUtils.get_db_detail_item():
-            data = deepcopy(item)
-            data.pop("_id")
-            yield data
-        yield None
+            yield item
+        yield None   
     
     '''
     process_image
     
     @author: chenzf
     '''    
-    @vthread.pool()  
     def process_data(self, data):
-        pass
+        if self.parseOnly == CParseType.Parse_Entire or self.parseOnly == CParseType.Parse_RealData:
+            if self.common.process_data(data):
+                self.dbUtils.switch_db_detail_item(data)            
+        elif self.parseOnly == CParseType.Parse_Brief:
+            datatmp = deepcopy(data)
+            self.dbUtils.insert_db_item(datatmp)
+        elif self.parseOnly == CParseType.Parse_Detail:
+            try:
+                dataDetail = self.common.parse_detail_fr_brief(data)  
+                if dataDetail:
+                    self.dbUtils.switch_db_item(data)
+                    self.dbUtils.insert_db_detail_item(dataDetail)
+            except:
+                self.log('error in parse detail_fr_brief item')                
+
            
     '''
     process
@@ -119,7 +129,10 @@ class CWebParser(object):
             t = threading.Thread(target=self.job_thread, args=(datas,))
             t.start()
             thread_list.append(t)
-            thread_num = cpu_count() - 1
+            if self.thread_num :
+                thread_num = self.thread_num
+            else:
+                thread_num = cpu_count() - 1
 #             thread_num = 1
 #             if self.parseOnly == 1 or self.parseOnly == 2:
 #                 thread_num = 0
@@ -227,7 +240,7 @@ class CWebParser(object):
         self.dataLocker.acquire()
         endFlag = False
         status = 1
-        print(len(self.job_list))
+        print(len(self.job_list), os.path.abspath(sys.argv[0]), str(sys.argv[1:]))
         if len(self.job_list) >= 1:
             if not self.job_list[0]:
                 data = None
@@ -282,5 +295,5 @@ class CWebParserSingleUrl(CWebParser):
                
     def urls_genarator(self):
         yield self.url
-        yield None
+        yield None   
         

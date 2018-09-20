@@ -31,33 +31,17 @@ class CWebParserSiteCommon(object):
         board        =  item('img').attr('src')
         product_url  =  item.attr('href')
         product_name =  item.text()
-       
+                          
+        data = { 
+        'board'   :  board,
+        'url'     :  product_url,
+        'name'    :  self.webParser.utils.format_name(product_name),
+        }   
+        
         if self.webParser.parseOnly == CParseType.Parse_Brief:                             
-            data = { 
-            'board'   :  board,
-            'url'     :  product_url,
-            'name'    :  self.webParser.utils.format_name(product_name),
-            }   
-        else:            
-            stills = []            
-            for index in range(1, 13):
-                stills.append(["%s/%02d.jpg"%(product_url, index) , "%s/%02dt.jpg"%(product_url, index)])
-               
-            site = ''    
-            html = self.webParser.utils.get_page(product_url)   
-            if html:
-                b = pq(html)   
-                site = b('div.title a:last-child').attr('title')
-                
-            data = {    
-                'board'   :  board,
-                'url'     :  product_url,
-                'name'    :  self.webParser.utils.format_name(product_name),
-                'stills'  :  stills,  
-                'site'    :  site,
-            }    
-                
-        return data 
+            return data 
+        else:                    
+            return self.parse_detail_fr_brief(data) 
     
     def parse_detail_fr_brief(self, item):
         data = deepcopy(item)

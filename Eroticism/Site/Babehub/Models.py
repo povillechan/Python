@@ -13,6 +13,7 @@ sys.path.insert(0, parentdir)
 from Common.CWebParser import CParseType,CWebParser,CWebParserMultiUrl,CWebParserSingleUrl
 from Common.CWebDataDbUtis import CWebDataDbUtis
 from Common.CWebSpiderUtils import CWebSpiderUtils
+from Common.CWebParserSite import CWebParserSite
 from copy import deepcopy
 from bs4 import BeautifulSoup
 from pyquery import PyQuery as pq
@@ -21,9 +22,9 @@ import vthread
 import pymongo
 from copy import deepcopy
 
-class CWebParserSiteCommon(object):
+class CWebParserSiteCommon(CWebParserSite):
     def __init__(self, webParser):
-        self.webParser = webParser
+        super().__init__(webParser)
 #    
     def parse_item(self, item):   
         data = None   
@@ -31,96 +32,113 @@ class CWebParserSiteCommon(object):
         url = item('a').attr('href')
         model = item('span').text().replace(item('span span').text(), '')
         board = item('img').attr('src')
-        productName = item('a').attr('title')
-    
+        productName = item('a').attr('title')    
+                         
+        data_brief = { 
+            'name' : self.webParser.utils.format_name(model),   
+            'url'  : url,    
+            'board': board,
+            'productName': self.webParser.utils.format_name(productName),   
+            }   
+        
+        data = {'brief': data_brief}
         if self.webParser.parseOnly == CParseType.Parse_Brief:                             
-            data = { 
-                'modelName' : self.webParser.utils.format_name(model),   
-                'url'  : url,    
-                'board': board,
-                'productName': self.webParser.utils.format_name(productName),   
-                }   
-        else:
-            html = self.webParser.utils.get_page(url,headers={'Referer':'https://www.babehub.com/'})   
-            if html:
-                b = pq(html)                          
-    
-                previews = b('ul.gallery-e li')
-                stills = []
-                for preview in previews.items():
-                    stills.append(
-                        [preview('a').attr('href'),
-                         preview('img').attr('src'),
-                        ])                 
-
-
-                data = { 
-                    'modelName' : self.webParser.utils.format_name(model),   
-                    'url'  : url,    
-                    'board': board,
-                    'productName': self.webParser.utils.format_name(productName),          
-                    'stills': stills
-                    }  
-                
-        return data 
+            return data 
+        else:                    
+            return self.parse_detail_fr_brief(data) 
     
     def parse_detail_fr_brief(self, item):
         data = None     
-        url = item.get('url')    
+        url = item.get('brief').get('url')        
+        html = self.webParser.utils.get_page(url)     
         
-        html = self.webParser.utils.get_page(url)   
         if html:
             b = pq(html)                          
 
+#             previews = b('ul.gallery-e li')
+#             stills = []
+#             for preview in previews.items():
+#                 stills.append(
+#                     [
+#                     preview('a').attr('href'),
+#                     preview('img').attr('src'),
+#                     ])                 
+# 
+# 
+#             data = { 
+#                 'modelName' : item.get('modelName'),   
+#                 'url'  : url,    
+#                 'board': item.get('board'),
+#                 'productName': item.get('productName'), 
+#                 'stills': stills
+#                 }  
+            board = None   
+            video = None
+            video_item = b('video source')
+            if video_item.items(0):
+                video = video_item.attr('src') 
+                board = b('video').attr('poster')
+                                   
+            stills = []            
             previews = b('ul.gallery-e li')
-            stills = []
             for preview in previews.items():
-                stills.append(
-                    [
-                    preview('a').attr('href'),
-                    preview('img').attr('src'),
-                    ])                 
-
-
-            data = { 
-                'modelName' : item.get('modelName'),   
-                'url'  : url,    
-                'board': item.get('board'),
-                'productName': item.get('productName'), 
-                'stills': stills
-                }  
+                stills.append(preview('a').attr('href'))
                 
-        return data        
+#                 }
+            data_detail = None
+            if video:
+                data_detail = {
+                    'videos': {
+                        'name' : self.webParser.utils.format_name(item.get('brief').get('productName')),
+                        'url'  : item.get('brief').get('url'),
+                        'board': board,
+                        'video': video,
+                        'stills':stills,
+                        }
+                    }
+            else:
+                data_detail = {
+                    'galleries': {
+                        'name' : self.webParser.utils.format_name(item.get('brief').get('productName')),
+                        'url'  : item.get('brief').get('url'),
+                        'board': item.get('brief').get('board'),
+                        'stills':stills,
+                        }
+                    }  
+                                                
+            data = deepcopy(item)
+            data['detail'] = data_detail
+        return data         
 
-    def process_data(self, data):
-        result = True
-        sub_dir_name = "%s\\galleries\\%s" %(data.get('modelName'), data.get('productName'))
-       
-        dir_name = self.webParser.savePath.format(filePath=sub_dir_name)
-        if not os.path.exists(dir_name):
-            os.makedirs(dir_name)
-        
-        with open(dir_name + '\\info.json', 'w') as f:    
-            json.dump(data, f)
-            
-        board = data.get('board')
-        if board:
-            result &=  self.webParser.utils.download_file(board,
-                                '%s\\%s' % (sub_dir_name, data.get('productName')),
-                                headers={'Referer':'https://www.babehub.com/'}
-                                 )  
-     
-        stills = data.get('stills')
-        for i, val in enumerate(stills, start=1): 
-            for subVal in val:
-                if subVal:
-                    result &= self.webParser.utils.download_file(subVal,
-                                     '%s\\%s' % (sub_dir_name, str(i)),
-                                     headers={'Referer':data.get('url')}
-                             )   
-                    break        
- 
-        return result      
+#     def process_data(self, data):
+#         result = True
+#         sub_dir_name = "%s\\galleries\\%s" %(data.get('modelName'), data.get('productName'))
+#        
+#         dir_name = self.webParser.savePath.format(filePath=sub_dir_name)
+#         if not os.path.exists(dir_name):
+#             os.makedirs(dir_name)
+#         
+#         with open(dir_name + '\\info.json', 'w') as f:    
+#             json.dump(data, f)
+#             
+#         board = data.get('board')
+#         if board:
+#             result &=  self.webParser.utils.download_file(board,
+#                                 '%s\\%s' % (sub_dir_name, data.get('productName')),
+#                                 headers={'Referer':'https://www.babehub.com/'}
+#                                  )  
+#      
+#         stills = data.get('stills')
+#         for i, val in enumerate(stills, start=1): 
+#             for subVal in val:
+#                 if subVal:
+#                     result &= self.webParser.utils.download_file(subVal,
+#                                      '%s\\%s' % (sub_dir_name, str(i)),
+#                                      headers={'Referer':data.get('url')}
+#                              )   
+#                     break        
+#  
+#         return result      
         
 class CWebParserSite(CWebParserMultiUrl):    
     def __init__(self, url, start, end, savePath, parseOnly):
@@ -153,7 +171,14 @@ class CWebParserSite(CWebParserMultiUrl):
                     items = a('ul.gallery-d li')
                     
                     for item in items.items():
-                        data = self.common.parse_item(item)                                                 
+                        data_p = self.common.parse_item(item)    
+                        data_t = {
+                            'name' :  data_p.get('brief').get('name'),
+                            'url'  :  data_p.get('brief').get('url'),
+                            'board':  data_p.get('brief').get('board'),
+                            }
+
+                        data = dict( data_t, **data_p )                                                                                
                         yield data
                     
                     self.log('parsed url %s' % url)     
@@ -165,29 +190,7 @@ class CWebParserSite(CWebParserMultiUrl):
                   
         
         yield None  
-        
-    '''
-    process_image
-    
-    @author: chenzf
-    '''    
-    def process_data(self, data):
-        if self.parseOnly == CParseType.Parse_Entire or self.parseOnly == CParseType.Parse_RealData:
-            if self.common.process_data(data):
-                self.dbUtils.switch_db_detail_item(data)            
-        elif self.parseOnly == CParseType.Parse_Brief:
-            datatmp = deepcopy(data)
-            self.dbUtils.insert_db_item(datatmp)
-        elif self.parseOnly == CParseType.Parse_Detail:
-            try:
-                dataDetail = self.common.parse_detail_fr_brief(data)  
-                if dataDetail:
-                    self.dbUtils.switch_db_item(data)
-                    self.dbUtils.insert_db_detail_item(dataDetail)
-            except:
-                self.log('error in parse detail_fr_brief item')       
-    
-                
+           
                     
 def Job_Start():
     print(__file__, "start!")

@@ -35,40 +35,17 @@ class CWebParserSiteCommon(object):
             url = url.replace(result.group(1),'')        
         
         url   =  urljoin('http://www.hotxart.com/', url)   
-        name  =  item('img').attr('alt')  
-        
+        name  =  item('img').attr('alt')          
+          
+        data = { 
+            'url'  : url,
+            'name' : self.webParser.utils.format_name(name),   
+            'board': board    
+        }   
         if self.webParser.parseOnly == CParseType.Parse_Brief:                             
-            data = { 
-                'url'  : url,
-                'name' : self.webParser.utils.format_name(name),   
-                'board': board    
-            }   
-        else:
-            html = self.webParser.utils.get_page(url)   
-            if html:
-                b = pq(html)                          
-                
-                photos = b('body table:nth-child(2) table td>a')
-                stills = []
-                for photo in photos.items():
-                    detail_url = urljoin('http://www.hotxart.com/', photo.attr('href')) 
-                    small = photo('img').attr('src')
-                    detail_html = self.webParser.utils.get_page(detail_url)   
-                    large = None
-                    if detail_html:
-                        c = pq(detail_html)                        
-                        large = c('span.galprov img').attr('src')
-                        
-                    stills.append([large, small])
-                
-                if len(stills) > 0:
-                    data = {    
-                    'url'  : item.get('url'),
-                    'name' : item.get('name'),   
-                    'board': item.get('board'),
-                    'stills' :  stills
-                    } 
-        return data    
+            return data 
+        else:                    
+            return self.parse_detail_fr_brief(data)   
     
     def parse_detail_fr_brief(self, item):
         data = None     

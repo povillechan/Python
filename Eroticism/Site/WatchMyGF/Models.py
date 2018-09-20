@@ -38,27 +38,16 @@ class CWebParserSiteCommon(object):
                 result + str(i)+'.jpg'                          
                 )
             
+        data = { 
+            'productName' : self.webParser.utils.format_name(name),   
+            'productUrl'  : url,
+            'stills'      : stills
+            }   
+        
         if self.webParser.parseOnly == CParseType.Parse_Brief:                             
-            data = { 
-                'productName' : self.webParser.utils.format_name(name),   
-                'productUrl'  : url,
-                'stills'      : stills
-                }   
-        else:
-            html = self.webParser.utils.get_page_by_chrome(url, 'video.fp-engine')   
-            if html:
-                b = BeautifulSoup(html, 'lxml')                         
-                 
-                video  = b.select_one('video.fp-engine').get('src')               
-    
-                data = { 
-                    'productName' : self.webParser.utils.format_name(name),   
-                    'productUrl'  : url,
-                    'video': video,
-                    'stills': stills
-                    }  
-            
-        return data 
+            return data 
+        else:                    
+            return self.parse_detail_fr_brief(data) 
     
     def parse_detail_fr_brief(self, item):
         data = None
@@ -156,6 +145,7 @@ class CWebParserSite(CWebParserMultiUrl):
                     self.log('request %s error' %url)         
             except:
                 self.log( 'error in parse url %s' % url)         
+                continue
                   
         
         yield None  

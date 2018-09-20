@@ -29,32 +29,16 @@ class CWebParserSiteCommon(object):
         data = None   
         url   = item.attr('href')
         name  = item.attr('title')
+                       
+        data = { 
+            'name' : self.webParser.utils.format_name(name), 
+            'url'  : url
+        }   
         
         if self.webParser.parseOnly == CParseType.Parse_Brief:                             
-            data = { 
-                'name' : self.webParser.utils.format_name(name), 
-                'url'  : url
-            }   
-        else:
-            html = self.webParser.utils.get_page_by_chrome(url, 'video', headless=False)   
-            if html:
-                b = BeautifulSoup(html, 'lxml')                         
-                 
-                video  = b.select_one('video.fp-engine').get('src')  
-
-                board = None
-                board_url = re.search('preview_url: \'(https.*?)\'', html, re.S)
-                if board_url:
-                    board = board_url.group(1)
-
-                data = { 
-                    'name' : self.webParser.utils.format_name(name), 
-                    'url'  : url,
-                    'board': board,
-                    'video': video
-                }      
-                    
-        return data 
+            return data 
+        else:                    
+            return self.parse_detail_fr_brief(data) 
     
     def parse_detail_fr_brief(self, item):
         data = deepcopy(item)

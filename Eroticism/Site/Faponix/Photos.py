@@ -29,27 +29,16 @@ class CWebParserSiteCommon(object):
         data = None   
         product_name  =  item.attr('title')
         product_url   =  item.attr('href')
+                           
+        data = { 
+            'url'     :  product_url,
+            'name'    :  self.webParser.utils.format_name(product_name),
+        }   
+        
         if self.webParser.parseOnly == CParseType.Parse_Brief:                             
-            data = { 
-                    'url'     :  product_url,
-                    'name'    :  self.webParser.utils.format_name(product_name),
-            }   
-        else:
-            html = self.webParser.utils.get_page(product_url)   
-            if html:
-                b = pq(html)                                    
-                stills = []            
-                previews = b('div.masonry_thumbs div.item div.masonry_item > a')
-                for preview in previews.items():
-                    stills.append(preview('a').attr('href'))
-                    
-                data = {    
-                    'url'     :  product_url,
-                    'name'    :  self.webParser.utils.format_name(product_name),
-                    'stills'  :  stills,  
-                }    
-                    
-        return data 
+            return data 
+        else:                    
+            return self.parse_detail_fr_brief(data) 
     
     def parse_detail_fr_brief(self, item):
         data = deepcopy(item)
@@ -111,11 +100,13 @@ class CWebParserSite(CWebParserSingleUrl):
                 if self.dbUtils.get_db_url(url):
                     continue
                 
-                data_total = 0
+                data_total = 1
                 html = self.utils.get_page(url)     
                 if html:
                     a = pq(html)   
                     data_total = a('button.js-load-more').attr('data-total')
+                    if not data_total:
+                        data_total = 1
                     
                 if int(data_total) > 0:
                     for page in range(1, int(data_total)+1):
@@ -147,7 +138,7 @@ class CWebParserSite(CWebParserSingleUrl):
                     self.log('request %s error' %url)         
             except:
                 self.log( 'error in parse url %s' % url)         
-                yield None    
+                continue   
         
         yield None  
         

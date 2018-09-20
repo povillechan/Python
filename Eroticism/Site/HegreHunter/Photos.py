@@ -33,51 +33,16 @@ class CWebParserHunterCommon(object):
             discrib = item('img').attr('alt')
         result = re.findall('[a-zA-z]+://[^\s]*', str(item('img').attr('srcset')))
 
-        if self.webParser.parseOnly == CParseType.Parse_Brief:     
-            data = { 
-                'url'     :  url,
-                'discrib' :  self.webParser.utils.format_name(discrib),
-                'board'   :  [result[0] if result and len(result) >= 2 else None,item('img').attr('src'), result[1] if result and len(result) >= 2 else None],
-            }             
-        else:
-            b = pq(url)                
-            art_site_info = b('#breadcrumbs li')
-            info_string = []
-            for it in art_site_info.items(): 
-                info_string.append(it.text())
-                
-            if len(info_string) >=3:
-                site, model, name  = info_string[0], info_string[1], info_string[2]
-            
-            video = None
-            video_item = b('video')
-            stills = []
-            if video_item:
-                src = []
-    
-                for src_item in video_item('source').items():
-                    src.append(src_item.attr('src'))
-                video={
-                        'src': src,
-                        'poster':video_item.attr('poster')
-                        }  
-            else:                                
-                previews = b('ul.gallery-b  li')
-                for preview in previews.items():
-                    stills.append([ preview('a').attr('href'), preview('img').attr('src')])
-                    
-            data = {    
-                'site'    :  site,
-                'name'    :  self.webParser.utils.format_name(name),  
-                'model'   :  self.webParser.utils.format_name(model),  
-                'discrib' :  self.webParser.utils.format_name(discrib),
-                'board'   :  [result[0] if result and len(result) >= 2 else None,item('img').attr('src'), result[1] if result and len(result) >= 2 else None],
-                'url'     :  url,
-                'stills'  :  stills,      
-                'video'   :  video      
-                }        
-                
-        return data 
+        data = { 
+            'url'     :  url,
+            'discrib' :  self.webParser.utils.format_name(discrib),
+            'board'   :  [result[0] if result and len(result) >= 2 else None,item('img').attr('src'), result[1] if result and len(result) >= 2 else None],
+        }             
+        
+        if self.webParser.parseOnly == CParseType.Parse_Brief:                             
+            return data 
+        else:                    
+            return self.parse_detail_fr_brief(data) 
     
     def parse_detail_fr_brief(self, item):
         data = None

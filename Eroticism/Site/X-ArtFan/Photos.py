@@ -32,50 +32,16 @@ class CWebParserSiteCommon(object):
         name = item('a[rel=bookmark]').text()
         result = re.findall('[a-zA-z]+://[^\s]*', str(item('img.attachment-bimber-grid-standard').attr('srcset')))
     
+        data = { 
+            'name' : self.webParser.utils.format_name(name),   
+            'url'  : url,    
+            'board': [result[1],result[0]]
+            }   
+        
         if self.webParser.parseOnly == CParseType.Parse_Brief:                             
-            data = { 
-                'name' : self.webParser.utils.format_name(name),   
-                'url'  : url,    
-                'board': [result[1],result[0]]
-                }   
-        else:
-            html = self.webParser.utils.get_page(url)   
-            if html:
-                b = pq(html)                          
-    
-                video = None
-                player = b('div.flowplayer')
-                if player:
-                    src = json.loads(player.attr('data-item')).get('sources')[0].get('src')     
-                    board = re.search('background-image: url\((.*?)\)', player.attr('style')).group(1)
-                    video = {
-                        'src':src,
-                        'board':board
-                        }
-    
-                previews = b('div.tiled-gallery-item a')
-                stills = []
-                for preview in previews.items():
-                    stills.append(
-                        [preview('img').attr('data-large-file'),
-                         preview('img').attr('data-medium-file'),
-                         preview('img').attr('src')                  
-                        ])                 
-                modelName = None                
-                for model in b('span.entry-categories-inner span').items():
-                    modelName = model.text()
-                    break
-
-                data = {           
-                    'name'  : self.webParser.utils.format_name(name),  
-                    'modelName':  self.webParser.utils.format_name(modelName),
-                    'url'   : url,    
-                    'board' : [result[1],result[0]],
-                    'video' : video,
-                    'stills': stills
-                    }  
-                
-        return data 
+            return data 
+        else:                    
+            return self.parse_detail_fr_brief(data) 
     
     def parse_detail_fr_brief(self, item):
         data = None     

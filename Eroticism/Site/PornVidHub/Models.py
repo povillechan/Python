@@ -270,6 +270,7 @@ class CWebParserSite(CWebParserMultiUrl):
         self.parseOnly = CParseType(parseOnly)  
         self.common = CWebParserPornVidHubCommon(self)    
         self.dbUtils = CWebDataDbUtis("PornVidHub")    
+#         self.thread_num = 1
         
     '''
     parse_page

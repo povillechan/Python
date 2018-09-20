@@ -28,29 +28,16 @@ class CWebParserSiteCommon(object):
     def parse_item(self, item):   
         data = None   
 #         product_name = item('img').attr('alt')
-        product_url  = item.attr('href')
+        product_url  = item.attr('href')        
+                  
+        data = { 
+            'url'  : product_url,
+        }   
         
         if self.webParser.parseOnly == CParseType.Parse_Brief:                             
-            data = { 
-                'url'  : product_url,
-            }   
-        else:
-            html = self.webParser.utils.get_page(product_url)   
-            if html:
-                b = pq(html) 
-                
-                previews = b('dt.gallery-icon a')
-                stills = []
-                for preview in previews.items():
-                    stills.append(preview.attr('href'))  
-                product_name = b('h1.single_title').text()
-                data = {   
-                    'name' : self.webParser.utils.format_name(product_name), 
-                    'url'  : product_url,
-                    'stills'  :  stills,  
-                }    
-                    
-        return data 
+            return data 
+        else:                    
+            return self.parse_detail_fr_brief(data) 
     
     def parse_detail_fr_brief(self, item):
         data = deepcopy(item)

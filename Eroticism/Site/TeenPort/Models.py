@@ -31,31 +31,17 @@ class CWebParserSiteCommon(object):
         board        = 'http:'+ item('img').attr('src')
         result       =  re.search('url=(.*?)&p', item.attr('href'), re.S)
         product_url  =  result.group(1)
+                           
+        data = { 
+            'url'  : product_url,
+            'board': board  ,  
+            'site' : "TeenPort",
+        }   
+        
         if self.webParser.parseOnly == CParseType.Parse_Brief:                             
-            data = { 
-                'url'  : product_url,
-                'board': board  ,  
-                'site' : "TeenPort",
-            }   
-        else:
-            html = self.webParser.utils.get_page(product_url)   
-            if html:
-                b = pq(html) 
-                stills = []            
-                for index in range(1, 13):
-                    stills.append(["%s/%02d.jpg"%(product_url, index) , "%s/%02dt.jpg"%(product_url, index)])
-                   
-                product_name = b('div.title').text().replace(' «', '').replace(b('div.title a').text(),'')
-                    
-                data = {    
-                    'board'   :  board,
-                    'url'     :  product_url,
-                    'name'    :  self.webParser.utils.format_name(product_name),
-                    'stills'  :  stills,  
-                    'site'    :  "TeenPort",
-                }    
-                    
-        return data 
+            return data 
+        else:                    
+            return self.parse_detail_fr_brief(data) 
     
     def parse_detail_fr_brief(self, item):
         data = deepcopy(item)

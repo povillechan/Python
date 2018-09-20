@@ -25,7 +25,8 @@ class CWebSpiderUtils(object):
                     "Accept-Encoding":"gzip, deflate, br",
                     "Accept-Language":"zh-CN,zh;q=0.9",
                     "Cache-Control":"max-age=0",
-                    "Connection":"keep-alive",
+#                     "Connection":"keep-alive",
+                    
                     }
     m_defTimeout = (10,30)
     m_defSuccessCode = [200, 204, 206]
@@ -63,12 +64,12 @@ class CWebSpiderUtils(object):
     
     @author: chenzf
     '''          
-    def download_file(self, url, filePath, headers=None):   
+    def download_file(self, url, filePath, fileType=None, headers=None):   
         if url is None:
             return False
           
         try:  
-            filePath = self.get_file_path(url,filePath)
+            filePath = self.get_file_path(url, filePath, fileType)
             if not filePath:
                 return False
                                      
@@ -111,7 +112,7 @@ class CWebSpiderUtils(object):
     
     @author: chenzf
     '''         
-    def get_file_path(self, url, fileName):
+    def get_file_path(self, url, fileName, fileType):        
         rePng = re.compile(".*?\.png.*?", re.S)
         reJpg = re.compile(".*?\.jpg.*?", re.S)
         reMp4 = re.compile(".*?\.mp4.*?", re.S)
@@ -122,8 +123,9 @@ class CWebSpiderUtils(object):
         fileName = fileName.replace('?', '_')    
         filePath = "{name}.{suffix}"
 
-
-        if re.search(rePng, url):
+        if fileType:
+            filePath = filePath.format(name=fileName, suffix=fileType)
+        elif re.search(rePng, url):
             filePath = filePath.format(name=fileName, suffix='png')
         elif re.search(reJpg, url):
             filePath = filePath.format(name=fileName, suffix='jpg')

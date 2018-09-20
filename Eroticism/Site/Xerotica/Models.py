@@ -29,43 +29,16 @@ class CWebParserSiteCommon(object):
         data = None   
         url = item('a.title').attr('href')
         name = item('a.title').attr('title')
-
+                        
+        data = { 
+            'productName' : self.webParser.utils.format_name(name),   
+            'productUrl'  : url
+            }   
+            
         if self.webParser.parseOnly == CParseType.Parse_Brief:                             
-            data = { 
-                'productName' : self.webParser.utils.format_name(name),   
-                'productUrl'  : url
-                }   
-        else:
-            html = self.webParser.utils.get_page(url)   
-            if html:
-                b = pq(html)                          
-                
-                video  = []
-                videos = b('#videoPlayer')
-                for vid in videos('source').items():
-                    video.append(vid.attr('src'))
-                
-                stills = []
-                poster = videos.attr('poster')
-                result = re.search('https.*?(\d+b).jpg', poster, re.S)
-                large  = poster.replace(result.group(1), '{index}b')
-                small  = poster.replace(result.group(1), '{index}')
-
-                for i in range(1,11):
-                    stills.append(
-                        [
-                        large.format(index=i),
-                        small.format(index=i)                            
-                        ])
-
-                data = { 
-                    'productName' : self.webParser.utils.format_name(name),   
-                    'productUrl'  : url,
-                    'video': video,
-                    'stills': stills
-                    }  
-                
-        return data 
+            return data 
+        else:                    
+            return self.parse_detail_fr_brief(data) 
     
     def parse_detail_fr_brief(self, item):
         data = None
