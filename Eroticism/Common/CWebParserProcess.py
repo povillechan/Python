@@ -15,7 +15,7 @@ from enum import Enum
 from copy import deepcopy
 import sys        
 
-class CWebParserSite(object):
+class CWebParserProcess(object):
     def __init__(self, webParser):
         self.webParser = webParser
         

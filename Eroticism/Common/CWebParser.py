@@ -38,15 +38,25 @@ class CWebParser(object):
     def parse_brief(self):
         return self.parse_page()
     
-    def parse_detail(self):
-        for item in self.dbUtils.get_db_item():
-            yield item
-        yield None   
+    def parse_detail(self):    
+        while True:
+            try:
+                for item in self.dbUtils.get_db_item():
+                    yield item
+                yield None
+                break
+            except:
+                continue
     
     def parse_detail_data(self):
-        for item in self.dbUtils.get_db_detail_item():
-            yield item
-        yield None   
+        while True:
+            try:
+                for item in self.dbUtils.get_db_detail_item():
+                    yield item
+                yield None
+                break
+            except:
+                continue  
     
     '''
     process_image

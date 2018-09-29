@@ -244,11 +244,7 @@ class CWebSpiderUtils(object):
             html = browser.page_source
             browser.close()
             return html
-        except TimeoutException as e:
-            browser.close()
-            return None
-        except Exception as e:
-            print(e)
+        except:
             browser.close()
             return None
 

@@ -29,22 +29,24 @@ class CWebParserSiteCommon(object):
         data = None   
         url   = item.attr('href')
         name  = item.attr('title')
-                       
-        data = { 
+
+        data_brief = {
             'name' : self.webParser.utils.format_name(name), 
-            'url'  : url
-        }   
+            'url'  : url    
+            } 
+        
+        data = {'brief': data_brief}
         
         if self.webParser.parseOnly == CParseType.Parse_Brief:                             
-            return data 
+            return data
         else:                    
             return self.parse_detail_fr_brief(data) 
     
     def parse_detail_fr_brief(self, item):
-        data = deepcopy(item)
+        data = None     
+        url = item.get('brief').get('url')        
+        html = self.webParser.utils.get_page_by_chrome(url, 'video', headless=False)       
         
-        url = item.get('url')
-        html = self.webParser.utils.get_page_by_chrome(url, 'video', headless=False)    
         if html:
             b = BeautifulSoup(html, 'lxml')                         
              
@@ -55,10 +57,19 @@ class CWebParserSiteCommon(object):
             if board_url:
                 board = board_url.group(1)
 
-            data['board'] = board
-            data['video'] = video
-                  
-        return data         
+            data_detail = {
+                'videos': {
+                    'name' : item.get('brief').get('name'),
+                    'url'  : url,
+                    'board': board,
+                    'video': video,
+                    'stills':[],
+                    }
+                }
+                                                
+            data = deepcopy(item)
+            data['detail'] = data_detail
+        return data       
 
     def process_data(self, data):
         result = True
@@ -71,18 +82,18 @@ class CWebParserSiteCommon(object):
 #         with open(dir_name + '\\info.json', 'w') as f:    
 #             json.dump(data, f)
            
-        board = data.get('board')
+        board = data.get('detail').get('videos').get('board')
         if board:
             result &=  self.webParser.utils.download_file(board,
-                                     data.get('name'),
-                                headers={'Referer':data.get('url')}
-                                 ) 
+                                data.get('detail').get('videos').get('name'),
+                                headers={'Referer':data.get('detail').get('videos').get('url')}
+                                ) 
              
-        video = data.get('video')
+        video = data.get('detail').get('videos').get('video')
         if video:
             result &=  self.webParser.utils.download_file(video,
-                                     data.get('name'),
-                                headers={'Referer':data.get('url')}
+                                    data.get('detail').get('videos').get('name'),
+                                    headers={'Referer':data.get('detail').get('videos').get('url')}
                                  ) 
         return result      
         
@@ -117,40 +128,27 @@ class CWebParserSite(CWebParserMultiUrl):
                     items = a('#list_videos_common_videos_list_items > div > a')
                     
                     for item in items.items():
-                        data = self.common.parse_item(item)                                                   
+                        data_p = self.common.parse_item(item)    
+                        data_t = {
+                            'name'  : data_p.get('brief').get('name'),
+                            'url'   : data_p.get('brief').get('url'),
+                            'refurl': url
+                            }
+
+                        data = dict( data_t, **data_p )                                                 
                         yield data     
                     self.log('parsed url %s' % url)      
                     self.dbUtils.put_db_url(url) 
                 else:
-                    self.log('request %s error' %url)         
+                    self.log('request %s error' %url)   
+            except (GeneratorExit, StopIteration):
+                break      
             except:
                 self.log( 'error in parse url %s' % url)         
                 continue
         
         yield None  
-        
-    '''
-    process_image
-    
-    @author: chenzf
-    '''    
-    def process_data(self, data):
-        if self.parseOnly == CParseType.Parse_Entire or self.parseOnly == CParseType.Parse_RealData:
-            if self.common.process_data(data):
-                self.dbUtils.switch_db_detail_item(data)            
-        elif self.parseOnly == CParseType.Parse_Brief:
-            datatmp = deepcopy(data)
-            self.dbUtils.insert_db_item(datatmp)
-        elif self.parseOnly == CParseType.Parse_Detail:
-            try:
-                dataDetail = self.common.parse_detail_fr_brief(data)  
-                if dataDetail:
-                    self.dbUtils.switch_db_item(data)
-                    self.dbUtils.insert_db_detail_item(dataDetail)
-            except:
-                self.log('error in parse detail_fr_brief item')       
-    
-                
+               
                     
 def Job_Start():
     print(__file__, "start!")

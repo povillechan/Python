@@ -13,7 +13,7 @@ sys.path.insert(0, parentdir)
 from Common.CWebParser import CParseType,CWebParser,CWebParserMultiUrl,CWebParserSingleUrl
 from Common.CWebDataDbUtis import CWebDataDbUtis
 from Common.CWebSpiderUtils import CWebSpiderUtils
-from Common.CWebParserSite import CWebParserSite
+from Common.CWebParserProcess import CWebParserProcess
 from copy import deepcopy
 from bs4 import BeautifulSoup
 from pyquery import PyQuery as pq
@@ -22,7 +22,7 @@ import vthread
 import pymongo
 from copy import deepcopy
 
-class CWebParserSiteCommon(CWebParserSite):
+class CWebParserSiteCommon(CWebParserProcess):
     def __init__(self, webParser):
         super().__init__(webParser)
 #    
@@ -176,6 +176,7 @@ class CWebParserSite(CWebParserMultiUrl):
                             'name' :  data_p.get('brief').get('name'),
                             'url'  :  data_p.get('brief').get('url'),
                             'board':  data_p.get('brief').get('board'),
+                            'refurl': url
                             }
 
                         data = dict( data_t, **data_p )                                                                                
@@ -185,9 +186,11 @@ class CWebParserSite(CWebParserMultiUrl):
                     self.dbUtils.put_db_url(url) 
                 else:
                     self.log('request %s error' %url)         
+            except (GeneratorExit, StopIteration):
+                break
             except:
                 self.log( 'error in parse url %s' % url)         
-                  
+                continue                   
         
         yield None  
            
