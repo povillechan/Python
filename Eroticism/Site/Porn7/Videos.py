@@ -93,6 +93,7 @@ class CWebParserSiteCommon(object):
         if video:
             result &=  self.webParser.utils.download_file(video,
                                     data.get('detail').get('videos').get('name'),
+                                    fileType='mp4',
                                     headers={'Referer':data.get('detail').get('videos').get('url')}
                                  ) 
         return result      
@@ -104,6 +105,9 @@ class CWebParserSite(CWebParserMultiUrl):
         self.parseOnly = CParseType(parseOnly)  
         self.common = CWebParserSiteCommon(self)    
         self.dbUtils = CWebDataDbUtis('Porn7')
+        
+#         if self.parseOnly == CParseType.Parse_Entire or self.parseOnly == CParseType.Parse_Detail:
+#             self.thread_num = 1
         
     '''
     parse_page

@@ -85,5 +85,16 @@ class CWebDataDbUtis(object):
         if self.dbDetailJob.find_one(data):
             self.dbDetailJob.delete_one(data)
         if not self.dbDetailJobError.find_one(data):
-            self.dbDetailJobError.insert_one(data)
-        
+            self.dbDetailJobError.insert_one(data)           
+                        
+    def switch_db_detail_to_breif(self):        
+        for item in self.get_db_detail_item():
+            self.dbDetailJob.delete_one(item)
+            
+            item.pop('_id')
+            item.pop('detail')
+            
+            if self.dbBriefJobParsed.find_one(item):
+                self.dbBriefJobParsed.delete_one(item)
+             
+            self.dbBriefJob.insert_one(item)         

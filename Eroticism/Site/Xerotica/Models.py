@@ -13,6 +13,7 @@ sys.path.insert(0, parentdir)
 from Common.CWebParser import CParseType,CWebParser,CWebParserMultiUrl,CWebParserSingleUrl
 from Common.CWebDataDbUtis import CWebDataDbUtis
 from Common.CWebSpiderUtils import CWebSpiderUtils
+from Common.CWebParserProcess import CWebParserProcess
 from copy import deepcopy
 from bs4 import BeautifulSoup
 from pyquery import PyQuery as pq
@@ -21,29 +22,30 @@ import vthread
 import pymongo
 from copy import deepcopy
 
-class CWebParserSiteCommon(object):
+class CWebParserSiteCommon(CWebParserProcess):
     def __init__(self, webParser):
-        self.webParser = webParser
+        super().__init__(webParser)
 #    
     def parse_item(self, item):   
         data = None   
         url = item('a.title').attr('href')
         name = item('a.title').attr('title')
-                        
-        data = { 
-            'productName' : self.webParser.utils.format_name(name),   
-            'productUrl'  : url
-            }   
-            
-        if self.webParser.parseOnly == CParseType.Parse_Brief:                             
-            return data 
-        else:                    
-            return self.parse_detail_fr_brief(data) 
-    
-    def parse_detail_fr_brief(self, item):
-        data = None
+                                           
+        data_brief = {
+            'url'  : url,
+            'name' : self.webParser.utils.format_name(name) 
+        } 
         
-        url = item.get('productUrl')
+        data = {'brief': data_brief}
+        if self.webParser.parseOnly == CParseType.Parse_Brief:                             
+            return data
+        else:                    
+            return self.parse_detail_fr_brief(data)     
+    
+    def parse_detail_fr_brief(self, item):    
+        data = None     
+        url = item.get('brief').get('url')   
+        
         html = self.webParser.utils.get_page(url)   
         if html:
             b = pq(html)                          
@@ -60,55 +62,20 @@ class CWebParserSiteCommon(object):
             small  = poster.replace(result.group(1), '{index}')
 
             for i in range(1,11):
-                stills.append(
-                    [
-                    large.format(index=i),
-                    small.format(index=i)                            
-                    ])
+                stills.append(large.format(index=i))
 
+            data_detail = {
+                'videos': {
+                    'name'  : item.get('brief').get('name'),
+                    'url'   : item.get('brief').get('url'),
+                    'video' : video[0] if len(video) > 1 else [],
+                    'stills': stills
+                    }
+                }
             data = deepcopy(item)
-            data['video']= video
-            data['stills']= stills
+            data['detail'] = data_detail                 
 
-        return data        
-
-    def process_data(self, data):
-        result = True
-        sub_dir_name = "%s\\%s" %(data.get('model'), data.get('productName'))
-       
-        dir_name = self.webParser.savePath.format(filePath=sub_dir_name)
-        if not os.path.exists(dir_name):
-            os.makedirs(dir_name)
-        
-        with open(dir_name + '\\info.json', 'w') as f:    
-            json.dump(data, f)
-            
-        board = data.get('board')
-        if board:
-            result &=  self.webParser.utils.download_file(board,
-                                '%s\\..\\%s' % (sub_dir_name, data.get('model')),
-                                headers={'Referer':data.get('url')}
-                                 )  
-     
-        stills = data.get('stills')
-        for i, val in enumerate(stills, start=1): 
-            for subVal in val:
-                if subVal:
-                    result &= self.webParser.utils.download_file(subVal,
-                                     '%s\\%s' % (sub_dir_name, str(i)),
-                                    headers={'Referer':data.get('productUrl')}
-                             )   
-                    break    
-                
-        videos = data.get('video')
-        for video in videos:
-            result &=  self.webParser.utils.download_file(video,
-                                '%s\\%s' % (sub_dir_name, data.get('productName')),
-                                headers={'Referer':data.get('productUrl')}
-                                 ) 
-            break      
- 
-        return result      
+        return data      
         
 class CWebParserSite(CWebParserMultiUrl):    
     def __init__(self, url, start, end, savePath, parseOnly):
@@ -141,54 +108,45 @@ class CWebParserSite(CWebParserMultiUrl):
                     items = a('div.content div.modelItem')
                     
                     for item in items.items():
-                        modelurl = item('a.title').attr('href')
+                        model_url = item('a.title').attr('href')
                         model = item('a.title').text()
                         board = item('img').attr('src')
                         
-                        html2 = self.utils.get_page(modelurl)      
+                        html2 = self.utils.get_page(model_url)      
                         if html2:
                             b = pq(html2)
                             items_model = b('div.content div.item')
                             for item_model in items_model.items():
-                                data = self.common.parse_item(item_model) 
-                                if data:
-                                    data['url']   = modelurl      
-                                    data['model'] = model
-                                    data['board'] = board                                          
+#                                 data = self.common.parse_item(item_model) 
+#                                 if data:
+#                                     data['url']   = modelurl      
+#                                     data['model'] = model
+#                                     data['board'] = board                                          
+#                                 yield data
+                                
+                                data_p = self.common.parse_item(item_model)    
+                                data_t = {
+                                    'name'  : self.utils.format_name(model),
+                                    'url'   : model_url,
+                                    'board' : board,
+                                    'refurl': url
+                                    }
+
+                                data = dict( data_t, **data_p )                                          
                                 yield data
+                                            
                     
                     self.log('parsed url %s' % url)     
                     self.dbUtils.put_db_url(url) 
                 else:
                     self.log('request %s error' %url)         
+            except (GeneratorExit, StopIteration):
+                break
             except:
                 self.log( 'error in parse url %s' % url)         
-                  
+                continue                   
         
-        yield None  
-        
-    '''
-    process_image
-    
-    @author: chenzf
-    '''    
-    def process_data(self, data):
-        if self.parseOnly == CParseType.Parse_Entire or self.parseOnly == CParseType.Parse_RealData:
-            if self.common.process_data(data):
-                self.dbUtils.switch_db_detail_item(data)            
-        elif self.parseOnly == CParseType.Parse_Brief:
-            datatmp = deepcopy(data)
-            self.dbUtils.insert_db_item(datatmp)
-        elif self.parseOnly == CParseType.Parse_Detail:
-            try:
-                dataDetail = self.common.parse_detail_fr_brief(data)  
-                if dataDetail:
-                    self.dbUtils.switch_db_item(data)
-                    self.dbUtils.insert_db_detail_item(dataDetail)
-            except:
-                self.log('error in parse detail_fr_brief item')       
-    
-                
+        yield None                     
                     
 def Job_Start():
     print(__file__, "start!")

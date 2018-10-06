@@ -4,7 +4,8 @@ Created on 2018年6月1日
 
 @author: chenzf
 '''
-
+import time
+import threading
 import requests
 import re
 from requests.exceptions import RequestException
@@ -14,6 +15,7 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
 import socket 
 from requests.adapters import HTTPAdapter
 from copy import deepcopy
@@ -30,10 +32,10 @@ class CWebSpiderUtils(object):
                     }
     m_defTimeout = (10,30)
     m_defSuccessCode = [200, 204, 206]
-    m_dirPath = ''
+    m_savePath = ''
     
-    def __init__(self, dirPath):
-        self.dirPath = dirPath
+    def __init__(self, savePath):
+        self.savePath = savePath
     '''
     get_page
     
@@ -142,7 +144,7 @@ class CWebSpiderUtils(object):
         else:
             return None
         
-        filePath =  self.dirPath.format(filePath = filePath)            
+        filePath = self.savePath.format(filePath = filePath)            
         return filePath   
     
     '''
@@ -223,8 +225,10 @@ class CWebSpiderUtils(object):
     @author: chenzf
     '''
     def get_page_by_chrome(self, url, cssElement, headless=True):      
-        html = None   
+        html = None 
+        browser = None  
         try:
+#             self.log('get_page_by_chrome_start[%s]' %threading.currentThread())
             use_option = False
             chrome_options = webdriver.ChromeOptions()
             if headless:
@@ -240,14 +244,28 @@ class CWebSpiderUtils(object):
             wait = WebDriverWait(browser, 10)
 #             browser.set_window_size(0,0)
             browser.get(url)
-            wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, cssElement)))
+            wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, cssElement)))
             html = browser.page_source
-            browser.close()
+            browser.quit()
+#             self.log('browser.close()[%s]' %threading.currentThread())
             return html
         except:
-            browser.close()
+            browser.quit()
             return None
 
-            
-            
+    '''
+    process
+    
+    @author: chenzf
+    '''     
+    def log(self, logText): 
+        fileName = self.savePath.format(filePath='Utils.log')
+        dirName = os.path.dirname(fileName)
+        if not os.path.exists(dirName):
+            os.makedirs(dirName)
+        
+        with open(fileName, 'a+') as f:    
+            f.write('%s %s\n' %(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), logText))
+        
+        print(logText)       
     

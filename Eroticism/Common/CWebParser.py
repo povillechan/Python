@@ -20,7 +20,7 @@ class CParseType(Enum):
     Parse_Brief    = 1
     Parse_Detail   = 2
     Parse_RealData = 3
-
+    Parse_Detail2Brief = 4
     
 class CWebParser(object):    
     def __init__(self, savePath):
@@ -51,13 +51,20 @@ class CWebParser(object):
     def parse_detail_data(self):
         while True:
             try:
-                for item in self.dbUtils.get_db_detail_item():
+                items = self.dbUtils.get_db_detail_item()
+                if items.count()<=0:
+                    yield None
+                    break
+                
+                for item in items:
                     yield item
                 yield None
-                break
+    
             except:
                 continue  
     
+    def parse_detail_to_brief(self): 
+        self.dbUtils.switch_db_detail_to_breif()
     '''
     process_image
     
@@ -124,6 +131,9 @@ class CWebParser(object):
                 datas = self.parse_brief()
             elif self.parseOnly == CParseType.Parse_Detail:
                 datas = self.parse_detail()
+            elif self.parseOnly == CParseType.Parse_Detail2Brief:
+                self.parse_detail_to_brief()
+                return
             else:
                 datas = self.parse_detail_data()
                 
