@@ -93,14 +93,19 @@ class CWebSpiderUtils(object):
                 response = s.get(url,headers=self.m_defHeaders,timeout=self.m_defTimeout, stream=True)
                 
             if response.status_code in self.m_defSuccessCode:
-                content_size = int(response.headers['content-length'])
-#                 print('recevice size = %s'%content_size)
-                if os.path.exists(filePath):
-                    if  os.path.getsize(filePath) == content_size:
+                if 'content-length' in response.headers:
+                    content_size = int(response.headers['content-length'])
+    #                 print('recevice size = %s'%content_size)
+                    if os.path.exists(filePath):
+                        if  os.path.getsize(filePath) == content_size:
+                            print(filePath + " is omitted")
+                            return True
+                        else:
+                            os.remove(filePath)
+                else:
+                    if os.path.exists(filePath):      
                         print(filePath + " is omitted")
-                        return True
-                    else:
-                        os.remove(filePath)         
+                        return True   
       
                 return self.save_file(response, filePath)  
             else:

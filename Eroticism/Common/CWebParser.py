@@ -41,27 +41,34 @@ class CWebParser(object):
     def parse_detail(self):    
         while True:
             try:
-                for item in self.dbUtils.get_db_item():
-                    yield item
-                yield None
-                break
+                items = self.dbUtils.get_db_item()
+                if items.count()<=0:    
+                    break
+                
+                for item in items:
+                    yield item   
+                    
+                time.sleep(10)
             except:
-                continue
+                continue  
+        
+        yield None
     
     def parse_detail_data(self):
         while True:
             try:
                 items = self.dbUtils.get_db_detail_item()
-                if items.count()<=0:
-                    yield None
+                if items.count()<=0:    
                     break
                 
                 for item in items:
-                    yield item
-                yield None
-    
+                    yield item   
+                    
+                time.sleep(10)
             except:
                 continue  
+        
+        yield None
     
     def parse_detail_to_brief(self): 
         self.dbUtils.switch_db_detail_to_breif()
