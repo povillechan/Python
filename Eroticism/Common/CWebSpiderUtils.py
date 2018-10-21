@@ -27,10 +27,11 @@ class CWebSpiderUtils(object):
                     "Accept-Encoding":"gzip, deflate, br",
                     "Accept-Language":"zh-CN,zh;q=0.9",
                     "Cache-Control":"max-age=0",
+                    'Connection': 'close',
 #                     "Connection":"keep-alive",
                     
                     }
-    m_defTimeout = (10,30)
+    m_defTimeout = (30,30)
     m_defSuccessCode = [200, 204, 206]
     m_savePath = ''
     m_retry_times = 3
@@ -204,7 +205,8 @@ class CWebSpiderUtils(object):
                             print("File %s [%.2f%%]"%(filePath, int(total_size * 100)/int(content_size)))
                         else:
                             print("File %s [%.0f Kb]"%(filePath, int(total_size)/1024))
-        except:
+        except Exception as e:
+            print("Download file error [%s]"%e)
             if os.path.exists(filePath):
                 os.remove(filePath)
             print(filePath + ' is abort')
