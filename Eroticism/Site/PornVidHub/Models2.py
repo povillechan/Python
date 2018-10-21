@@ -13,7 +13,6 @@ sys.path.insert(0, parentdir)
 from Common.CWebParser import CParseType,CWebParser,CWebParserMultiUrl,CWebParserSingleUrl
 from Common.CWebDataDbUtis import CWebDataDbUtis
 from Common.CWebSpiderUtils import CWebSpiderUtils
-from Common.CWebParserProcess import CWebParserProcess
 from copy import deepcopy
 from bs4 import BeautifulSoup
 from pyquery import PyQuery as pq
@@ -22,11 +21,11 @@ import vthread
 import pymongo
 from copy import deepcopy
 
-class CWebParserSiteCommon(CWebParserProcess):
+class CWebParserPornVidHubCommon(object):
     def __init__(self, webParser):
-        super().__init__(webParser)
+        self.webParser = webParser
 #    
-    def parse_item(self, item):     
+    def parse_item(self, item):    
 #         data = None      
 #         url = item('a').attr('href')
 #         discrib = item('a').attr('title')
@@ -109,42 +108,22 @@ class CWebParserSiteCommon(CWebParserProcess):
         yield None         
 
     def parse_detail_fr_brief(self, item):
-#         data = deepcopy(item)
-# 
-#         url = data.get('videos').get('url')
-#         if url:
-#             video, still= self.parse_video_detail(url)
-#                         
-#             video_item =  {
-#                             'name'   :  data.get('videos').get('name'),
-#                             'url'    :  url,
-#                             'video'  :  video,     
-#                             'stills' :  still                      
-#                             }      
-#             data['videos'] =  video_item     
-#             return data
-# 
-#         return None
-    
-        data = None     
-        url = item.get('brief').get('url')        
-        html = self.webParser.utils.get_page_by_chrome(url, 'video source', headless=False)     
-           
-        if html:
-            b = BeautifulSoup(html, 'lxml')
-            video  = b.select_one('video source').get('src')  
+        data = deepcopy(item)
 
-            data_detail = {
-                'videos': {
-                    'name' : item.get('brief').get('name'),
-                    'url'  : item.get('brief').get('url'),
-                    'video': video
-                    }
-                }
-            data = deepcopy(item)
-            data['detail'] = data_detail                  
-                  
-        return data  
+        url = data.get('videos').get('url')
+        if url:
+            video, still= self.parse_video_detail(url)
+                        
+            video_item =  {
+                            'name'   :  data.get('videos').get('name'),
+                            'url'    :  url,
+                            'video'  :  video,     
+                            'stills' :  still                      
+                            }      
+            data['videos'] =  video_item     
+            return data
+
+        return None
                         
     def parse_video(self, data, url):
 #         videos_dict = []
@@ -283,12 +262,13 @@ class CWebParserSiteCommon(CWebParserProcess):
         return result
         
         
-class CWebParserSite(CWebParserMultiUrl):    
+class CWebParserSite(CWebParserMultiUrl):
+        
     def __init__(self, url, start, end, savePath, parseOnly):
         super().__init__(url, start, end, savePath)
         self.utils = CWebSpiderUtils(self.savePath)  
         self.parseOnly = CParseType(parseOnly)  
-        self.common = CWebParserSiteCommon(self)    
+        self.common = CWebParserPornVidHubCommon(self)    
         self.dbUtils = CWebDataDbUtis("PornVidHub")    
 #         self.thread_num = 1
         
@@ -336,6 +316,24 @@ class CWebParserSite(CWebParserMultiUrl):
                 yield None    
         yield None            
 
+    def parse_brief(self):
+        return self.parse_page()
+    
+    def parse_detail(self):
+        for item in self.dbUtils.get_db_item():
+#             try:
+#                 data = self.common.parse_detail_fr_brief(item) 
+#                 yield data
+#                 else:
+#                     continue                                
+#             except:
+#                 self.log('error in parse item')         
+#                 continue   
+            data = deepcopy(item) 
+            data.pop('_id')
+            yield data
+        yield None   
+        
     '''
     process_image
     

@@ -252,8 +252,12 @@ class CWebParser(object):
     def push_data_job(self, data):
         rel = True
         self.dataLocker.acquire()
-
-        if len(self.job_list)> cpu_count():
+        if self.thread_num :
+            thread_num = self.thread_num
+        else:
+            thread_num = cpu_count() - 1
+            
+        if len(self.job_list)> thread_num:
             print('Job full, need waitting')
             rel = False
         else:

@@ -4,27 +4,26 @@ Created on 2018年6月1日
 
 @author: chenzf
 '''
-import os, sys, re, json
-import argparse
-from copy import deepcopy
+import argparse,os,sys
+import os,sys,vthread,re,json
+from pyquery import PyQuery as pq
+from win32comext.shell.shellcon import SE_ERR_NOASSOC
 parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-sys.path.insert(0, parentdir)
+sys.path.insert(0,parentdir)
 
 from Common.CWebParser import CParseType,CWebParser,CWebParserMultiUrl,CWebParserSingleUrl
 from Common.CWebDataDbUtis import CWebDataDbUtis
 from Common.CWebSpiderUtils import CWebSpiderUtils
-from Common.CWebParserProcess import CWebParserProcess
-from copy import deepcopy
-from bs4 import BeautifulSoup
-from pyquery import PyQuery as pq
-from urllib.parse import urljoin
-import vthread
-import pymongo
 from copy import deepcopy
 
-class CWebParserSiteCommon(CWebParserProcess):
+parentdir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, parentdir)
+
+# from CWebParserHunter import CWebParserHunterSingleUrl
+# from CWebParserHunter import CWebParserHunterMultiUrl    
+class CWebParserHunterCommon(object):
     def __init__(self, webParser):
-        super().__init__(webParser)
+        self.webParser = webParser
 #    
     def parse_item(self, item):   
         data = None     
@@ -34,24 +33,23 @@ class CWebParserSiteCommon(CWebParserProcess):
             discrib = item('img').attr('alt')
         result = re.findall('[a-zA-z]+://[^\s]*', str(item('img').attr('srcset')))
 
-        data_brief = {
+        data = { 
             'url'     :  url,
             'discrib' :  self.webParser.utils.format_name(discrib),
-            'board'   :  result[0] if result and len(result) >= 2 else None,   
-        } 
+            'board'   :  [result[0] if result and len(result) >= 2 else None,item('img').attr('src'), result[1] if result and len(result) >= 2 else None],
+        }             
         
-        data = {'brief': data_brief}
         if self.webParser.parseOnly == CParseType.Parse_Brief:                             
-            return data
+            return data 
         else:                    
             return self.parse_detail_fr_brief(data) 
-        
     
     def parse_detail_fr_brief(self, item):
         data = None
-        url = item.get('brief').get('url')  
-     
-        html = self.webParser.utils.get_page(url)        
+        url = item.get('url')
+        board = item.get('board')
+        discrib = item.get('discrib')
+        html = self.webParser.utils.get_page(url)     
         if html:
             b = pq(html)
      
@@ -67,70 +65,90 @@ class CWebParserSiteCommon(CWebParserProcess):
             video_item = b('video')
             stills = []
             if video_item:
-                src = []    
+                src = []
+    
                 for src_item in video_item('source').items():
                     src.append(src_item.attr('src'))
                 video={
                         'src': src,
-                        'board':video_item.attr('poster')
+                        'poster':video_item.attr('poster')
                         }  
             else:                                
                 previews = b('ul.gallery-b  li')
                 for preview in previews.items():
-                    stills.append(preview('a').attr('href'))
+                    stills.append([ preview('a').attr('href'), preview('img').attr('src')])
                     
-#             data = {    
-#                 'site'    :  site,
-#                 'name'    :  self.webParser.utils.format_name(name),  
-#                 'model'   :  self.webParser.utils.format_name(model),  
-#                 'discrib' :  discrib,
-#                 'board'   :  board,
-#                 'url'     :  url,
-#                 'stills'  :  stills,      
-#                 'video'   :  video      
-#                 }          
+            data = {    
+                'site'    :  site,
+                'name'    :  self.webParser.utils.format_name(name),  
+                'model'   :  self.webParser.utils.format_name(model),  
+                'discrib' :  discrib,
+                'board'   :  board,
+                'url'     :  url,
+                'stills'  :  stills,      
+                'video'   :  video      
+                }          
 
-            data_detail = None
-            if video:
-                data_detail = {
-                    'videos': {
-                        'name' : '%s %s'%(self.webParser.utils.format_name(model), self.webParser.utils.format_name(name)),
-                        'url'  : item.get('brief').get('url'),
-                        'board': video.get('board'),
-                        'site' : site,
-                        'video': video.get('src'),
-                        'stills':stills,
-                        }
-                    }
-            else:
-                data_detail = {
-                    'galleries': {
-                        'name' : '%s %s'%(self.webParser.utils.format_name(model), self.webParser.utils.format_name(name)),
-                        'url'  : item.get('brief').get('url'),
-                        'site' : site,
-                        'stills':stills,
-                        }
-                    }  
-                                                
-            data = deepcopy(item)
-            data['detail'] = data_detail
-            data['name'] = self.webParser.utils.format_name(info_string[1])
-            
-        return data 
-               
-    def get_sub_dir_name(self,data):
-        if data.get('detail').get('videos'):
-            sub_dir_name = "%s\\%s" %(data.get('detail').get('videos').get('site'),data.get('name'))    
+        return data             
+
+    def process_data(self, data):
+#         print(data)
+        result = True
+        if data.get('video'):
+            sub_dir_name = "%s\\%s\\films\\%s %s" %(data.get('site'), data.get('model'), data.get('model'),data.get('name'))
         else:
-            sub_dir_name = "%s\\%s" %(data.get('detail').get('galleries').get('site'),data.get('name'))         
-        return sub_dir_name
+            sub_dir_name = "%s\\%s\\galleries\\%s %s" %(data.get('site'), data.get('model'), data.get('model'),data.get('name'))
+       
+        dir_name = self.webParser.savePath.format(filePath=sub_dir_name)
+        if not os.path.exists(dir_name):
+            os.makedirs(dir_name)
+        
+        with open(dir_name + '\\..\\info.json', 'w') as f:    
+            json.dump(data, f)
+            
+        boards = data.get('board')
+        for board in boards:
+            if board:
+                result &=  self.webParser.utils.download_file(board,
+                                        '%s\\%s' % (sub_dir_name, data.get('name')),
+                                        headers={'Referer':data.get('url')}        
+                                         )  
+
+                break                     
+        
+        if data.get('video'):
+            for src in data.get('video').get('src'): 
+                result &=  self.webParser.utils.download_file(src,
+                            '%s\\%s' % (sub_dir_name, data.get('name')),
+                            headers={'Referer':data.get('url')}        
+                             )    
+                break
+            
+            result &= self.webParser.utils.download_file(data.get('video').get('poster'),
+                            '%s\\%s' % (sub_dir_name, data.get('name')),
+                            headers={'Referer':data.get('url')}        
+                             ) 
+            
+        else:        
+            stills = data.get('stills')
+            for i, val in enumerate(stills, start=1): 
+                for subVal in val:
+                    if subVal:
+                        result &= self.webParser.utils.download_file(subVal,
+                                         '%s\\%s' % (sub_dir_name, str(i)),
+                                         headers={'Referer':data.get('url')}        
+                                 )   
+                        break
+        
+        return result
+        
         
 class CWebParserHunterMultiUrl(CWebParserMultiUrl):    
     def __init__(self, url, start, end, savePath, parseOnly):
         super().__init__(url, start, end, savePath)
         self.utils = CWebSpiderUtils(self.savePath)  
         self.parseOnly = CParseType(parseOnly)  
-        self.common = CWebParserSiteCommon(self)    
+        self.common = CWebParserHunterCommon(self)    
         self.dbUtils = CWebDataDbUtis('HegreHunter')
 
     '''
@@ -154,43 +172,50 @@ class CWebParserHunterMultiUrl(CWebParserMultiUrl):
                     a = pq(html)   
                     #items
                     items = a('nav.pagination-a').prev_all('ul li')
-                    parse_succeed = True
+            
                     for item in items.items():
-                        try:
-                            data_p = self.common.parse_item(item)    
-                            data_t = {
-                                'url'    :   data_p.get('brief').get('url'),
-                                'refurl' :   url
-                                }
-
-                            data = dict( data_t, **data_p )                                          
-                            yield data
-                                                               
-                        except:
-                            parse_succeed = False
-                            continue      
-                    if parse_succeed:
-                        self.log('parsed url %s' % url)     
-                        self.dbUtils.put_db_url(url)  
+                        data = self.common.parse_item(item)                            
+                        yield data
+                    
+                    self.log('parsed url %s' % url)     
+                    self.dbUtils.put_db_url(url)  
                 else:
                     self.log('request %s error' %url)         
-            except (GeneratorExit, StopIteration):
-                break
             except:
                 self.log( 'error in parse url %s' % url)         
-                continue 
+                yield None    
         
-        yield None          
-
+        yield None   
+        
+    '''
+    process_image
+    
+    @author: chenzf
+    '''    
+    def process_data(self, data):
+        if self.parseOnly == CParseType.Parse_Entire or self.parseOnly == CParseType.Parse_RealData:
+            if self.common.process_data(data):
+                self.dbUtils.switch_db_detail_item(data)            
+        elif self.parseOnly == CParseType.Parse_Brief:
+            datatmp = deepcopy(data)
+            self.dbUtils.insert_db_item(datatmp)
+        elif self.parseOnly == CParseType.Parse_Detail:
+            try:
+                dataDetail = self.common.parse_detail_fr_brief(data)  
+                if dataDetail:
+                    self.dbUtils.switch_db_item(data)
+                    self.dbUtils.insert_db_detail_item(dataDetail)
+            except:
+                self.log('error in parse detail_fr_brief item')       
 
 class CWebParserHunterSingleUrl(CWebParserSingleUrl):    
     def __init__(self, url, savePath, parseOnly):
         super().__init__(url, savePath)
         self.utils = CWebSpiderUtils(self.savePath)  
         self.parseOnly = CParseType(parseOnly)  
-        self.common = CWebParserSiteCommon(self)    
+        self.common = CWebParserHunterCommon(self)    
         self.dbUtils = CWebDataDbUtis('HegreHunter')
-
+        
     '''
     parse_page
     
@@ -211,35 +236,42 @@ class CWebParserHunterSingleUrl(CWebParserSingleUrl):
                 if html:
                     a = pq(html)   
                     #items
-                    items = a('ul.gallery-a li')                    
-                    parse_succeed = True
+                    items = a('ul.gallery-a li')
+                    
                     for item in items.items():
-                        try:
-                            data_p = self.common.parse_item(item)    
-                            data_t = {
-                                'url'    :   data_p.get('brief').get('url'),
-                                'refurl' :   url
-                                }
-
-                            data = dict( data_t, **data_p )                                          
-                            yield data
-                                                               
-                        except:
-                            parse_succeed = False
-                            continue      
-                    if parse_succeed:
-                        self.log('parsed url %s' % url)     
-                        self.dbUtils.put_db_url(url)      
+                        data = self.common.parse_item(item)                            
+                        yield data
+                    
+                    self.log('parsed url %s' % url)     
+                    self.dbUtils.put_db_url(url)      
                 else:
                     self.log('request %s error' %url)         
-            except (GeneratorExit, StopIteration):
-                break
             except:
                 self.log( 'error in parse url %s' % url)         
-                continue 
+                yield None    
         
-        yield None       
-
+        yield None  
+        
+    '''
+    process_image
+    
+    @author: chenzf
+    '''    
+    def process_data(self, data):
+        if self.parseOnly == CParseType.Parse_Entire or self.parseOnly == CParseType.Parse_RealData:
+            if self.common.process_data(data):
+                self.dbUtils.switch_db_detail_item(data)            
+        elif self.parseOnly == CParseType.Parse_Brief:
+            datatmp = deepcopy(data)
+            self.dbUtils.insert_db_item(datatmp)
+        elif self.parseOnly == CParseType.Parse_Detail:
+            try:
+                dataDetail = self.common.parse_detail_fr_brief(data)  
+                if dataDetail:
+                    self.dbUtils.switch_db_item(data)
+                    self.dbUtils.insert_db_detail_item(dataDetail)
+            except:
+                self.log('error in parse detail_fr_brief item')       
  
  
 def Job_Start():
