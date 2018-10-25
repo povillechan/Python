@@ -68,10 +68,6 @@ class CWebParserSiteCommon(CWebParserProcess):
 
         return data      
     
-    def get_sub_dir_name(self,data):
-        sub_dir_name = ""  
-        return sub_dir_name
-    
 class CWebParserSite(CWebParserSingleUrl):    
     def __init__(self, url, savePath, parseOnly):
         super().__init__(url,savePath)
@@ -106,7 +102,7 @@ class CWebParserSite(CWebParserSingleUrl):
                             for item in items.items():
                                 try:                            
                                     name      = item('b a').text()
-                                    board     = 'https:' + item('a img').attr('lsrc') 
+                                    board     = 'https:' + item('a img').attr('lsrc') + '.jpg'
                                     model_url = urljoin('https://www.hqbabes.com/', item('b a').attr('href'))
                                      
                                     html2 = self.utils.get_page(model_url)

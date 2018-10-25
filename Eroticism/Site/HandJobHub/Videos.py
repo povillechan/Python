@@ -76,7 +76,7 @@ class CWebParserSiteCommon(CWebParserProcess):
             else:       
                 previews = b('#galleryImages div.gallery-item-col a')            
                 stills = []
-                for previews in previews.item():
+                for previews in previews.items():
                     stills.append(previews.attr('href'))
     
                 data_detail = {

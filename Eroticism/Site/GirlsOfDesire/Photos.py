@@ -69,10 +69,6 @@ class CWebParserSiteCommon(CWebParserProcess):
 
         return data      
     
-    def get_sub_dir_name(self,data):
-        sub_dir_name = ""  
-        return sub_dir_name
-    
 class CWebParserSite(CWebParserMultiUrl):    
     def __init__(self, url, start, end, savePath, parseOnly):
         super().__init__(url, start, end, savePath)

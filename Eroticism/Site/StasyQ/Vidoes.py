@@ -28,8 +28,8 @@ class CWebParserSiteCommon(CWebParserProcess):
 #    
     def parse_item(self, item):   
         data = None   
-        url = item.attr('href')
-        name = item('img').attr('alt')
+        name = item('span a').text()
+        url  = urljoin('https://www.stasyq.com/', item('span a').attr('href'))
                                            
         data_brief = {
             'url'  : url,
@@ -45,51 +45,45 @@ class CWebParserSiteCommon(CWebParserProcess):
     def parse_detail_fr_brief(self, item):    
         data = None     
         url = item.get('brief').get('url')   
-     
-        html = self.webParser.utils.get_page(url)        
+        
+        html = self.webParser.utils.get_page(url)   
         if html:
-            b = pq(html)
+            b = pq(html)                          
             
-            video = None
-            video_src = b('center video')
-            if video_src:
-                video = urljoin(url,video_src.attr('src'))
-                data_detail = {
-                    'videos': {
-                        'name'  : item.get('brief').get('name'),
-                        'url'   : item.get('brief').get('url'),
-                        'video' : video
-                        }
+            video  = []
+            videos = b('#videoPlayer')
+            for vid in videos('source').items():
+                video.append(vid.attr('src'))
+            
+            stills = []
+            poster = videos.attr('poster')
+            result = re.search('https.*?(\d+b).jpg', poster, re.S)
+            large  = poster.replace(result.group(1), '{index}b')
+            small  = poster.replace(result.group(1), '{index}')
+
+            for i in range(1,11):
+                stills.append(large.format(index=i))
+
+            data_detail = {
+                'videos': {
+                    'name'  : item.get('brief').get('name'),
+                    'url'   : item.get('brief').get('url'),
+                    'video' : video[0] if len(video) > 1 else [],
+                    'stills': stills
                     }
-                                
-            else:                   
-                stills = []
-                for i in range(1,13):
-                    stills.append(url + "%s.jpg"%i)
-    
-                data_detail = {
-                    'galleries': {
-                        'name'  : item.get('brief').get('name'),
-                        'url'   : item.get('brief').get('url'),
-                        'stills': stills
-                        }
-                    }
+                }
             data = deepcopy(item)
             data['detail'] = data_detail                 
 
         return data      
-    
-    def get_sub_dir_name(self,data):
-        sub_dir_name = ""  
-        return sub_dir_name
-    
+        
 class CWebParserSite(CWebParserMultiUrl):    
     def __init__(self, url, start, end, savePath, parseOnly):
         super().__init__(url, start, end, savePath)
         self.utils = CWebSpiderUtils(self.savePath)  
         self.parseOnly = CParseType(parseOnly)  
         self.common = CWebParserSiteCommon(self)    
-        self.dbUtils = CWebDataDbUtis('FoxHQ')
+        self.dbUtils = CWebDataDbUtis('StasyQ')
         
     '''
     parse_page
@@ -109,27 +103,22 @@ class CWebParserSite(CWebParserMultiUrl):
                 
                 html = self.utils.get_page(url)     
                 if html:
-                    a = pq(html)     
+                    a = pq(html)   
                     #items
-                    items = a('body > table:nth-child(2) center table:nth-child(1) > table:nth-child(1) td > a[target="_blank"]')
-                    parse_succeed = True
-                    for item in items.items():
-                        try:
-                            data_p = self.common.parse_item(item)    
-                            data_t = {
-                                'name'  : "FoxHQ",
-                                'url'   : data_p.get('brief').get('url'),
-                                'refurl': url
-                                }
-    
-                            data = dict( data_t, **data_p )                                          
-                            yield data
-                        except:
-                            parse_succeed = False
-                            continue                 
-                    if parse_succeed:
-                        self.log('parsed url %s' % url)     
-                        self.dbUtils.put_db_url(url)  
+                    items = a('#mainscroll .wrapbox__box .content__text')                    
+                    for item in items.items():                                               
+                        data_p = self.common.parse_item(item)    
+                        data_t = {
+                            'name'  : data_p.get('brief').get('name'),
+                            'url'   : data_p.get('brief').get('url'),
+                            'refurl': url
+                            }
+
+                        data = dict( data_t, **data_p )                                          
+                        yield data                                           
+                    
+                    self.log('parsed url %s' % url)     
+                    self.dbUtils.put_db_url(url) 
                 else:
                     self.log('request %s error' %url)         
             except (GeneratorExit, StopIteration):
@@ -144,13 +133,13 @@ def Job_Start():
     print(__file__, "start!")
     parser = argparse.ArgumentParser(description='manual to this script')
     parser.add_argument('-s', type=int, default = 1)
-    parser.add_argument('-e', type=int, default = 343)
-    parser.add_argument('-f', type=str, default = 'FoxHQ\\{filePath}')
+    parser.add_argument('-e', type=int, default = 9)
+    parser.add_argument('-f', type=str, default = 'StasyQ\\{filePath}')
     parser.add_argument('-p', type=int, default = '0')
     args = parser.parse_args()
     print(args)
 
-    job = CWebParserSite('http://www.foxhq.com/showgals.php?page={page}', args.s, args.e, args.f, args.p)
+    job = CWebParserSite('https://www.stasyq.com/releases/page/{page}', args.s, args.e, args.f, args.p)
     job.call_process() 
     
 if __name__ == '__main__':   
