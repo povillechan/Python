@@ -29,7 +29,7 @@ class CWebParserSiteCommon(CWebParserProcess):
     def parse_item(self, item):   
         data = None   
 
-        url  = urljoin('https://www.hqbabes.com/', item('a:nth-child(2)').attr('href'))
+        url  = urljoin('https://www.hqsluts.com/', item('a:nth-child(2)').attr('href'))
         name = item('b span').text()
         if not name:
             name = item('a:nth-child(2)').attr('href').split('/')[1]
@@ -56,7 +56,7 @@ class CWebParserSiteCommon(CWebParserProcess):
             previews = b('ul.set.gallery li.item.i a')            
             stills = []
             for preview in previews.items():
-                stills.append('https:' + preview.attr('href'))
+                stills.append(preview.attr('href'))
 
             data_detail = {
                 'galleries': {
@@ -76,7 +76,7 @@ class CWebParserSite(CWebParserSingleUrl):
         self.utils = CWebSpiderUtils(self.savePath)  
         self.parseOnly = CParseType(parseOnly)  
         self.common = CWebParserSiteCommon(self)    
-        self.dbUtils = CWebDataDbUtis('HQBabes')
+        self.dbUtils = CWebDataDbUtis('HQSluts')
         
     '''
     parse_page
@@ -99,18 +99,18 @@ class CWebParserSite(CWebParserSingleUrl):
                         else:
                             a = pq(html)     
                             #items
-                            items = a('ul.babes_main li')
+                            items = a('ul.sluts_main li')
                             parse_succeed = True
                             for item in items.items():
                                 try:                            
                                     name      = item('b a').text()
-                                    board     = 'https:' + item('a img').attr('lsrc') + '.jpg'
-                                    model_url = urljoin('https://www.hqbabes.com/', item('b a').attr('href'))
+                                    board     = item('a img').attr('lsrc') + '.jpg'
+                                    model_url = urljoin('https://www.hqsluts.com/', item('b a').attr('href'))
                                      
                                     html2 = self.utils.get_page(model_url)
                                     if html2:
                                         b = pq(html2)
-                                        modelitems = b('ul.set.babe li')
+                                        modelitems = b('ul.set.slut li')
                                         for modelitem in modelitems.items():
                                             try:
                                                 data_p = self.common.parse_item(modelitem)    
@@ -135,7 +135,7 @@ class CWebParserSite(CWebParserSingleUrl):
                                 
                         next_url = a('#pages li a[count="Next Page"]')
                         if next_url:
-                            url = urljoin('https://www.hqbabes.com/', next_url.attr('href'))
+                            url = urljoin('https://www.hqsluts.com/', next_url.attr('href'))
                             self.log('request %s' %url)  
                         else:
                             break
@@ -153,14 +153,14 @@ class CWebParserSite(CWebParserSingleUrl):
 def Job_Start():
     print(__file__, "start!")
     parser = argparse.ArgumentParser(description='manual to this script')
-    parser.add_argument('-f', type=str, default=  'HQBabes\\{filePath}')
+    parser.add_argument('-f', type=str, default=  'HQSluts\\{filePath}')
     parser.add_argument('-p', type=int, default=  '0')
     args = parser.parse_args()
     print(args)
 
     for url in range(ord("A"),ord("Z")+1):
 #         print(chr(url))
-        job = CWebParserSite("https://www.hqbabes.com/babes/%s/"%chr(url), args.f, args.p)
+        job = CWebParserSite("https://www.hqsluts.com/sluts/%s/"%chr(url), args.f, args.p)
         job.call_process()
     
 if __name__ == '__main__':   
