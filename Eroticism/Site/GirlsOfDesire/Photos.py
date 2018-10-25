@@ -54,8 +54,8 @@ class CWebParserSiteCommon(CWebParserProcess):
             stills = []
             for preview in previews.items():
                 prefix = re.search('(.*?)_thumb.jpg', preview('img').attr('src'))
-                if prefiex:
-                    stills.append(urljoin('https://www.girlsofdesire.org/', prefiex.group(1) + ".jpg"))
+                if prefix:
+                    stills.append(urljoin('https://www.girlsofdesire.org/', prefix.group(1) + ".jpg"))
 
             data_detail = {
                 'galleries': {
@@ -68,6 +68,10 @@ class CWebParserSiteCommon(CWebParserProcess):
             data['detail'] = data_detail                 
 
         return data      
+        
+    def get_sub_dir_name(self,data):
+        sub_dir_name = ""  
+        return sub_dir_name
     
 class CWebParserSite(CWebParserMultiUrl):    
     def __init__(self, url, start, end, savePath, parseOnly):
