@@ -118,7 +118,7 @@ class CWebSpiderUtils(object):
           
                     return self.save_file(response, filePath)  
                 else:
-                    print(url + " is error[%s]", response.status_code)
+                    print(url + " is error[%s]"%response.status_code)
                     down_retrys +=1
                     if down_retrys >= self.m_retry_times:
                         return False
