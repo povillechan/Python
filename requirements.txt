@@ -32,3 +32,5 @@ pyinstaller
 scrapy
 splash
 threadpool   
+vthread
+bs4
