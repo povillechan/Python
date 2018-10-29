@@ -21,6 +21,7 @@ from urllib.parse import urljoin
 import vthread
 import pymongo
 from copy import deepcopy
+from multiprocessing import cpu_count
 
 class CWebParserSiteCommon(CWebParserProcess):
     def __init__(self, webParser):
@@ -69,13 +70,14 @@ class CWebParserSiteCommon(CWebParserProcess):
         return data      
     
 class CWebParserSite(CWebParserSingleUrl):    
-    def __init__(self, url, savePath, parseOnly):
+    def __init__(self, url, savePath, parseOnly, threadNum):
         super().__init__(url,savePath)
         self.utils = CWebSpiderUtils(self.savePath)  
         self.parseOnly = CParseType(parseOnly)  
         self.common = CWebParserSiteCommon(self)    
         self.dbUtils = CWebDataDbUtis('HQBabes')
-        
+        self.thread_num = threadNum     
+          
     '''
     parse_page
     
@@ -152,13 +154,14 @@ def Job_Start():
     print(__file__, "start!")
     parser = argparse.ArgumentParser(description='manual to this script')
     parser.add_argument('-f', type=str, default=  'HQBabes\\{filePath}')
+    parser.add_argument('-t', type=int, default=  cpu_count() - 1) 
     parser.add_argument('-p', type=int, default=  '0')
     args = parser.parse_args()
     print(args)
 
     for url in range(ord("A"),ord("Z")+1):
 #         print(chr(url))
-        job = CWebParserSite("https://www.hqbabes.com/babes/%s/"%chr(url), args.f, args.p)
+        job = CWebParserSite("https://www.hqbabes.com/babes/%s/"%chr(url), args.f, args.p, args.t)
         job.call_process()
     
 if __name__ == '__main__':   

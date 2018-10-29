@@ -21,6 +21,7 @@ from urllib.parse import urljoin
 import vthread
 import pymongo
 from copy import deepcopy
+from multiprocessing import cpu_count
 
 class CWebParserSiteCommon(CWebParserProcess):
     def __init__(self, webParser):
@@ -116,12 +117,13 @@ class CWebParserSiteCommon(CWebParserProcess):
 #         return result      
         
 class CWebParserSite(CWebParserMultiUrl):    
-    def __init__(self, url, start, end, savePath, parseOnly):
+    def __init__(self, url, start, end, savePath, parseOnly, threadNum):
         super().__init__(url, start, end, savePath)
         self.utils = CWebSpiderUtils(self.savePath)  
         self.parseOnly = CParseType(parseOnly)  
         self.common = CWebParserSiteCommon(self)    
         self.dbUtils = CWebDataDbUtis('WatchMyGF')
+        self.thread_num = threadNum
         
     '''
     parse_page
@@ -189,10 +191,11 @@ def Job_Start():
     parser.add_argument('-e', type=int, default = 34)
     parser.add_argument('-f', type=str, default = 'WatchMyGF\\{filePath}')
     parser.add_argument('-p', type=int, default = '0')
+    parser.add_argument('-t', type=int, default=  cpu_count() - 1) 
     args = parser.parse_args()
     print(args)
 
-    job = CWebParserSite('https://watch-my-gf.com/girls.html?mode=async&function=get_block&block_id=list_models_models_list&section=&sort_by=avg_videos_popularity&from={page}', args.s, args.e, args.f, args.p)
+    job = CWebParserSite('https://watch-my-gf.com/girls.html?mode=async&function=get_block&block_id=list_models_models_list&section=&sort_by=avg_videos_popularity&from={page}', args.s, args.e, args.f, args.p, args.t)
     job.call_process() 
     
 if __name__ == '__main__':   

@@ -21,6 +21,7 @@ from urllib.parse import urljoin
 import vthread
 import pymongo
 from copy import deepcopy
+from multiprocessing import cpu_count
 
 class CWebParserSiteCommon(CWebParserProcess):
     def __init__(self, webParser):
@@ -77,12 +78,13 @@ class CWebParserSiteCommon(CWebParserProcess):
         return sub_dir_name  
     
 class CWebParserSite(CWebParserSingleUrl):    
-    def __init__(self, url, savePath, parseOnly):
+    def __init__(self, url, savePath, parseOnly, threadNum):
         super().__init__(url, savePath)
         self.utils = CWebSpiderUtils(self.savePath)  
         self.parseOnly = CParseType(parseOnly)  
         self.common = CWebParserSiteCommon(self)    
         self.dbUtils = CWebDataDbUtis('TeenPortGirls')
+        self.thread_num = threadNum
         
     '''
     parse_page
@@ -151,10 +153,11 @@ def Job_Start():
     parser = argparse.ArgumentParser(description='manual to this script')
     parser.add_argument('-f', type=str, default='TeenPort\\{filePath}')
     parser.add_argument('-p', type=int, default='0')
+    parser.add_argument('-t', type=int, default=  cpu_count() - 1) 
     args = parser.parse_args()
     print(args)
     for job_item in job_list:
-        job = CWebParserSite(job_item[1], args.f, args.p)
+        job = CWebParserSite(job_item[1], args.f, args.p, args.t)
         job.call_process()
         
 if __name__ == '__main__':   
