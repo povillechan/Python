@@ -4,24 +4,19 @@ Created on 2018年6月1日
 
 @author: chenzf
 '''
-import os, sys, re, json
-import argparse
-from copy import deepcopy
+import os, sys, re, json, collections
+
 parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, parentdir)
 
-from Common.CWebParser import CParseType,CWebParser,CWebParserMultiUrl,CWebParserSingleUrl
+from Common.CWebParser import CParseType, CWebParser, CWebParserMultiUrl, CWebParserSingleUrl
 from Common.CWebDataDbUtis import CWebDataDbUtis
 from Common.CWebSpiderUtils import CWebSpiderUtils
 from Common.CWebParserProcess import CWebParserProcess
 from copy import deepcopy
-from bs4 import BeautifulSoup
 from pyquery import PyQuery as pq
 from urllib.parse import urljoin
-import vthread
-import pymongo
-from copy import deepcopy
-from multiprocessing import cpu_count
+
 
 class CWebParserSiteCommon(CWebParserProcess):
     def __init__(self, webParser):
@@ -70,16 +65,14 @@ class CWebParserSiteCommon(CWebParserProcess):
             data['detail'] = data_detail                 
 
         return data      
-    
+
+
 class CWebParserSite(CWebParserSingleUrl):    
-    def __init__(self, url, savePath, parseOnly, threadNum):
-        super().__init__(url,savePath)
-        self.utils = CWebSpiderUtils(self.savePath)  
-        self.parseOnly = CParseType(parseOnly)  
-        self.common = CWebParserSiteCommon(self)    
-        self.dbUtils = CWebDataDbUtis('HQSluts')
-        self.thread_num = threadNum
-                
+    def __init__(self, **kwArgs):
+        super().__init__(**kwArgs)
+        self.utils = CWebSpiderUtils(self.savePath)
+        self.common = CWebParserSiteCommon(self)
+        self.dbUtils = CWebDataDbUtis(kwArgs.get('database'))
     '''
     parse_page
     
@@ -150,21 +143,20 @@ class CWebParserSite(CWebParserSingleUrl):
                 self.log( 'error in parse url %s' % url)         
                 continue                   
         
-        yield None                     
+        yield None  
+           
                     
-def Job_Start():
-    print(__file__, "start!")
-    parser = argparse.ArgumentParser(description='manual to this script')
-    parser.add_argument('-f', type=str, default=  'HQSluts\\{filePath}')
-    parser.add_argument('-p', type=int, default=  '0')
-    parser.add_argument('-t', type=int, default=  cpu_count() - 1) 
-    args = parser.parse_args()
-    print(args)
-
+def job_start():
     for url in range(ord("A"),ord("Z")+1):
-#         print(chr(url))
-        job = CWebParserSite("https://www.hqsluts.com/sluts/%s/"%chr(url), args.f, args.p, args.t)
-        job.call_process()
-    
+	    para_args = {
+	        'savePath': 'HQSluts\\{filePath}',
+	        'url': "https://www.hqsluts.com/sluts/%s/"%chr(url),
+	        'database': 'HQSluts'
+	    }
+
+	    job = CWebParserSite(**para_args)
+	    job.call_process()
+
+
 if __name__ == '__main__':   
-    Job_Start() 
+    job_start() 

@@ -5,23 +5,18 @@ Created on 2018年6月1日
 @author: chenzf
 '''
 import os, sys, re, json, collections
-import argparse
-from copy import deepcopy
+
 parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, parentdir)
 
-from Common.CWebParser import CParseType,CWebParser,CWebParserMultiUrl,CWebParserSingleUrl
+from Common.CWebParser import CParseType, CWebParser, CWebParserMultiUrl, CWebParserSingleUrl
 from Common.CWebDataDbUtis import CWebDataDbUtis
 from Common.CWebSpiderUtils import CWebSpiderUtils
 from Common.CWebParserProcess import CWebParserProcess
 from copy import deepcopy
-from bs4 import BeautifulSoup
 from pyquery import PyQuery as pq
 from urllib.parse import urljoin
-import vthread
-import pymongo
-from copy import deepcopy
-from multiprocessing import cpu_count
+
 
 class CWebParserSiteCommon(CWebParserProcess):
     def __init__(self, webParser):
@@ -101,16 +96,14 @@ class CWebParserSiteCommon(CWebParserProcess):
     def get_sub_dir_name(self,data):
         sub_dir_name = ""        
         return sub_dir_name
-            
+
+
 class CWebParserSite(CWebParserSingleUrl):    
-    def __init__(self, url, savePath, parseOnly, threadNum):
-        super().__init__(url,savePath)
-        self.utils = CWebSpiderUtils(self.savePath)  
-        self.parseOnly = CParseType(parseOnly)  
-        self.common = CWebParserSiteCommon(self)    
-        self.dbUtils = CWebDataDbUtis('FleshlightGirls')
-        self.thread_num = threadNum  
-             
+    def __init__(self, **kwArgs):
+        super().__init__(**kwArgs)
+        self.utils = CWebSpiderUtils(self.savePath)
+        self.common = CWebParserSiteCommon(self)
+        self.dbUtils = CWebDataDbUtis(kwArgs.get('database'))
     '''
     parse_page
     
@@ -159,25 +152,36 @@ class CWebParserSite(CWebParserSingleUrl):
                 continue    
         
         yield None  
-                        
-def Job_Start():
-    print(__file__, "start!")
-    parser = argparse.ArgumentParser(description='manual to this script')
-    parser.add_argument('-f', type=str, default=  'FleshlightGirls\\{filePath}')
-    parser.add_argument('-p', type=int, default=  '0')
-    parser.add_argument('-t', type=int, default=  cpu_count() - 1) 
-    args = parser.parse_args()
-    print(args)
+
+
+def job_start():
     job_list = [
-        ('S', 'https://au.fleshlight.com/collections/fleshlight-girls/'),
-        ('S', 'https://au.fleshlight.com/collections/legends'),
-        ('S', 'https://au.fleshlight.com/collections/dorcel-girls'),
-        ('S', 'https://au.fleshlight.com/collections/camstars')
+        {
+            'savePath': 'FleshlightGirls\\{filePath}',
+            'url': 'https://au.fleshlight.com/collections/fleshlight-girls/',
+            'database': 'FleshlightGirls'
+        },
+        {
+            'savePath': 'FleshlightGirls\\{filePath}',
+            'url': 'https://au.fleshlight.com/collections/legends',
+            'database': 'FleshlightGirls'
+        },
+        {
+            'savePath': 'FleshlightGirls\\{filePath}',
+            'url': 'https://au.fleshlight.com/collections/dorcel-girls',
+            'database': 'FleshlightGirls'
+        },
+        {
+            'savePath': 'FleshlightGirls\\{filePath}',
+            'url': 'https://au.fleshlight.com/collections/camstars',
+            'database': 'FleshlightGirls'
+        }
         ]
           
     for job_item in job_list:
-         job = CWebParserSite(job_item[1], args.f, args.p, args.t)
-         job.call_process()   
-    
+	    job = CWebParserSite(**job_item)
+	    job.call_process()
+
+
 if __name__ == '__main__':   
-    Job_Start() 
+    job_start() 

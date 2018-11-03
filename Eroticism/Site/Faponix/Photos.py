@@ -4,24 +4,19 @@ Created on 2018年6月1日
 
 @author: chenzf
 '''
-import os, sys, re, json
-import argparse
-from copy import deepcopy
+import os, sys, re, json, collections
+
 parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, parentdir)
 
-from Common.CWebParser import CParseType,CWebParser,CWebParserMultiUrl,CWebParserSingleUrl
+from Common.CWebParser import CParseType, CWebParser, CWebParserMultiUrl, CWebParserSingleUrl
 from Common.CWebDataDbUtis import CWebDataDbUtis
 from Common.CWebSpiderUtils import CWebSpiderUtils
 from Common.CWebParserProcess import CWebParserProcess
 from copy import deepcopy
-from bs4 import BeautifulSoup
 from pyquery import PyQuery as pq
 from urllib.parse import urljoin
-import vthread
-import pymongo
-from copy import deepcopy
-from multiprocessing import cpu_count
+
 
 class CWebParserSiteCommon(CWebParserProcess):
     def __init__(self, webParser):
@@ -43,6 +38,7 @@ class CWebParserSiteCommon(CWebParserProcess):
             return data 
         else:                    
             return self.parse_detail_fr_brief(data) 
+        
     
     def parse_detail_fr_brief(self, item):
         data = None 
@@ -68,15 +64,14 @@ class CWebParserSiteCommon(CWebParserProcess):
             data['detail'] = data_detail
 
         return data         
-    
+
+
 class CWebParserSite(CWebParserSingleUrl):    
-    def __init__(self, url, savePath, parseOnly, threadNum):
-        super().__init__(url, savePath)
-        self.utils = CWebSpiderUtils(self.savePath)  
-        self.parseOnly = CParseType(parseOnly)  
-        self.common = CWebParserSiteCommon(self)    
-        self.dbUtils = CWebDataDbUtis('Faponix')
-        self.thread_num = threadNum        
+    def __init__(self, **kwArgs):
+        super().__init__(**kwArgs)
+        self.utils = CWebSpiderUtils(self.savePath)
+        self.common = CWebParserSiteCommon(self)
+        self.dbUtils = CWebDataDbUtis(kwArgs.get('database'))
     '''
     parse_page
     
@@ -181,22 +176,16 @@ class CWebParserSite(CWebParserSingleUrl):
         yield None       
         
                 
-def Job_Start():
-    print(__file__, "start!")
-   
-    job_list = [
-    ('S', 'https://www.faponix.com/categories/'), 
-    ]
-    
-    parser = argparse.ArgumentParser(description='manual to this script')
-    parser.add_argument('-f', type=str, default='Faponix\\{filePath}')
-    parser.add_argument('-p', type=int, default='0')
-    parser.add_argument('-t', type=int, default=  cpu_count() - 1) 
-    args = parser.parse_args()
-    print(args)
-    for job_item in job_list:
-        job = CWebParserSite(job_item[1], args.f, args.p, args.t)
-        job.call_process()
-        
+def job_start():
+    para_args = {
+        'savePath': 'Faponix\\{filePath}',
+        'url': 'https://www.faponix.com/categories/',
+        'database': 'Faponix'
+    }
+
+    job = CWebParserSite(**para_args)
+    job.call_process()
+
+
 if __name__ == '__main__':   
-    Job_Start() 
+    job_start() 

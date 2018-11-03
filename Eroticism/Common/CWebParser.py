@@ -14,6 +14,7 @@ import socket
 from enum import Enum
 from copy import deepcopy
 import sys
+import argparse
 
 class CParseType(Enum):
     Parse_Entire   = 0
@@ -302,28 +303,101 @@ class CWebParser(object):
         return None
         
     def call_process(self):
-        self.process()        
+        self.process()
+
+    def param_parse(self):
+        parser = argparse.ArgumentParser(description='manual to this script')
+        parser.add_argument('-s', type=int, default = None)
+        parser.add_argument('-e', type=int, default = None)
+        parser.add_argument('-f', type=str, default = None)
+        parser.add_argument('-p', type=int, default = '0')
+        parser.add_argument('-t', type=int, default = cpu_count() - 1)
+        parser.add_argument('-u', type=str, default = None)
+        self.args = parser.parse_args()
         
 class CWebParserMultiUrl(CWebParser):    
-    def __init__(self, url, start, end, savePath):
-        super().__init__(savePath)
-        self.url = url
-        self.start = start
-        self.end = end
+    # def __init__(self, url, start, end, savePath):
+    def __init__(self, **kwArgs):
+        super().param_parse()
+        try:
+            # save path
+            if self.args.f:
+                super().__init__(self.args.f)
+            elif kwArgs.get('savePath'):
+                super().__init__(kwArgs.get('savePath'))
+            else:
+                raise Exception('no save path!')
+
+            # url
+            if self.args.u:
+                self.url = self.args.u
+            elif kwArgs.get('url'):
+                self.url =  kwArgs.get('url')
+            else:
+                raise Exception('no url!')
+
+            # start
+            if self.args.s:
+                self.start = self.args.s
+            elif kwArgs.get('start'):
+                self.start =  kwArgs.get('start')
+            else:
+                raise Exception('no start positon!')
+
+            # end
+            if self.args.e:
+                self.end = self.args.e
+            elif kwArgs.get('end'):
+                self.end =  kwArgs.get('end')
+            else:
+                raise Exception('no end positon!')
+
+            # thread num
+            self.thread_num = self.args.t
+
+            # parse only
+            self.parseOnly = CParseType(self.args.p)
+
+        except Exception as e:
+            print(e)
+            exit()
                
     def urls_genarator(self):
         for i in range(self.start, self.end+1):
             yield self.url.format(page=i)
         yield None
-        
 
 class CWebParserSingleUrl(CWebParser):    
-    def __init__(self, url, savePath):
-        super().__init__(savePath)
-        self.url = url
-        self.start = None
-        self.end = None    
-               
+    def __init__(self, **kwArgs):
+        super().param_parse()
+        try:
+            self.start = None
+            self.end = None
+            # save path
+            if self.args.f:
+                super().__init__(self.args.f)
+            elif kwArgs.get('savePath'):
+                super().__init__(kwArgs.get('savePath'))
+            else:
+                raise Exception('no save path!')
+
+            # url
+            if self.args.u:
+                self.url = self.args.u
+            elif kwArgs.get('url'):
+                self.url = kwArgs.get('url')
+            else:
+                raise Exception('no url!')
+
+            # thread num
+            self.thread_num = self.args.t
+
+            # parse only
+            self.parseOnly = CParseType(self.args.p)
+        except Exception as e:
+            print(e)
+            exit()
+
     def urls_genarator(self):
         yield self.url
         yield None   

@@ -4,27 +4,23 @@ Created on 2018年6月1日
 
 @author: chenzf
 '''
-import os, sys, re, json
-import argparse
-from copy import deepcopy
+import os, sys, re, json, collections
+
 parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, parentdir)
 
-from Common.CWebParser import CParseType,CWebParser,CWebParserMultiUrl,CWebParserSingleUrl
+from Common.CWebParser import CParseType, CWebParser, CWebParserMultiUrl, CWebParserSingleUrl
 from Common.CWebDataDbUtis import CWebDataDbUtis
 from Common.CWebSpiderUtils import CWebSpiderUtils
+from Common.CWebParserProcess import CWebParserProcess
 from copy import deepcopy
-from bs4 import BeautifulSoup
 from pyquery import PyQuery as pq
 from urllib.parse import urljoin
-import vthread
-import pymongo
-from copy import deepcopy
-from multiprocessing import cpu_count
 
-class CWebParserSiteCommon(object):
+
+class CWebParserSiteCommon(CWebParserProcess):
     def __init__(self, webParser):
-        self.webParser = webParser
+        super().__init__(webParser)
 #    
     def parse_item(self, item):   
         data = None   
@@ -124,16 +120,14 @@ class CWebParserSiteCommon(object):
                                      '%s\\%s\\%s' % (sub_dir_name, data.get('name'), 'video_preview')
                                      )     
         return result      
-        
+
+
 class CWebParserSite(CWebParserMultiUrl):    
-    def __init__(self, url, start, end, savePath, parseOnly, threadNum):
-        super().__init__(url, start, end, savePath)
-        self.utils = CWebSpiderUtils(self.savePath)  
-        self.parseOnly = CParseType(parseOnly)  
-        self.common = CWebParserSiteCommon(self)    
-        self.dbUtils = CWebDataDbUtis('X-ArtFan')
-        self.thread_num = threadNum
-        
+    def __init__(self, **kwArgs):
+        super().__init__(**kwArgs)
+        self.utils = CWebSpiderUtils(self.savePath)
+        self.common = CWebParserSiteCommon(self)
+        self.dbUtils = CWebDataDbUtis(kwArgs.get('database'))
     '''
     parse_page
     
@@ -164,48 +158,27 @@ class CWebParserSite(CWebParserMultiUrl):
                     self.dbUtils.put_db_url(url) 
                 else:
                     self.log('request %s error' %url)         
+            except (GeneratorExit, StopIteration):
+                break
             except:
                 self.log( 'error in parse url %s' % url)         
-                  
+                continue                   
         
         yield None  
-        
-    '''
-    process_image
-    
-    @author: chenzf
-    '''    
-    def process_data(self, data):
-        if self.parseOnly == CParseType.Parse_Entire or self.parseOnly == CParseType.Parse_RealData:
-            if self.common.process_data(data):
-                self.dbUtils.switch_db_detail_item(data)            
-        elif self.parseOnly == CParseType.Parse_Brief:
-            datatmp = deepcopy(data)
-            self.dbUtils.insert_db_item(datatmp)
-        elif self.parseOnly == CParseType.Parse_Detail:
-            try:
-                dataDetail = self.common.parse_detail_fr_brief(data)  
-                if dataDetail:
-                    self.dbUtils.switch_db_item(data)
-                    self.dbUtils.insert_db_detail_item(dataDetail)
-            except:
-                self.log('error in parse detail_fr_brief item')       
-    
-                
+           
                     
-def Job_Start():
-    print(__file__, "start!")
-    parser = argparse.ArgumentParser(description='manual to this script')
-    parser.add_argument('-s', type=int, default = 1)
-    parser.add_argument('-e', type=int, default = 52)
-    parser.add_argument('-f', type=str, default = 'X-ArtFan\\{filePath}')
-    parser.add_argument('-p', type=int, default = '0')
-    parser.add_argument('-t', type=int, default=  cpu_count() - 1) 
-    args = parser.parse_args()
-    print(args)
+def job_start():
+    para_args = {
+        'savePath': 'X-ArtFan\\{filePath}',
+        'url': 'https://xartfan.com/page/{page}',
+        'database': 'X-ArtFan',
+	    'start': 1,
+		'end': 52
+    }
 
-    job = CWebParserSite('https://xartfan.com/page/{page}', args.s, args.e, args.f, args.p, args.t)
-    job.call_process() 
-    
+    job = CWebParserSite(**para_args)
+    job.call_process()
+
+
 if __name__ == '__main__':   
-    Job_Start() 
+    job_start() 

@@ -4,7 +4,7 @@ Created on 2018年6月1日
 
 @author: chenzf
 '''
-import os, sys, re, json, collections
+import os, sys, re, json
 import argparse
 from copy import deepcopy
 parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -22,6 +22,7 @@ import vthread
 import pymongo
 from copy import deepcopy
 from multiprocessing import cpu_count
+
 
 class CWebParserSiteCommon(CWebParserProcess):
     def __init__(self, webParser):
@@ -102,7 +103,6 @@ class CWebParserSiteCommon(CWebParserProcess):
         return data        
  
     def process_data(self, data):
-#         print(data)
         result = True
         sub_dir_name = self.get_sub_dir_name(data)
        
@@ -166,15 +166,14 @@ class CWebParserSiteCommon(CWebParserProcess):
                                      )      
                 
         return result  
-        
+
+
 class CWebParserSite(CWebParserSingleUrl):    
-    def __init__(self, url, savePath, parseOnly, threadNum):
-        super().__init__(url,savePath)
-        self.utils = CWebSpiderUtils(self.savePath)  
-        self.parseOnly = CParseType(parseOnly)  
-        self.common = CWebParserSiteCommon(self)    
-        self.dbUtils = CWebDataDbUtis('18OnlyGirls')
-        self.thread_num = threadNum
+    def __init__(self, **kwArgs):
+        super().__init__(**kwArgs)
+        self.utils = CWebSpiderUtils(self.savePath)
+        self.common = CWebParserSiteCommon(self)
+        self.dbUtils = CWebDataDbUtis(kwArgs.get('database'))
     '''
     parse_page
     
@@ -233,17 +232,16 @@ class CWebParserSite(CWebParserSingleUrl):
         yield None  
                 
                     
-def Job_Start():
-    print(__file__, "start!")
-    parser = argparse.ArgumentParser(description='manual to this script')
-    parser.add_argument('-f', type=str, default=  '18OnlyGirls\\{filePath}')
-    parser.add_argument('-p', type=int, default=  '0')
-    parser.add_argument('-t', type=int, default=  cpu_count() - 1) 
-    args = parser.parse_args()
-    print(args)
+def job_start():
+    para_args = {
+        'savePath': '18OnlyGirls\\{filePath}',
+        'url': 'https://www.18onlygirlsblog.com/models-list/',
+        'database': '18OnlyGirls'
+    }
 
-    job = CWebParserSite('https://www.18onlygirlsblog.com/models-list/', args.f, args.p, args.t)
+    job = CWebParserSite(**para_args)
     job.call_process()
-    
+
+
 if __name__ == '__main__':   
-    Job_Start() 
+    job_start() 

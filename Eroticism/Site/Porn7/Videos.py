@@ -4,27 +4,23 @@ Created on 2018年6月1日
 
 @author: chenzf
 '''
-import os, sys, re, json
-import argparse
-from copy import deepcopy
+import os, sys, re, json, collections
+
 parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, parentdir)
 
-from Common.CWebParser import CParseType,CWebParser,CWebParserMultiUrl,CWebParserSingleUrl
+from Common.CWebParser import CParseType, CWebParser, CWebParserMultiUrl, CWebParserSingleUrl
 from Common.CWebDataDbUtis import CWebDataDbUtis
 from Common.CWebSpiderUtils import CWebSpiderUtils
+from Common.CWebParserProcess import CWebParserProcess
 from copy import deepcopy
-from bs4 import BeautifulSoup
 from pyquery import PyQuery as pq
 from urllib.parse import urljoin
-import vthread
-import pymongo
-from copy import deepcopy
-from multiprocessing import cpu_count
 
-class CWebParserSiteCommon(object):
+
+class CWebParserSiteCommon(CWebParserProcess):
     def __init__(self, webParser):
-        self.webParser = webParser
+        super().__init__(webParser)
 #    
     def parse_item(self, item):   
         data = None   
@@ -98,18 +94,14 @@ class CWebParserSiteCommon(object):
                                     headers={'Referer':data.get('detail').get('videos').get('url')}
                                  ) 
         return result      
-        
-class CWebParserSite(CWebParserMultiUrl):    
-    def __init__(self, url, start, end, savePath, parseOnly, threadNum):
-        super().__init__(url, start, end, savePath)
-        self.utils = CWebSpiderUtils(self.savePath)  
-        self.parseOnly = CParseType(parseOnly)  
-        self.common = CWebParserSiteCommon(self)    
-        self.dbUtils = CWebDataDbUtis('Porn7')
-        self.thread_num = threadNum
-#         if self.parseOnly == CParseType.Parse_Entire or self.parseOnly == CParseType.Parse_Detail:
-#             self.thread_num = 1
-        
+
+
+class CWebParserSite(CWebParserMultiUrl):
+    def __init__(self, **kwArgs):
+        super().__init__(**kwArgs)
+        self.utils = CWebSpiderUtils(self.savePath)
+        self.common = CWebParserSiteCommon(self)
+        self.dbUtils = CWebDataDbUtis(kwArgs.get('database'))
     '''
     parse_page
     
@@ -122,7 +114,7 @@ class CWebParserSite(CWebParserMultiUrl):
                 url = next(urlsGen)
                 if not url:
                     yield None
-                
+                    
                 if self.dbUtils.get_db_url(url):
                     continue
                 
@@ -153,21 +145,20 @@ class CWebParserSite(CWebParserMultiUrl):
                 continue
         
         yield None  
-               
+           
                     
-def Job_Start():
-    print(__file__, "start!")
-    parser = argparse.ArgumentParser(description='manual to this script')
-    parser.add_argument('-s', type=int, default = 0)
-    parser.add_argument('-e', type=int, default = 222)
-    parser.add_argument('-f', type=str, default = 'Porn7\\{filePath}')
-    parser.add_argument('-p', type=int, default = '0')
-    parser.add_argument('-t', type=int, default=  cpu_count() - 1) 
-    args = parser.parse_args()
-    print(args)
+def job_start():
+    para_args = {
+        'savePath': 'Porn7\\{filePath}',
+        'url': 'https://www.porn7.xxx/rated/?mode=async&function=get_block&block_id=list_videos_common_videos_list&sort_by=rating&from={page}',
+        'database': 'Porn7',
+	    'start': 0,
+		'end': 222
+    }
 
-    job = CWebParserSite('https://www.porn7.xxx/rated/?mode=async&function=get_block&block_id=list_videos_common_videos_list&sort_by=rating&from={page}', args.s, args.e, args.f, args.p, args.t)
-    job.call_process() 
-    
+    job = CWebParserSite(**para_args)
+    job.call_process()
+
+
 if __name__ == '__main__':   
-    Job_Start() 
+    job_start() 
