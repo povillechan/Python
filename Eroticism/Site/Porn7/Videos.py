@@ -21,33 +21,34 @@ from urllib.parse import urljoin
 class CWebParserSiteCommon(CWebParserProcess):
     def __init__(self, webParser):
         super().__init__(webParser)
-#    
-    def parse_item(self, item):   
-        data = None   
-        url   = item.attr('href')
-        name  = item.attr('title')
+
+    #
+    def parse_item(self, item):
+        data = None
+        url = item.attr('href')
+        name = item.attr('title')
 
         data_brief = {
-            'name' : self.webParser.utils.format_name(name), 
-            'url'  : url    
-            } 
-        
+            'name': self.webParser.utils.format_name(name),
+            'url': url
+        }
+
         data = {'brief': data_brief}
-        
-        if self.webParser.parseOnly == CParseType.Parse_Brief:                             
+
+        if self.webParser.parseOnly == CParseType.Parse_Brief:
             return data
-        else:                    
-            return self.parse_detail_fr_brief(data) 
-    
+        else:
+            return self.parse_detail_fr_brief(data)
+
     def parse_detail_fr_brief(self, item):
-        data = None     
-        url = item.get('brief').get('url')        
-        html = self.webParser.utils.get_page_by_chrome(url, 'video', headless=False)       
-        
+        data = None
+        url = item.get('brief').get('url')
+        html = self.webParser.utils.get_page_by_chrome(url, 'video', headless=False)
+
         if html:
-            b = BeautifulSoup(html, 'lxml')                         
-             
-            video  = b.select_one('video.fp-engine').get('src')  
+            b = BeautifulSoup(html, 'lxml')
+
+            video = b.select_one('video.fp-engine').get('src')
 
             board = None
             board_url = re.search('preview_url: \'(https.*?)\'', html, re.S)
@@ -56,44 +57,46 @@ class CWebParserSiteCommon(CWebParserProcess):
 
             data_detail = {
                 'videos': {
-                    'name' : item.get('brief').get('name'),
-                    'url'  : url,
+                    'name': item.get('brief').get('name'),
+                    'url': url,
                     'board': board,
                     'video': video,
-                    'stills':[],
-                    }
+                    'stills': [],
                 }
-                                                
+            }
+
             data = deepcopy(item)
             data['detail'] = data_detail
-        return data       
+        return data
 
     def process_data(self, data):
         result = True
-        sub_dir_name = "" 
-       
+        sub_dir_name = ""
+
         dir_name = self.webParser.savePath.format(filePath=sub_dir_name)
         if not os.path.exists(dir_name):
             os.makedirs(dir_name)
-        
-#         with open(dir_name + '\\info.json', 'w') as f:    
-#             json.dump(data, f)
-           
+
+        #         with open(dir_name + '\\info.json', 'w') as f:
+        #             json.dump(data, f)
+
         board = data.get('detail').get('videos').get('board')
         if board:
-            result &=  self.webParser.utils.download_file(board,
-                                data.get('detail').get('videos').get('name'),
-                                headers={'Referer':data.get('detail').get('videos').get('url')}
-                                ) 
-             
+            result &= self.webParser.utils.download_file(board,
+                                                         data.get('detail').get('videos').get('name'),
+                                                         headers={
+                                                             'Referer': data.get('detail').get('videos').get('url')}
+                                                         )
+
         video = data.get('detail').get('videos').get('video')
         if video:
-            result &=  self.webParser.utils.download_file(video,
-                                    data.get('detail').get('videos').get('name'),
-                                    fileType='mp4',
-                                    headers={'Referer':data.get('detail').get('videos').get('url')}
-                                 ) 
-        return result      
+            result &= self.webParser.utils.download_file(video,
+                                                         data.get('detail').get('videos').get('name'),
+                                                         fileType='mp4',
+                                                         headers={
+                                                             'Referer': data.get('detail').get('videos').get('url')}
+                                                         )
+        return result
 
 
 class CWebParserSite(CWebParserMultiUrl):
@@ -102,63 +105,65 @@ class CWebParserSite(CWebParserMultiUrl):
         self.utils = CWebSpiderUtils(self.savePath)
         self.common = CWebParserSiteCommon(self)
         self.dbUtils = CWebDataDbUtis(kwArgs.get('database'))
+
     '''
     parse_page
     
     @author: chenzf
-    ''' 
+    '''
+
     def parse_page(self):
         urlsGen = self.urls_genarator()
-        while True: 
+        while True:
             try:
                 url = next(urlsGen)
                 if not url:
                     yield None
-                    
+
                 if self.dbUtils.get_db_url(url):
                     continue
-                
-                html = self.utils.get_page(url)     
-                if html:
-                    a = pq(html)   
-                    #items
-                    items = a('#list_videos_common_videos_list_items > div > a')
-                    
-                    for item in items.items():
-                        data_p = self.common.parse_item(item)    
-                        data_t = {
-                            'name'  : data_p.get('brief').get('name'),
-                            'url'   : data_p.get('brief').get('url'),
-                            'refurl': url
-                            }
 
-                        data = dict( data_t, **data_p )                                                 
-                        yield data     
-                    self.log('parsed url %s' % url)      
-                    self.dbUtils.put_db_url(url) 
+                html = self.utils.get_page(url)
+                if html:
+                    a = pq(html)
+                    # items
+                    items = a('#list_videos_common_videos_list_items > div > a')
+
+                    for item in items.items():
+                        data_p = self.common.parse_item(item)
+                        data_t = {
+                            'name': data_p.get('brief').get('name'),
+                            'url': data_p.get('brief').get('url'),
+                            'refurl': url
+                        }
+
+                        data = dict(data_t, **data_p)
+                        yield data
+                    self.log('parsed url %s' % url)
+                    self.dbUtils.put_db_url(url)
                 else:
-                    self.log('request %s error' %url)   
+                    self.log('request %s error' % url)
             except (GeneratorExit, StopIteration):
-                break      
+                break
             except:
-                self.log( 'error in parse url %s' % url)         
+                self.log('error in parse url %s' % url)
                 continue
-        
-        yield None  
-           
-                    
+
+        yield None
+
+
 def job_start():
     para_args = {
         'savePath': 'Porn7\\{filePath}',
         'url': 'https://www.porn7.xxx/rated/?mode=async&function=get_block&block_id=list_videos_common_videos_list&sort_by=rating&from={page}',
         'database': 'Porn7',
-	    'start': 0,
-		'end': 222
+        'start': 0,
+        'end': 222
     }
 
     job = CWebParserSite(**para_args)
     job.call_process()
 
 
-if __name__ == '__main__':   
-    job_start() 
+if __name__ == '__main__':
+    job_start()

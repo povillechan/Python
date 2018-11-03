@@ -21,92 +21,95 @@ from urllib.parse import urljoin
 class CWebParserSiteCommon(CWebParserProcess):
     def __init__(self, webParser):
         super().__init__(webParser)
-#    
-    def parse_item(self, item):   
-        data = None   
+
+    #
+    def parse_item(self, item):
+        data = None
 
         url = item('a').attr('href')
         model = item('span').text().replace(item('span span').text(), '')
         board = item('img').attr('src')
-        productName = item('a').attr('title')    
-                         
-        data_brief = { 
-            'name' : self.webParser.utils.format_name(model),   
-            'url'  : url,    
-            'board': board,
-            'productName': self.webParser.utils.format_name(productName),   
-            }   
-        
-        data = {'brief': data_brief}
-        if self.webParser.parseOnly == CParseType.Parse_Brief:                             
-            return data
-        else:                    
-            return self.parse_detail_fr_brief(data) 
-    
-    def parse_detail_fr_brief(self, item):
-        data = None     
-        url = item.get('brief').get('url')        
-        html = self.webParser.utils.get_page(url)     
-        
-        if html:
-            b = pq(html)                          
+        productName = item('a').attr('title')
 
-#             previews = b('ul.gallery-e li')
-#             stills = []
-#             for preview in previews.items():
-#                 stills.append(
-#                     [
-#                     preview('a').attr('href'),
-#                     preview('img').attr('src'),
-#                     ])                 
-# 
-# 
-#             data = { 
-#                 'modelName' : item.get('modelName'),   
-#                 'url'  : url,    
-#                 'board': item.get('board'),
-#                 'productName': item.get('productName'), 
-#                 'stills': stills
-#                 }  
-            board = None   
+        data_brief = {
+            'name': self.webParser.utils.format_name(model),
+            'url': url,
+            'board': board,
+            'productName': self.webParser.utils.format_name(productName),
+        }
+
+        data = {'brief': data_brief}
+        if self.webParser.parseOnly == CParseType.Parse_Brief:
+            return data
+        else:
+            return self.parse_detail_fr_brief(data)
+
+    def parse_detail_fr_brief(self, item):
+        data = None
+        url = item.get('brief').get('url')
+        html = self.webParser.utils.get_page(url)
+
+        if html:
+            b = pq(html)
+
+            #             previews = b('ul.gallery-e li')
+            #             stills = []
+            #             for preview in previews.items():
+            #                 stills.append(
+            #                     [
+            #                     preview('a').attr('href'),
+            #                     preview('img').attr('src'),
+            #                     ])
+            #
+            #
+            #             data = {
+            #                 'modelName' : item.get('modelName'),
+            #                 'url'  : url,
+            #                 'board': item.get('board'),
+            #                 'productName': item.get('productName'),
+            #                 'stills': stills
+            #                 }
+            board = None
             video = None
             video_item = b('video source')
             if video_item.items(0):
-                video = video_item.attr('src') 
+                video = video_item.attr('src')
                 board = b('video').attr('poster')
-                                   
-            stills = []            
+
+            stills = []
             previews = b('ul.gallery-e li')
             for preview in previews.items():
                 stills.append(preview('a').attr('href'))
-                
-#                 }
+
+            #                 }
             data_detail = None
             if video:
                 data_detail = {
                     'videos': {
-                        'name' : self.webParser.utils.format_name(item.get('brief').get('productName')),
-                        'url'  : item.get('brief').get('url'),
+                        'name': self.webParser.utils.format_name(item.get('brief').get('productName')),
+                        'url': item.get('brief').get('url'),
                         'board': board,
                         'video': video,
-                        'stills':stills,
-                        }
+                        'stills': stills,
                     }
+                }
             else:
                 data_detail = {
                     'galleries': {
-                        'name' : self.webParser.utils.format_name(item.get('brief').get('productName')),
-                        'url'  : item.get('brief').get('url'),
+                        'name': self.webParser.utils.format_name(item.get('brief').get('productName')),
+                        'url': item.get('brief').get('url'),
                         'board': item.get('brief').get('board'),
-                        'stills':stills,
-                        }
-                    }  
-                                                
+                        'stills': stills,
+                    }
+                }
+
             data = deepcopy(item)
             data['detail'] = data_detail
-        return data         
+        return data
 
-#     def process_data(self, data):
+    #     def process_data(self, data):
+
+
 #         result = True
 #         sub_dir_name = "%s\\galleries\\%s" %(data.get('modelName'), data.get('productName'))
 #        
@@ -143,53 +146,55 @@ class CWebParserSite(CWebParserMultiUrl):
         self.utils = CWebSpiderUtils(self.savePath)
         self.common = CWebParserSiteCommon(self)
         self.dbUtils = CWebDataDbUtis(kwArgs.get('database'))
+
     '''
     parse_page
     
     @author: chenzf
-    ''' 
+    '''
+
     def parse_page(self):
         urlsGen = self.urls_genarator()
-        while True: 
+        while True:
             try:
                 url = next(urlsGen)
                 if not url:
                     yield None
-                    
+
                 if self.dbUtils.get_db_url(url):
                     continue
-                
-                html = self.utils.get_page(url)     
-                if html:
-                    a = pq(html)   
-                    #items
-                    items = a('ul.gallery-d li')
-                    
-                    for item in items.items():
-                        data_p = self.common.parse_item(item)    
-                        data_t = {
-                            'name' :  data_p.get('brief').get('name'),
-                            'url'  :  data_p.get('brief').get('url'),
-                            'board':  data_p.get('brief').get('board'),
-                            'refurl': url
-                            }
 
-                        data = dict( data_t, **data_p )                                                                                
+                html = self.utils.get_page(url)
+                if html:
+                    a = pq(html)
+                    # items
+                    items = a('ul.gallery-d li')
+
+                    for item in items.items():
+                        data_p = self.common.parse_item(item)
+                        data_t = {
+                            'name': data_p.get('brief').get('name'),
+                            'url': data_p.get('brief').get('url'),
+                            'board': data_p.get('brief').get('board'),
+                            'refurl': url
+                        }
+
+                        data = dict(data_t, **data_p)
                         yield data
-                    
-                    self.log('parsed url %s' % url)     
-                    self.dbUtils.put_db_url(url) 
+
+                    self.log('parsed url %s' % url)
+                    self.dbUtils.put_db_url(url)
                 else:
-                    self.log('request %s error' %url)         
+                    self.log('request %s error' % url)
             except (GeneratorExit, StopIteration):
                 break
             except:
-                self.log( 'error in parse url %s' % url)         
-                continue                   
-        
-        yield None  
-           
-                    
+                self.log('error in parse url %s' % url)
+                continue
+
+        yield None
+
+
 def job_start():
     para_args = {
         'savePath': 'BabeHub\\{filePath}',
@@ -203,5 +208,5 @@ def job_start():
     job.call_process()
 
 
-if __name__ == '__main__':   
-    job_start() 
+if __name__ == '__main__':
+    job_start()

@@ -21,142 +21,145 @@ from urllib.parse import urljoin
 class CWebParserSiteCommon(CWebParserProcess):
     def __init__(self, webParser):
         super().__init__(webParser)
-#    
-    def parse_item(self, item):   
-        data = None   
 
-        url  = urljoin('https://www.hqsluts.com/', item('a:nth-child(2)').attr('href'))
+    #
+    def parse_item(self, item):
+        data = None
+
+        url = urljoin('https://www.hqsluts.com/', item('a:nth-child(2)').attr('href'))
         name = item('b span').text()
         if not name:
             name = item('a:nth-child(2)').attr('href').split('/')[1]
-                                           
+
         data_brief = {
-            'url'  : url,
-            'name' : self.webParser.utils.format_name(name),
-        } 
-        
+            'url': url,
+            'name': self.webParser.utils.format_name(name),
+        }
+
         data = {'brief': data_brief}
-        if self.webParser.parseOnly == CParseType.Parse_Brief:                             
+        if self.webParser.parseOnly == CParseType.Parse_Brief:
             return data
-        else:                    
-            return self.parse_detail_fr_brief(data)     
-    
-    def parse_detail_fr_brief(self, item):    
-        data = None     
-        url = item.get('brief').get('url')   
-     
-        html = self.webParser.utils.get_page(url)        
+        else:
+            return self.parse_detail_fr_brief(data)
+
+    def parse_detail_fr_brief(self, item):
+        data = None
+        url = item.get('brief').get('url')
+
+        html = self.webParser.utils.get_page(url)
         if html:
-            b = pq(html)           
-   
-            previews = b('ul.set.gallery li.item.i a')            
+            b = pq(html)
+
+            previews = b('ul.set.gallery li.item.i a')
             stills = []
             for preview in previews.items():
                 stills.append(preview.attr('href'))
 
             data_detail = {
                 'galleries': {
-                    'name'  : item.get('brief').get('name'),
-                    'url'   : item.get('brief').get('url'),
+                    'name': item.get('brief').get('name'),
+                    'url': item.get('brief').get('url'),
                     'stills': stills
-                    }
                 }
+            }
             data = deepcopy(item)
-            data['detail'] = data_detail                 
+            data['detail'] = data_detail
 
-        return data      
+        return data
 
 
-class CWebParserSite(CWebParserSingleUrl):    
+class CWebParserSite(CWebParserSingleUrl):
     def __init__(self, **kwArgs):
         super().__init__(**kwArgs)
         self.utils = CWebSpiderUtils(self.savePath)
         self.common = CWebParserSiteCommon(self)
         self.dbUtils = CWebDataDbUtis(kwArgs.get('database'))
+
     '''
     parse_page
     
     @author: chenzf
-    ''' 
+    '''
+
     def parse_page(self):
         urlsGen = self.urls_genarator()
-        while True: 
+        while True:
             try:
                 url = next(urlsGen)
                 if url is None:
-                    yield None                    
-               
+                    yield None
+
                 while True:
-                    html = self.utils.get_page(url)     
+                    html = self.utils.get_page(url)
                     if html:
                         if self.dbUtils.get_db_url(url):
                             pass
                         else:
-                            a = pq(html)     
-                            #items
+                            a = pq(html)
+                            # items
                             items = a('ul.sluts_main li')
                             parse_succeed = True
                             for item in items.items():
-                                try:                            
-                                    name      = item('b a').text()
-                                    board     = item('a img').attr('lsrc') + '.jpg'
+                                try:
+                                    name = item('b a').text()
+                                    board = item('a img').attr('lsrc') + '.jpg'
                                     model_url = urljoin('https://www.hqsluts.com/', item('b a').attr('href'))
-                                     
+
                                     html2 = self.utils.get_page(model_url)
                                     if html2:
                                         b = pq(html2)
                                         modelitems = b('ul.set.slut li')
                                         for modelitem in modelitems.items():
                                             try:
-                                                data_p = self.common.parse_item(modelitem)    
+                                                data_p = self.common.parse_item(modelitem)
                                                 data_t = {
-                                                    'name'  : self.utils.format_name(name),
-                                                    'url'   : model_url,
-                                                    'board' : board,
+                                                    'name': self.utils.format_name(name),
+                                                    'url': model_url,
+                                                    'board': board,
                                                     'refurl': url
-                                                    }
-                         
-                                                data = dict( data_t, **data_p )                                          
+                                                }
+
+                                                data = dict(data_t, **data_p)
                                                 yield data
                                             except:
                                                 parse_succeed = False
                                                 continue
                                 except:
                                     parse_succeed = False
-                                    continue                 
+                                    continue
                             if parse_succeed:
-                                self.log('parsed url %s' % url)     
-                                self.dbUtils.put_db_url(url)  
-                                
+                                self.log('parsed url %s' % url)
+                                self.dbUtils.put_db_url(url)
+
                         next_url = a('#pages li a[count="Next Page"]')
                         if next_url:
                             url = urljoin('https://www.hqsluts.com/', next_url.attr('href'))
-                            self.log('request %s' %url)  
+                            self.log('request %s' % url)
                         else:
                             break
                     else:
-                        self.log('request %s error' %url)      
-                        continue   
+                        self.log('request %s error' % url)
+                        continue
             except (GeneratorExit, StopIteration):
                 break
             except:
-                self.log( 'error in parse url %s' % url)         
-                continue                   
-        
-        yield None  
-           
-                    
+                self.log('error in parse url %s' % url)
+                continue
+
+        yield None
+
+
 def job_start():
-    for url in range(ord("A"),ord("Z")+1):
-	    para_args = {
-	        'savePath': 'HQSluts\\{filePath}',
-	        'url': "https://www.hqsluts.com/sluts/%s/"%chr(url),
-	        'database': 'HQSluts'
-	    }
+    for url in range(ord("A"), ord("Z") + 1):
+        para_args = {
+            'savePath': 'HQSluts\\{filePath}',
+            'url': "https://www.hqsluts.com/sluts/%s/" % chr(url),
+            'database': 'HQSluts'
+        }
 
-	    job = CWebParserSite(**para_args)
-	    job.call_process()
+        job = CWebParserSite(**para_args)
+        job.call_process()
 
 
-if __name__ == '__main__':   
-    job_start() 
+if __name__ == '__main__':
+    job_start()
