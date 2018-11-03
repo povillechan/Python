@@ -35,6 +35,9 @@ class CWebDataDbUtis(object):
     def get_db_item(self):
         return self.dbBriefJob.find()
 
+    def get_db_item_count(self):
+        return self.dbBriefJob.count()
+
     def insert_db_item(self, data):
         if self.dbBriefJob.find_one(data) or self.dbBriefJobParsed.find_one(data):
             print('data already in database <brief>!')
@@ -60,6 +63,9 @@ class CWebDataDbUtis(object):
 
     def get_db_detail_item(self):
         return self.dbDetailJob.find()
+
+    def get_db_detail_item_count(self):
+        return self.dbDetailJob.count()
 
     def insert_db_detail_item(self, data):
         if self.dbDetailJob.find_one(data) or self.dbDetailJobParsed.find_one(data):

@@ -29,7 +29,7 @@ class CWebParser(object):
         self.parseOnly = 0
         self.savePath = 'H:\\Pictures\\' + savePath
         self.thread_num = None
-
+        self.threadRunningCount = 1
     '''
     parse_page
     
@@ -198,6 +198,14 @@ class CWebParser(object):
     def job_thread(self, datas):
         #         times = 0
         while True:
+            if self.args \
+                    and self.args.l \
+                    and self.parseOnly == CParseType.Parse_Detail \
+                    and self.args.l <= self.dbUtils.get_db_detail_item_count():
+                print('job limit reached, pedding')
+                time.sleep(10)
+                continue
+
             data = next(datas)
             #             if times >= 2:
             #                 data = None
@@ -278,7 +286,11 @@ class CWebParser(object):
         self.dataLocker.acquire()
         endFlag = False
         status = 1
-        print(len(self.job_list), os.path.abspath(sys.argv[0]), str(sys.argv[1:]))
+        self.threadRunningCount += 1
+        if self.threadRunningCount > 20:
+            print("thred [%s]"%os.getpid(), 'job thread [%s]'%len(self.job_list), os.path.abspath(sys.argv[0]), str(sys.argv[1:]))
+            self.threadRunningCount = 1
+
         if len(self.job_list) >= 1:
             if not self.job_list[0]:
                 data = None
@@ -318,6 +330,7 @@ class CWebParser(object):
         parser.add_argument('-p', type=int, default='0')
         parser.add_argument('-t', type=int, default=cpu_count() - 1)
         parser.add_argument('-u', type=str, default=None)
+        parser.add_argument('-l', type=int, default=None)
         self.args = parser.parse_args()
 
 

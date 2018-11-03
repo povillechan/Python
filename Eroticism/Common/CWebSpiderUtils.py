@@ -189,7 +189,7 @@ class CWebSpiderUtils(object):
         total_size = 0
         chunk_size = 512
         content_size = 0
-        report_space = 100
+        report_space = 500
         report_count = 0
         if 'content-length' in response.headers:
             content_size = int(response.headers['content-length'])
