@@ -36,9 +36,25 @@ class CWebParserSiteCommon(CWebParserProcess):
 
         data = {'brief': data_brief}
         if self.webParser.parseOnly == CParseType.Parse_Brief:
-            return data
+            result = self.parse_detail_fr_brief_duplicate(data)
+            if result:
+                return None
+            else:
+                return data
         else:
             return self.parse_detail_fr_brief(data)
+
+    def parse_detail_fr_brief_duplicate(self, item):
+        url = item.get('brief').get('url')
+        html = self.webParser.utils.get_page(url)
+        if html:
+            b = pq(html)
+            if b('span.stars'):
+                return True
+            else:
+                return False
+        else:
+            return True
 
     def parse_detail_fr_brief(self, item):
         data = None
@@ -95,47 +111,28 @@ class CWebParserSite(CWebParserMultiUrl):
                 if url is None:
                     yield None
 
+                if self.dbUtils.get_db_url(url):
+                    continue
+
                 html = self.utils.get_page(url)
                 if html:
-                    if self.dbUtils.get_db_url(url):
-                        pass
-                    else:
-                        a = pq(html)
-                        # items
-                        items = a('#content > ul  li.pornstars a')
-                        for item in items.items():
-                            name = item('a img').attr('alt')
-                            board = item('a img').attr('src')
-                            model_url = urljoin('https://www.thumbzilla.com/', item.attr('href'))
+                    a = pq(html)
+                    # items
+                    items = a('a.js-thumb')
 
-                            while True:
-                                html2 = self.utils.get_page(model_url)
-                                if html2:
-                                    if self.dbUtils.get_db_url(model_url):
-                                        pass
-                                    else:
-                                        data_ps, parse_res = self.parse_sub_page(html2)
-                                        for data_p in data_ps:
-                                            data_t = {
-                                                'name': self.utils.format_name(name),
-                                                'url': model_url,
-                                                'board': board,
-                                                'refurl': url
-                                            }
+                    for item in items.items():
+                        data_p = self.common.parse_item(item)
+                        if not data_p:
+                            continue
 
-                                            data = dict(data_t, **data_p)
-                                            yield data
+                        data_t = {
+                            'name': 'Categories',
+                            'url': data_p.get('brief').get('url'),
+                            'refurl': url
+                        }
 
-                                        if parse_res:
-                                            self.log('parsed url %s' % model_url)
-                                            self.dbUtils.put_db_url(model_url)
-
-                                    next_url = pq(html2)('li.page_next a')
-                                    if next_url:
-                                        model_url = urljoin('https://www.thumbzilla.com', next_url.attr('href'))
-                                        self.log('request %s' % model_url)
-                                    else:
-                                        break
+                        data = dict(data_t, **data_p)
+                        yield data
                 else:
                     self.log('request %s error' % url)
                     continue
@@ -147,34 +144,13 @@ class CWebParserSite(CWebParserMultiUrl):
 
         yield None
 
-    def parse_sub_page(self, html):
-        b = pq(html)
-        items = b('#content ul li:gt(4) a')
-
-        sub_datas = []
-        parse_successed = None
-        for item in items.items():
-            try:
-                data_p = self.common.parse_item(item)
-                sub_datas.append(data_p)
-
-                if not parse_successed:
-                    parse_successed = True
-                else:
-                    parse_successed = True & parse_successed
-            except:
-                parse_successed = False
-
-        return sub_datas, parse_successed
-
-
 def job_start():
     para_args = {
         'savePath': 'ThumbZilla\\{filePath}',
-        'url': 'https://www.thumbzilla.com/pornstars?page={page}',
+        'url': 'https://www.thumbzilla.com/categories/all?page={page}',
         'database': 'ThumbZilla',
         'start': 1,
-        'end': 275
+        'end': 7242
     }
 
     job = CWebParserSite(**para_args)
