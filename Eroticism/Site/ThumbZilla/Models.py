@@ -172,7 +172,7 @@ def job_start():
     para_args = {
         'savePath': 'ThumbZilla\\{filePath}',
         'url': 'https://www.thumbzilla.com/pornstars?page={page}',
-        'database': 'ThumbZilla',
+        'database': 'ThumbZillaCatalog',
         'start': 1,
         'end': 275
     }
