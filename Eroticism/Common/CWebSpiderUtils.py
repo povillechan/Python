@@ -211,10 +211,10 @@ class CWebSpiderUtils(object):
             print("Download file error [%s]" % e)
             if os.path.exists(filePath):
                 os.remove(filePath)
-            print(filePath + ' is abort')
+            print(filePath + '【abort】')
             return False
 
-        print(filePath + ' is done')
+        print(filePath + '【done】')
         return True
 
     '''

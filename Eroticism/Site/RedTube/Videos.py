@@ -111,46 +111,39 @@ class CWebParserSite(CWebParserSingleUrl):
                     yield None
                     break
 
-                if self.dbUtils.get_db_url(url):
-                    continue
+                # if self.dbUtils.get_db_url(url):
+                #                 #     continue
+                for page in range(1, 101):
+                    search_url = url + "?/page=%s" % page
 
-                while True:
-                    html = self.utils.get_page(url)
+                    if self.dbUtils.get_db_url(search_url):
+                        continue
+
+                    html = self.utils.get_page(search_url)
                     if html:
-                        if self.dbUtils.get_db_url(url):
-                            pass
-                        else:
-                            a = pq(html)
-                            # items
-                            items = a('#block_browse li>div')
-                            parse_succeed = None
-                            for item in items.items():
-                                try:
-                                    data_p = self.common.parse_item(item)
-                                    data_t = {
-                                        'name': data_p.get('brief').get('name'),
-                                        'url': data_p.get('brief').get('url'),
-                                        'refurl': url
-                                    }
+                        a = pq(html)
+                        items = a('#block_browse li>div')
+                        parse_succeed = True
+                        for item in items.items():
+                            try:
+                                data_p = self.common.parse_item(item)
+                                data_t = {
+                                    'name': data_p.get('brief').get('name'),
+                                    'url': data_p.get('brief').get('url'),
+                                    # 'refurl': search_url
+                                }
 
-                                    data = dict(data_t, **data_p)
-                                    yield data
-                                except:
-                                    parse_succeed = False
-                                    continue
+                                data = dict(data_t, **data_p)
+                                yield data
+                            except:
+                                parse_succeed = False
+                                continue
 
-                            if parse_succeed and items.items() > 0:
-                                self.log('parsed url %s' % url)
-                                self.dbUtils.put_db_url(url)
-
-                        next_url = a('#wp_navNext').attr('href')
-                        if next_url:
-                            url = urljoin('https://www.redtube.com/', next_url)
-                            self.log('request %s' % url)
-                        else:
-                            break
+                        if parse_succeed:
+                            self.log('parsed url %s' % search_url)
+                            self.dbUtils.put_db_url(search_url)
                     else:
-                        self.log('request %s error' % url)
+                        self.log('request %s error' % search_url)
                         continue
             except (GeneratorExit, StopIteration):
                 break
