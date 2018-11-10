@@ -229,9 +229,20 @@ class CWebSpiderUtils(object):
     '''
 
     def format_name(self, name):
-        return name.strip().replace('\"', '_').replace(':', '_').replace(',', '_').replace('!', '_').replace('?',
-                                                                                                             '_').replace(
-            '/', ' ')
+        name = name.strip()
+        patterns = [('\"', '_'),
+                    (',', '_'),
+                    (':', '_'),
+                    (',', '_'),
+                    ('!', '_'),
+                    ('?', '_'),
+                    ('/', '_'),
+                    ('|', '_'),
+                    ('#', '_'),
+                    ]
+        for pattern in patterns:
+            name = name.replace(pattern[0], pattern[1])
+        return name
 
     '''
     init_chrome
