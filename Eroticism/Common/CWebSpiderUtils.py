@@ -32,11 +32,13 @@ class CWebSpiderUtils(object):
     m_defSuccessCode = [200, 204, 206]
     m_savePath = ''
     m_retry_times = 3
+    m_verify = True
 
     def __init__(self, savePath):
         self.savePath = savePath
         self.chrome_service = Service("C:\\Windows\\System32\\chromedriver.exe")
         self.chrome_service.start()
+        self.verify = True
 
     '''
     get_page
@@ -93,12 +95,15 @@ class CWebSpiderUtils(object):
                 s = requests.Session()
                 s.mount('http://', HTTPAdapter(max_retries=3))
                 s.mount('https://', HTTPAdapter(max_retries=3))
+                requests.packages.urllib3.disable_warnings()
                 if headers:
                     new_headers = self.m_defHeaders.copy()
                     new_headers.update(headers)
-                    response = s.get(url, headers=new_headers, timeout=self.m_defTimeout, stream=True)
+                    response = s.get(url, headers=new_headers, timeout=self.m_defTimeout, stream=True,
+                                     verify=self.verify)
                 else:
-                    response = s.get(url, headers=self.m_defHeaders, timeout=self.m_defTimeout, stream=True)
+                    response = s.get(url, headers=self.m_defHeaders, timeout=self.m_defTimeout, stream=True,
+                                     verify=self.verify)
 
                 if response.status_code in self.m_defSuccessCode:
                     if 'content-length' in response.headers:
