@@ -270,7 +270,7 @@ def job_start():
             para_args = {
                 'savePath': 'Hunter\\{filePath}',
                 'url': job_item[1],
-                'database': 'Hunter'
+                'database': 'HegreHunter'
             }
 
             job = CWebParserHunterSingleUrl(**para_args)
@@ -278,7 +278,7 @@ def job_start():
             para_args = {
                 'savePath': 'Hunter\\{filePath}',
                 'url': job_item[1],
-                'database': 'Hunter',
+                'database': 'HegreHunter',
                 'start': job_item[2],
                 'end': job_item[3]
             }
