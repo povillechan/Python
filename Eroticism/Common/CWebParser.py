@@ -99,17 +99,6 @@ class CWebParser(object):
             except:
                 self.log('error in parse detail_fr_brief item')
 
-    '''
-    process
-    
-    @author: chenzf
-    '''
-    '''
-    process
-    
-    @author: chenzf
-    '''
-
     def log(self, logText):
         fileName = self.savePath.format(filePath='Runlog.log')
         dirName = os.path.dirname(fileName)
@@ -202,48 +191,23 @@ class CWebParser(object):
                     and self.args.l \
                     and self.parseOnly == CParseType.Parse_Detail \
                     and self.args.l <= self.dbUtils.get_db_detail_item_count():
-                print('job limit reached, pedding')
+                print('job limit reached, pending')
                 time.sleep(10)
                 continue
 
             data = next(datas)
-            #             if times >= 2:
-            #                 data = None
-
             while True:
-                #                 if self.parseOnly == 1:
-                #                     break
-                #                 else:
                 rel = self.push_data_job(data)
                 if not rel:
                     time.sleep(1)
                 else:
                     break
-            #             times += 1
-            #
 
             if not data:
                 print("job parse ended!")
                 return
 
-    #             if self.is_sigint_up:
-    #                 print('job end by interrupt')
-    #                 return
-
-    #             time.sleep(2)
-
     def process_thread(self):
-        #         while True:
-        #             print(str(threading.currentThread()) + " process_thread() get locker")
-        #             self.dataLocker.acquire()
-        #             data = next(data_gen)
-        #             self.dataLocker.release()
-        #             print(str(threading.currentThread()) + " process_thread() release locker")
-        #             if data:
-        #                 self.process_data(data)
-        #             else:
-        #                 break
-        #             time.sleep(1)
         while True:
             try:
                 data, endFlag = self.pop_data_job()
@@ -257,9 +221,6 @@ class CWebParser(object):
                 self.process_data(data)
                 time.sleep(1)
 
-            #                 if self.is_sigint_up:
-            #                     print('job end by interrupt')
-            #                     return
             except Exception as e:
                 print(e)
                 continue
@@ -284,8 +245,7 @@ class CWebParser(object):
 
     def pop_data_job(self):
         self.dataLocker.acquire()
-        endFlag = False
-        status = 1
+        endflag = False
         self.threadRunningCount += 1
         if self.threadRunningCount > 20:
             print("thred [%s]"%os.getpid(), 'job thread [%s]'%len(self.job_list), os.path.abspath(sys.argv[0]), str(sys.argv[1:]))
@@ -294,19 +254,14 @@ class CWebParser(object):
         if len(self.job_list) >= 1:
             if not self.job_list[0]:
                 data = None
-                endFlag = True
-                status = 2
+                endflag = True
             else:
                 data = self.job_list.pop(0)
-                status = 3
         else:
             data = None
-            status = 4
-        #
-        #         print('get a job, flag is %s, status is %s' %(endFlag, status))
-        self.dataLocker.release()
 
-        return data, endFlag
+        self.dataLocker.release()
+        return data, endflag
 
     def save_info(self, data):
         dir_name = self.savePath.format(filePath=data.get('name'))
