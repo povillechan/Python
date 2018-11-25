@@ -239,6 +239,8 @@ class CWebSpiderUtils(object):
                     ('/', '_'),
                     ('|', '_'),
                     ('#', '_'),
+                    ('[', '_'),
+                    (']', '_'),
                     ]
         for pattern in patterns:
             name = name.replace(pattern[0], pattern[1])
