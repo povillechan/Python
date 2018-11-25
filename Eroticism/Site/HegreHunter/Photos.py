@@ -124,7 +124,7 @@ class CWebParserSiteCommon(CWebParserProcess):
         return sub_dir_name
 
 
-class CWebParserHunterSingleUrl(CWebParserSingleUrl):
+class CWebParserHunterMultiUrl(CWebParserMultiUrl):
     def __init__(self, **kwArgs):
         super().__init__(**kwArgs)
         self.utils = CWebSpiderUtils(self.savePath)
@@ -182,7 +182,7 @@ class CWebParserHunterSingleUrl(CWebParserSingleUrl):
         yield None
 
 
-class CWebParserHunterMultiUrl(CWebParserSingleUrl):
+class CWebParserHunterSingleUrl(CWebParserSingleUrl):
     def __init__(self, **kwArgs):
         super().__init__(**kwArgs)
         self.utils = CWebSpiderUtils(self.savePath)
