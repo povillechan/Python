@@ -114,7 +114,7 @@ class CWebParserSite(CWebParserSingleUrl):
                 # if self.dbUtils.get_db_url(url):
                 #                 #     continue
                 for page in range(1, 101):
-                    search_url = url + "?/page=%s" % page
+                    search_url = url + "?page=%s" % page
 
                     if self.dbUtils.get_db_url(search_url):
                         continue
