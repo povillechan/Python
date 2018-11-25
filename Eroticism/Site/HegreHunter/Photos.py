@@ -124,7 +124,7 @@ class CWebParserSiteCommon(CWebParserProcess):
         return sub_dir_name
 
 
-class CWebParserHunterSingleUrl(CWebParserMultiUrl):
+class CWebParserHunterSingleUrl(CWebParserSingleUrl):
     def __init__(self, **kwArgs):
         super().__init__(**kwArgs)
         self.utils = CWebSpiderUtils(self.savePath)
@@ -241,7 +241,6 @@ class CWebParserHunterMultiUrl(CWebParserSingleUrl):
 
 
 def job_start():
-    print(__file__, "start!")
     job_list = [
         ('S', 'https://www.alshunter.com'),
         ('S', 'https://www.centerfoldhunter.com'),
@@ -284,7 +283,7 @@ def job_start():
                 'end': job_item[3]
             }
 
-            job = CWebParserHunterMultiUrl(**job_item[1])
+            job = CWebParserHunterMultiUrl(**para_args)
 
         job.call_process()
 

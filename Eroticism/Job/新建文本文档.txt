@@ -1,2 +1,0 @@
-cmd /k start python ..\Site\RedTube\videos.py -p 2 -l 20
-cmd /k start python ..\Site\RedTube\videos.py -p 3 -t 20
