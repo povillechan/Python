@@ -83,6 +83,8 @@ class CWebParserProcess(object):
 
             video = videos.get('video')
             if video:
+                if type(video) is list:
+                    video = video[0]
                 result &= self.webParser.utils.download_file(video,
                                                              '%s\\videos\\%s\\%s' % (
                                                                  sub_dir_name, videos.get('name'), videos.get('name')),

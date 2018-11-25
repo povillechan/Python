@@ -313,7 +313,7 @@ class CWebParserMultiUrl(CWebParser):
             # start
             if self.args.s:
                 self.start = self.args.s
-            elif kwArgs.get('start'):
+            elif kwArgs.get('start') is not None:
                 self.start = kwArgs.get('start')
             else:
                 raise Exception('no start positon!')
@@ -321,7 +321,7 @@ class CWebParserMultiUrl(CWebParser):
             # end
             if self.args.e:
                 self.end = self.args.e
-            elif kwArgs.get('end'):
+            elif kwArgs.get('end') is not None:
                 self.end = kwArgs.get('end')
             else:
                 raise Exception('no end positon!')
