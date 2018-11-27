@@ -210,7 +210,7 @@ class CWebParserHunterSingleUrl(CWebParserSingleUrl):
                 if html:
                     a = pq(html)
                     # items
-                    items = a('ul.gallery-a li')
+                    items = a('#content h2').prev_all('ul.gallery-a li')
                     parse_succeed = True
                     for item in items.items():
                         try:
