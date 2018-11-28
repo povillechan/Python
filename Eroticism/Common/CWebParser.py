@@ -187,14 +187,6 @@ class CWebParser(object):
     def job_thread(self, datas):
         #         times = 0
         while True:
-            if self.args \
-                    and self.args.l \
-                    and self.parseOnly == CParseType.Parse_Detail \
-                    and self.args.l <= self.dbUtils.get_db_detail_item_count():
-                print('job limit reached, pending')
-                time.sleep(10)
-                continue
-
             data = next(datas)
             while True:
                 rel = self.push_data_job(data)
@@ -228,6 +220,9 @@ class CWebParser(object):
     def push_data_job(self, data):
         rel = True
         self.dataLocker.acquire()
+        # print('thread %s in push data' % threading.currentThread())
+        #
+        # print('current db count %s'%self.dbUtils.get_db_detail_item_count())
         if self.thread_num:
             thread_num = self.thread_num
         else:
@@ -236,10 +231,14 @@ class CWebParser(object):
         if len(self.job_list) > thread_num:
             print('Job full, need waitting')
             rel = False
+        elif self.args and self.args.l and self.parseOnly == CParseType.Parse_Detail and self.args.l <= self.dbUtils.get_db_detail_item_count():
+            print('Job limit reached, need pending')
+            rel = False
         else:
             self.job_list.append(data)
             print('New job is pushed')
             rel = True
+        # print('thread %s leave push data' % threading.currentThread())
         self.dataLocker.release()
         return rel
 
