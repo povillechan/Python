@@ -118,10 +118,11 @@ class CWebParserSite(CWebParserMultiUrl):
                     a = pq(html)
                     # items
                     items = a('div.inner-box-container > div.row div.item-col.col > div.item-inner-col.inner-col >a')
-
+                    parse_successed = True
                     for item in items.items():
                         data_p = self.common.parse_item(item)
                         if not data_p:
+                            parse_successed = False
                             continue
 
                         data_t = {
@@ -132,6 +133,8 @@ class CWebParserSite(CWebParserMultiUrl):
 
                         data = dict(data_t, **data_p)
                         yield data
+                    if parse_successed:
+                        self.dbUtils.put_db_url(url)
                 else:
                     self.log('request %s error' % url)
                     continue
