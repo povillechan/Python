@@ -106,9 +106,29 @@ class CWebParserSite(CWebParserMultiUrl):
                         for item in items.items():
                             name = item('a img').attr('alt')
                             board = item('a img').attr('src')
-                            model_url = urljoin('https://www.thumbzilla.com/', item.attr('href'))
+                            model_url_origin = urljoin('https://www.thumbzilla.com/', item.attr('href'))
+
+                            index = 1
+                            while True:
+                                model_url = "%s?page=%s" % (model_url_origin, index)
+                                if index == 1:
+                                    if self.dbUtils.get_db_url(model_url_origin):
+                                        index = index + 1
+                                        continue
+                                elif self.dbUtils.get_db_url(model_url):
+                                    index = index + 1
+                                    continue
+
+                                break
+
+                            if index > 2:
+                                index = index - 1
+                                model_url = "%s?page=%s" % (model_url_origin, index)
+                            else:
+                                model_url = model_url_origin
 
                             while True:
+                                self.log('request %s' % model_url)
                                 html2 = self.utils.get_page(model_url)
                                 if html2:
                                     if self.dbUtils.get_db_url(model_url):
@@ -133,7 +153,6 @@ class CWebParserSite(CWebParserMultiUrl):
                                     next_url = pq(html2)('li.page_next a')
                                     if next_url:
                                         model_url = urljoin('https://www.thumbzilla.com', next_url.attr('href'))
-                                        self.log('request %s' % model_url)
                                     else:
                                         break
                 else:
