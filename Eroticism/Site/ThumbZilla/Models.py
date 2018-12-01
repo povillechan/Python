@@ -155,6 +155,8 @@ class CWebParserSite(CWebParserMultiUrl):
                                         model_url = urljoin('https://www.thumbzilla.com', next_url.attr('href'))
                                     else:
                                         break
+                                else:
+                                    break;
                 else:
                     self.log('request %s error' % url)
                     continue
