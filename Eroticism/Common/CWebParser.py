@@ -94,8 +94,12 @@ class CWebParser(object):
             try:
                 dataDetail = self.common.parse_detail_fr_brief(data)
                 if dataDetail:
-                    self.dbUtils.switch_db_item(data)
-                    self.dbUtils.insert_db_detail_item(dataDetail)
+                    if self.args and self.args.l and self.args.l <= self.dbUtils.get_db_detail_item_count():
+                        self.log('process_data job limit reached, data dropped')
+                        pass
+                    else:
+                        self.dbUtils.switch_db_item(data)
+                        self.dbUtils.insert_db_detail_item(dataDetail)
             except:
                 self.log('error in parse detail_fr_brief item')
 
