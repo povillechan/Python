@@ -110,7 +110,7 @@ class CWebParserSite(CWebParserMultiUrl):
 
                             index = 1
                             while True:
-                                model_url = "%spage/%s" % (model_url_origin, index)
+                                model_url = "%spage/%s/" % (model_url_origin, index)
                                 if index == 1:
                                     if self.dbUtils.get_db_url(model_url_origin):
                                         index = index + 1
@@ -123,7 +123,7 @@ class CWebParserSite(CWebParserMultiUrl):
 
                             if index > 2:
                                 index = index - 1
-                                model_url = "%spage/%s" % (model_url_origin, index)
+                                model_url = "%spage/%s/" % (model_url_origin, index)
                             else:
                                 model_url = model_url_origin
 
