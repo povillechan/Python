@@ -119,10 +119,11 @@ class CWebParserSite(CWebParserMultiUrl):
                     a = pq(html)
                     # items
                     items = a('a.js-thumb')
-
+                    parse_successed = True
                     for item in items.items():
                         data_p = self.common.parse_item(item)
                         if not data_p:
+                            parse_successed = False
                             continue
 
                         data_t = {
@@ -133,6 +134,9 @@ class CWebParserSite(CWebParserMultiUrl):
 
                         data = dict(data_t, **data_p)
                         yield data
+
+                    if parse_successed:
+                        self.dbUtils.put_db_url(url)
                 else:
                     self.log('request %s error' % url)
                     continue
