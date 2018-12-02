@@ -36,11 +36,11 @@ class CWebParserSiteCommon(CWebParserProcess):
 
         data = {'brief': data_brief}
         if self.webParser.parseOnly == CParseType.Parse_Brief:
-            result = self.parse_detail_fr_brief_duplicate(data)
-            if result:
-                return None
-            else:
-                return data
+            # result = self.parse_detail_fr_brief_duplicate(data)
+            # if result:
+            #     return None
+            # else:
+            return data
         else:
             return self.parse_detail_fr_brief(data)
 
@@ -116,14 +116,18 @@ class CWebParserSite(CWebParserMultiUrl):
 
                 html = self.utils.get_page(url)
                 if html:
+                    self.log('request %s' % url)
                     a = pq(html)
                     # items
                     items = a('a.video-thumb-link')
                     parse_successed = True
                     for item in items.items():
                         data_p = self.common.parse_item(item)
+
                         if not data_p:
                             parse_successed = False
+                            continue
+                        elif self.common.parse_detail_fr_brief_duplicate(data_p):
                             continue
 
                         data_t = {
