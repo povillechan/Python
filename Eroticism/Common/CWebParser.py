@@ -30,6 +30,8 @@ class CWebParser(object):
         self.savePath = 'H:\\Pictures\\' + savePath
         self.thread_num = None
         self.threadRunningCount = 1
+        self.job_list = []
+
     '''
     parse_page
     
@@ -87,21 +89,26 @@ class CWebParser(object):
         if self.parseOnly == CParseType.Parse_Entire or self.parseOnly == CParseType.Parse_RealData:
             if self.common.process_data(data):
                 self.dbUtils.switch_db_detail_item(data)
+            else:
+                self.dbUtils.switch_db_one_detail_to_breif(data)
         elif self.parseOnly == CParseType.Parse_Brief:
-            datatmp = deepcopy(data)
-            self.dbUtils.insert_db_item(datatmp)
+            self.dbUtils.insert_db_item(data)
         elif self.parseOnly == CParseType.Parse_Detail:
             try:
                 dataDetail = self.common.parse_detail_fr_brief(data)
                 if dataDetail:
                     if self.args and self.args.l and self.args.l <= self.dbUtils.get_db_detail_item_count():
-                        self.log('process_data job limit reached, data dropped')
+                        # self.log('process_data job limit reached, data dropped')
                         pass
                     else:
                         self.dbUtils.switch_db_item(data)
                         self.dbUtils.insert_db_detail_item(dataDetail)
             except:
                 self.log('error in parse detail_fr_brief item')
+            finally:
+                self.pop_data_job(data)
+
+        self.pop_data_job(data)
 
     def log(self, logText):
         fileName = self.savePath.format(filePath='Runlog.log')
@@ -152,7 +159,7 @@ class CWebParser(object):
             #                     self.process_data(data)
             #                 else:
             #                     break
-            self.job_list = []
+
             thread_list = []
             t = threading.Thread(target=self.job_thread, args=(datas,))
             t.start()
@@ -200,13 +207,13 @@ class CWebParser(object):
                     break
 
             if not data:
-                print("job parse ended!")
+                # print("job parse ended!")
                 return
 
     def process_thread(self):
         while True:
             try:
-                data, endFlag = self.pop_data_job()
+                data, endFlag = self.get_data_job()
                 if not data and not endFlag:
                     time.sleep(1)
                     continue
@@ -224,42 +231,57 @@ class CWebParser(object):
     def push_data_job(self, data):
         rel = True
         self.dataLocker.acquire()
-        # print('thread %s in push data' % threading.currentThread())
-        #
-        # print('current db count %s'%self.dbUtils.get_db_detail_item_count())
         if self.thread_num:
             thread_num = self.thread_num
         else:
             thread_num = cpu_count() - 1
 
-        if len(self.job_list) > thread_num:
-            print('Job full, need waitting')
+        if len(self.job_list) >= thread_num:
+            # print('Job full, need waitting')
             rel = False
         elif self.args and self.args.l and self.parseOnly == CParseType.Parse_Detail and self.args.l <= self.dbUtils.get_db_detail_item_count():
-            print('Job limit reached, need pending')
+            # print('Job limit reached, need pending')
             rel = False
         else:
-            self.job_list.append(data)
-            print('New job is pushed')
+            self.job_list.append({"status": 0,
+                                  "data": data})
+            # print('New job is pushed, size %s' % len(self.job_list))
             rel = True
         # print('thread %s leave push data' % threading.currentThread())
         self.dataLocker.release()
         return rel
 
-    def pop_data_job(self):
+    def pop_data_job(self, data):
+        self.dataLocker.acquire()
+        for i in range(0, len(self.job_list)):
+            if self.job_list[i].get("data") == data:
+                # print('a job is popped, size %s, index %s' % (len(self.job_list), i))
+                del self.job_list[i]
+                break
+
+        self.dataLocker.release()
+
+    def get_data_job(self):
+        data = None
         self.dataLocker.acquire()
         endflag = False
         self.threadRunningCount += 1
-        if self.threadRunningCount > 20:
-            print("thred [%s]"%os.getpid(), 'job thread [%s]'%len(self.job_list), os.path.abspath(sys.argv[0]), str(sys.argv[1:]))
+        if self.threadRunningCount > 50:
+            print("thread [%s]" % os.getpid(), 'job thread [%s]' % len(self.job_list), os.path.abspath(sys.argv[0]),
+                  str(sys.argv[1:]))
             self.threadRunningCount = 1
 
         if len(self.job_list) >= 1:
-            if not self.job_list[0]:
+            if not self.job_list[0].get("data"):
                 data = None
                 endflag = True
             else:
-                data = self.job_list.pop(0)
+                for i in range(0, len(self.job_list)):
+                    if self.job_list[i].get("status") == 0:
+                        data = self.job_list[i].get('data')
+                        self.job_list[i]["status"] = 1
+                        # print('A job is getted, size %s, index %s' % (len(self.job_list),i))
+                        break
         else:
             data = None
 

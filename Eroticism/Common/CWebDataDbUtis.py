@@ -92,12 +92,16 @@ class CWebDataDbUtis(object):
 
     def switch_db_detail_to_breif(self):
         for item in self.get_db_detail_item():
-            self.dbDetailJob.delete_one(item)
+            self.switch_db_one_detail_to_breif(item)
 
-            item.pop('_id')
-            item.pop('detail')
+    def switch_db_one_detail_to_breif(self, data):
+        self.dbDetailJob.delete_one(data)
 
-            if self.dbBriefJobParsed.find_one(item):
-                self.dbBriefJobParsed.delete_one(item)
+        data.pop('_id')
+        data.pop('detail')
 
-            self.dbBriefJob.insert_one(item)
+        if self.dbBriefJobParsed.find_one(data):
+            self.dbBriefJobParsed.delete_one(data)
+
+        self.dbBriefJob.insert_one(data)
+
