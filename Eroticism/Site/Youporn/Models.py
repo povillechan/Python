@@ -25,12 +25,13 @@ class CWebParserSiteCommon(CWebParserProcess):
     #
     def parse_item(self, item):
         data = None
-        product_url = urljoin('https://www.youporn.com/', item.attr('href'))
-        product_name = item('img').attr('alt')
+
+        url = urljoin('https://www.youporn.com/', item.attr('href'))
+        name = item('div.video-box-title').text()
 
         data_brief = {
-            'url': product_url,
-            'name': self.webParser.utils.format_name(product_name)
+            'url': url,
+            'name': self.webParser.utils.format_name(name),
         }
 
         data = {'brief': data_brief}
@@ -42,49 +43,37 @@ class CWebParserSiteCommon(CWebParserProcess):
     def parse_detail_fr_brief(self, item):
         data = None
         url = item.get('brief').get('url')
-        html = self.webParser.utils.get_page_by_chrome(url, 'video source', headless=False)
 
+        html = self.webParser.utils.get_page(url)
         if html:
-            b = BeautifulSoup(html, 'lxml')
-            video = b.select_one('video source').get('src')
+            b = pq(html)
+
+            video = b('#downloadModal  .modal-box-content .downloadVideoLink')
+            videos = []
+            if video:
+                for video_item in video.items():
+                    videos.append(video_item.attr('href'))
+
+            stills = []
+            img_text = b('meta[property="og:image"]').attr('content')
+            if img_text:
+                img_pattern = re.search('(https.*?original/)\d+(/.*?-)\d+\.jpg', img_text, re.S)
+                if img_pattern:
+                    for i in range(1, 16):
+                        stills.append('%s%s%s%s.jpg'%(img_pattern.group(1), i, img_pattern.group(2), i))
 
             data_detail = {
                 'videos': {
                     'name': item.get('brief').get('name'),
                     'url': item.get('brief').get('url'),
-                    'video': video
+                    'video': videos,
+                    'stills': stills
                 }
             }
             data = deepcopy(item)
             data['detail'] = data_detail
 
         return data
-
-    def process_data(self, data):
-        result = True
-        sub_dir_name = "%s" % (data.get('name'))
-
-        dir_name = self.webParser.savePath.format(filePath=sub_dir_name)
-        if not os.path.exists(dir_name):
-            os.makedirs(dir_name)
-
-        #         with open(dir_name + '\\info.json', 'w') as f:
-        #             json.dump(data, f)
-
-        board = data.get('board')
-        if board:
-            result &= self.webParser.utils.download_file(board,
-                                                         '%s\\%s' % (sub_dir_name, data.get('name'))
-                                                         )
-
-        video = data.get('detail').get('videos').get('video')
-        if video:
-            result &= self.webParser.utils.download_file(video,
-                                                         '%s\\%s' % (
-                                                         sub_dir_name, data.get('detail').get('videos').get('name')),
-                                                         fileType='mp4'
-                                                         )
-        return result
 
 
 class CWebParserSite(CWebParserMultiUrl):
@@ -96,7 +85,7 @@ class CWebParserSite(CWebParserMultiUrl):
 
     '''
     parse_page
-    
+
     @author: chenzf
     '''
 
@@ -105,75 +94,81 @@ class CWebParserSite(CWebParserMultiUrl):
         while True:
             try:
                 url = next(urlsGen)
-                if not url:
+                if url is None:
                     yield None
-
-                if self.dbUtils.get_db_url(url):
-                    continue
 
                 html = self.utils.get_page(url)
                 if html:
-                    a = pq(html)
+                    if self.dbUtils.get_db_url(url):
+                        pass
+                    else:
+                        a = pq(html)
+                        # items
+                        # items = a('#content > ul  li.pornstars a')
+                        # for item in items.items():
+                        #     name = item('a img').attr('alt')
+                        #     board = item('a img').attr('src')
+                        #     model_url_origin = urljoin('https://www.thumbzilla.com/', item.attr('href'))
+                        #     # items
+                        items = a('div.fifteen-column > div > div.three-column > a')
+                        parse_url_success = True
+                        for item in items.items():
+                            model_url_origin = urljoin('https://www.youporn.com/', item.attr('href'))
+                            name = item('img').attr('alt')
+                            board = item('img').attr('data-original')
 
-                    # items
-                    items = a('div.fifteen-column > div > div.three-column > a')
-                    parse_url_success = True
-                    for item in items.items():
-                        model_url = urljoin('https://www.youporn.com/', item.attr('href'))
-                        model_name = item('img').attr('alt')
-                        model_board = item('img').attr('data-original')
+                            index = 1
+                            while True:
+                                model_url = "%s?page=%s" % (model_url_origin, index)
+                                if index == 1:
+                                    if self.dbUtils.get_db_url(model_url_origin):
+                                        index = index + 1
+                                        continue
+                                elif self.dbUtils.get_db_url(model_url):
+                                    index = index + 1
+                                    continue
 
-                        while True:
-                            model_html = self.utils.get_page(model_url)
-                            next_url = None
-                            if model_html:
+                                break
 
-                                if self.dbUtils.get_db_url(model_url):
-                                    pass
-                                else:
-                                    parse_success = True
-                                    b = pq(model_html)
+                            if index > 2:
+                                index = index - 1
+                                model_url = "%s?page=%s" % (model_url_origin, index)
+                            else:
+                                model_url = model_url_origin
 
-                                    video_items = b('div.video-box > a.video-box-image')
-                                    for video_item in video_items.items():
-                                        try:
-                                            #                                             data = self.common.parse_item(video_item)
-                                            #
-                                            #                                             data['model_url']   = model_url
-                                            #                                             data['model_name']  = model_name
-                                            #                                             data['model_board'] = model_board
-                                            #                                             yield data
-
-                                            data_p = self.common.parse_item(video_item)
+                            while True:
+                                self.log('request %s' % model_url)
+                                html2 = self.utils.get_page(model_url)
+                                if html2:
+                                    if self.dbUtils.get_db_url(model_url):
+                                        pass
+                                    else:
+                                        data_ps, parse_res = self.parse_sub_page(html2)
+                                        for data_p in data_ps:
                                             data_t = {
-                                                'name': self.utils.format_name(model_name),
+                                                'name': self.utils.format_name(name),
                                                 'url': model_url,
-                                                'board': model_board,
-                                                'refurl': model_url
+                                                'board': board,
+                                                'refurl': url
                                             }
 
                                             data = dict(data_t, **data_p)
                                             yield data
 
-                                        except:
-                                            parse_url_success = False
-                                            parse_success = False
-                                            continue
+                                        if parse_res:
+                                            self.log('parsed url %s' % model_url)
+                                            self.dbUtils.put_db_url(model_url)
 
-                                    if parse_success:
-                                        self.dbUtils.put_db_url(model_url)
-
-                                next_url = b('#next div.prev-next a').attr('href')
-
-                            if not next_url:
-                                break
-                            else:
-                                model_url = urljoin('https://www.youporn.com/', next_url)
-                    self.log('parsed url %s' % url)
-                    if parse_url_success:
-                        self.dbUtils.put_db_url(url)
+                                    next_url = pq(html2)('#next .prev-next a').attr("data-page-number")
+                                    if next_url:
+                                        model_url = "%s?page=%s" % (model_url_origin, next_url)
+                                    else:
+                                        break
+                                else:
+                                    break;
                 else:
                     self.log('request %s error' % url)
+                    continue
             except (GeneratorExit, StopIteration):
                 break
             except:
@@ -182,6 +177,26 @@ class CWebParserSite(CWebParserMultiUrl):
 
         yield None
 
+    def parse_sub_page(self, html):
+        b = pq(html)
+        items = b('div.video_block_wrapper > a ')
+
+        sub_datas = []
+        parse_successed = None
+        for item in items.items():
+            try:
+                data_p = self.common.parse_item(item)
+                sub_datas.append(data_p)
+
+                if not parse_successed:
+                    parse_successed = True
+                else:
+                    parse_successed = True & parse_successed
+            except:
+                parse_successed = False
+
+        return sub_datas, parse_successed
+
 
 def job_start():
     para_args = {
@@ -189,7 +204,7 @@ def job_start():
         'url': 'https://www.youporn.com/pornstars/?page={page}',
         'database': 'Youporn',
         'start': 1,
-        'end': 204
+        'end': 209
     }
 
     job = CWebParserSite(**para_args)

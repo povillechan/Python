@@ -27,7 +27,7 @@ class CParseType(Enum):
 class CWebParser(object):
     def __init__(self, savePath):
         self.parseOnly = 0
-        self.savePath = 'H:\\Pictures\\' + savePath
+        self.savePath = 'E:\\Pictures\\' + savePath
         self.thread_num = None
         self.threadRunningCount = 1
         self.job_list = []
