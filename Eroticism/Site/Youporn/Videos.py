@@ -18,6 +18,7 @@ from pyquery import PyQuery as pq
 from urllib.parse import urljoin
 
 
+
 class CWebParserSiteCommon(CWebParserProcess):
     def __init__(self, webParser):
         super().__init__(webParser)
@@ -26,8 +27,8 @@ class CWebParserSiteCommon(CWebParserProcess):
     def parse_item(self, item):
         data = None
 
-        url = urljoin('https://www.redtube.com/', item.attr('href'))
-        name = item('img').attr('alt')
+        url = urljoin('https://www.youporn.com/', item.attr('href'))
+        name = item('div.video-box-title').text()
 
         data_brief = {
             'url': url,
@@ -48,19 +49,19 @@ class CWebParserSiteCommon(CWebParserProcess):
         if html:
             b = pq(html)
 
-            video = b('#download_url_list  li a.js_download_video')
+            video = b('#downloadModal  .modal-box-content .downloadVideoLink')
             videos = []
             if video:
                 for video_item in video.items():
-                    videos.append(video_item.attr('data-href'))
+                    videos.append(video_item.attr('href'))
 
             stills = []
             img_text = b('meta[property="og:image"]').attr('content')
             if img_text:
-                img_pattern = re.search('(https.*?/)\d+\.jpg', img_text, re.S)
+                img_pattern = re.search('(https.*?original/)\d+(/.*?-)\d+\.jpg', img_text, re.S)
                 if img_pattern:
                     for i in range(1, 17):
-                        stills.append('%s%s.jpg' % (img_pattern.group(1), i))
+                        stills.append('%s%s%s%s.jpg'%(img_pattern.group(1), i, img_pattern.group(2), i))
 
             data_detail = {
                 'videos': {
@@ -137,7 +138,7 @@ class CWebParserSite(CWebParserSingleUrl):
                             pass
                         else:
                             a = pq(html2)
-                            items = a('#block_browse li>div')
+                            items = a('div.js_video_row  div.video-box  a.video-box-image')
                             parse_successed = True
                             for item in items.items():
                                 try:
@@ -166,9 +167,9 @@ class CWebParserSite(CWebParserSingleUrl):
                                 else:
                                     self.log('request %s error' % search_url)
 
-                        next_url = pq(html2)('#wp_navNext').attr("href")
+                        next_url = pq(html2)('#next .prev-next a').attr("href")
                         if next_url:
-                            search_url = urljoin('https://www.redtube.com/', next_url)
+                            search_url = urljoin('https://www.youporn.com/', next_url)
                         else:
                             break
             except (GeneratorExit, StopIteration):
@@ -183,17 +184,17 @@ class CWebParserSite(CWebParserSingleUrl):
         html = self.utils.get_page(self.url)
         if html:
             a = pq(html)
-            categorys = a('#categories_list_block li div.category_item_info a')
+            categorys = a('#categoryList a.categoryBox')
             for category in categorys.items():
-                yield urljoin("https://www.redtube.com", category.attr('href'))
+                yield urljoin("https://www.youporn.com", category.attr('href'))
         yield None
 
 
 def job_start():
     para_args = {
-        'savePath': 'RedTube\\{filePath}',
-        'url': "https://www.redtube.com/categories/",
-        'database': 'RedTubeVideo'
+        'savePath': 'Youporn\\{filePath}',
+        'url': "https://www.youporn.com/categories/alphabetical/",
+        'database': 'YoupornVideo'
     }
 
     job = CWebParserSite(**para_args)

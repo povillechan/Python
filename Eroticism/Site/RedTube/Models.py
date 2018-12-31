@@ -26,8 +26,8 @@ class CWebParserSiteCommon(CWebParserProcess):
     def parse_item(self, item):
         data = None
 
-        url = urljoin('https://www.youporn.com/', item.attr('href'))
-        name = item('div.video-box-title').text()
+        url = urljoin('https://www.redtube.com/', item.attr('href'))
+        name = item('img').attr('alt')
 
         data_brief = {
             'url': url,
@@ -48,19 +48,19 @@ class CWebParserSiteCommon(CWebParserProcess):
         if html:
             b = pq(html)
 
-            video = b('#downloadModal  .modal-box-content .downloadVideoLink')
+            video = b('#download_url_list  li a.js_download_video')
             videos = []
             if video:
                 for video_item in video.items():
-                    videos.append(video_item.attr('href'))
+                    videos.append(video_item.attr('data-href'))
 
             stills = []
             img_text = b('meta[property="og:image"]').attr('content')
             if img_text:
-                img_pattern = re.search('(https.*?original/)\d+(/.*?-)\d+\.jpg', img_text, re.S)
+                img_pattern = re.search('(https.*?/)\d+\.jpg', img_text, re.S)
                 if img_pattern:
                     for i in range(1, 17):
-                        stills.append('%s%s%s%s.jpg'%(img_pattern.group(1), i, img_pattern.group(2), i))
+                        stills.append('%s%s.jpg' % (img_pattern.group(1), i))
 
             data_detail = {
                 'videos': {
@@ -103,19 +103,11 @@ class CWebParserSite(CWebParserMultiUrl):
                         pass
                     else:
                         a = pq(html)
-                        # items
-                        # items = a('#content > ul  li.pornstars a')
-                        # for item in items.items():
-                        #     name = item('a img').attr('alt')
-                        #     board = item('a img').attr('src')
-                        #     model_url_origin = urljoin('https://www.thumbzilla.com/', item.attr('href'))
-                        #     # items
-                        items = a('div.fifteen-column > div > div.three-column > a')
-                        parse_url_success = True
+                        items = a('#pornstars_list li.ps_info a')
                         for item in items.items():
-                            model_url_origin = urljoin('https://www.youporn.com/', item.attr('href'))
+                            model_url_origin = urljoin('https://www.redtube.com/', item.attr('href'))
                             name = item('img').attr('alt')
-                            board = item('img').attr('data-original')
+                            board = item('img').attr('src')
 
                             index = 1
                             while True:
@@ -159,9 +151,9 @@ class CWebParserSite(CWebParserMultiUrl):
                                             self.log('parsed url %s' % model_url)
                                             self.dbUtils.put_db_url(model_url)
 
-                                    next_url = pq(html2)('#next .prev-next a').attr("data-page-number")
+                                    next_url = pq(html2)('#wp_navNext').attr("href")
                                     if next_url:
-                                        model_url = "%s?page=%s" % (model_url_origin, next_url)
+                                        model_url = urljoin('https://www.redtube.com/', next_url)
                                     else:
                                         break
                                 else:
@@ -179,7 +171,7 @@ class CWebParserSite(CWebParserMultiUrl):
 
     def parse_sub_page(self, html):
         b = pq(html)
-        items = b('div.video_block_wrapper > a ')
+        items = b('#pornstar_profile_block > .videoblock_list > .video_block_wrapper  a.video_link')
 
         sub_datas = []
         parse_successed = None
@@ -200,11 +192,11 @@ class CWebParserSite(CWebParserMultiUrl):
 
 def job_start():
     para_args = {
-        'savePath': 'Youporn\\{filePath}',
-        'url': 'https://www.youporn.com/pornstars/?page={page}',
-        'database': 'Youporn',
+        'savePath': 'RedTube\\{filePath}',
+        'url': 'https://www.redtube.com/pornstar?page={page}',
+        'database': 'RedTube',
         'start': 1,
-        'end': 209
+        'end': 144
     }
 
     job = CWebParserSite(**para_args)
