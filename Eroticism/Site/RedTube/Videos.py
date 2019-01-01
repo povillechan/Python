@@ -160,11 +160,11 @@ class CWebParserSite(CWebParserSingleUrl):
                                     parse_successed = False
                                     continue
 
-                                if parse_successed:
-                                    self.log('parsed url %s' % search_url)
-                                    self.dbUtils.put_db_url(search_url)
-                                else:
-                                    self.log('request %s error' % search_url)
+                            if parse_successed:
+                                self.log('parsed url %s' % search_url)
+                                self.dbUtils.put_db_url(search_url)
+                            else:
+                                self.log('request %s error' % search_url)
 
                         next_url = pq(html2)('#wp_navNext').attr("href")
                         if next_url:
