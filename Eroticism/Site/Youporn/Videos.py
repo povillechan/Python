@@ -167,11 +167,14 @@ class CWebParserSite(CWebParserSingleUrl):
                             else:
                                 self.log('request %s error' % search_url)
 
-                        next_url = pq(html2)('#next .prev-next a').attr("href")
+                        next_url = pq(html2)('#next .prev-next a').attr("data-page-number")
                         if next_url:
-                            search_url = urljoin('https://www.youporn.com/', next_url)
+                            # search_url = urljoin('https://www.youporn.com/', next_url)
+                            search_url = "%s?page=%s" % (url_origin, next_url)
                         else:
                             break
+                    else:
+                        break
             except (GeneratorExit, StopIteration):
                 break
             except:
