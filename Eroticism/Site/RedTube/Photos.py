@@ -109,7 +109,7 @@ class CWebParserSite(CWebParserMultiUrl):
                 html = self.utils.get_page(url)
                 if html:
                     a = pq(html)
-                    items = a('#image_album_list li a')
+                    items = a('#image_album_list li div.gallery_thumb a')
                     parse_succeed = True
                     for item in items.items():
                         try:
