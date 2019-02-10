@@ -97,7 +97,7 @@ class CWebParserSite(CWebParserSingleUrl):
                         else:
                             a = pq(html)
                             # items
-                            items = a('ul.sluts_main li')
+                            items = a('ul.set.sluts_main li')
                             parse_succeed = True
                             for item in items.items():
                                 try:

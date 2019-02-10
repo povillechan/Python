@@ -95,7 +95,7 @@ class CWebParserSite(CWebParserSingleUrl):
                         else:
                             a = pq(html)
                             # items
-                            items = a('ul.babes_main li')
+                            items = a('ul.set.babes_main li')
                             parse_succeed = True
                             for item in items.items():
                                 try:
@@ -120,9 +120,11 @@ class CWebParserSite(CWebParserSingleUrl):
                                                 data = dict(data_t, **data_p)
                                                 yield data
                                             except:
+                                                self.log('parsed error 1 %s_%s' % (url,modelitem))
                                                 parse_succeed = False
                                                 continue
                                 except:
+                                    self.log('parsed error 2 %s_%s' % (url, item))
                                     parse_succeed = False
                                     continue
                             if parse_succeed:
