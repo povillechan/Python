@@ -137,7 +137,7 @@ class CWebParserSite(CWebParserSingleUrl):
                             pass
                         else:
                             a = pq(html2)
-                            items = a('#block_browse li>div')
+                            items = a('#block_browse li>div a.video_link')
                             parse_successed = True
                             for item in items.items():
                                 try:
