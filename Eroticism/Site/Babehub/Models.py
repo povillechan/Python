@@ -4,7 +4,8 @@ Created on 2018年6月1日
 
 @author: chenzf
 '''
-import os, sys, re, json, collections
+import os
+import sys
 
 parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, parentdir)
@@ -13,9 +14,8 @@ from Common.CWebParser import CParseType, CWebParser, CWebParserMultiUrl, CWebPa
 from Common.CWebDataDbUtis import CWebDataDbUtis
 from Common.CWebSpiderUtils import CWebSpiderUtils
 from Common.CWebParserProcess import CWebParserProcess
-from copy import deepcopy
 from pyquery import PyQuery as pq
-from urllib.parse import urljoin
+from copy import deepcopy
 
 
 class CWebParserSiteCommon(CWebParserProcess):
@@ -24,8 +24,6 @@ class CWebParserSiteCommon(CWebParserProcess):
 
     #
     def parse_item(self, item):
-        data = None
-
         url = item('a').attr('href')
         model = item('span').text().replace(item('span span').text(), '')
         board = item('img').attr('src')
@@ -51,24 +49,6 @@ class CWebParserSiteCommon(CWebParserProcess):
 
         if html:
             b = pq(html)
-
-            #             previews = b('ul.gallery-e li')
-            #             stills = []
-            #             for preview in previews.items():
-            #                 stills.append(
-            #                     [
-            #                     preview('a').attr('href'),
-            #                     preview('img').attr('src'),
-            #                     ])
-            #
-            #
-            #             data = {
-            #                 'modelName' : item.get('modelName'),
-            #                 'url'  : url,
-            #                 'board': item.get('board'),
-            #                 'productName': item.get('productName'),
-            #                 'stills': stills
-            #                 }
             board = None
             video = None
             video_item = b('video source')
@@ -81,8 +61,6 @@ class CWebParserSiteCommon(CWebParserProcess):
             for preview in previews.items():
                 stills.append(preview('a').attr('href'))
 
-            #                 }
-            data_detail = None
             if video:
                 data_detail = {
                     'videos': {
@@ -106,38 +84,6 @@ class CWebParserSiteCommon(CWebParserProcess):
             data = deepcopy(item)
             data['detail'] = data_detail
         return data
-
-    #     def process_data(self, data):
-
-
-#         result = True
-#         sub_dir_name = "%s\\galleries\\%s" %(data.get('modelName'), data.get('productName'))
-#        
-#         dir_name = self.webParser.savePath.format(filePath=sub_dir_name)
-#         if not os.path.exists(dir_name):
-#             os.makedirs(dir_name)
-#         
-#         with open(dir_name + '\\info.json', 'w') as f:    
-#             json.dump(data, f)
-#             
-#         board = data.get('board')
-#         if board:
-#             result &=  self.webParser.utils.download_file(board,
-#                                 '%s\\%s' % (sub_dir_name, data.get('productName')),
-#                                 headers={'Referer':'https://www.babehub.com/'}
-#                                  )  
-#      
-#         stills = data.get('stills')
-#         for i, val in enumerate(stills, start=1): 
-#             for subVal in val:
-#                 if subVal:
-#                     result &= self.webParser.utils.download_file(subVal,
-#                                      '%s\\%s' % (sub_dir_name, str(i)),
-#                                      headers={'Referer':data.get('url')}
-#                              )   
-#                     break        
-#  
-#         return result      
 
 
 class CWebParserSite(CWebParserMultiUrl):

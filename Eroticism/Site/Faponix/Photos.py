@@ -24,7 +24,6 @@ class CWebParserSiteCommon(CWebParserProcess):
 
     #
     def parse_item(self, item):
-        data = None
         product_name = item.attr('title')
         product_url = item.attr('href')
 
@@ -114,11 +113,6 @@ class CWebParserSite(CWebParserSingleUrl):
 
                                 items = b('div.masonry_item >a')
                                 for item in items.items():
-                                    #                                     product_data = self.common.parse_item(item)
-                                    #                                     data = {
-                                    #                                         'name':    self.utils.format_name(name),
-                                    #                                         'product': product_data}
-                                    #
                                     data_p = self.common.parse_item(item)
                                     data_t = {
                                         'name': name,

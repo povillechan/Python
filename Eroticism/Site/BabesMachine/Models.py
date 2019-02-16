@@ -4,7 +4,8 @@ Created on 2018年6月1日
 
 @author: chenzf
 '''
-import os, sys, re, json, collections
+import os
+import sys
 
 parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, parentdir)
@@ -13,8 +14,8 @@ from Common.CWebParser import CParseType, CWebParser, CWebParserMultiUrl, CWebPa
 from Common.CWebDataDbUtis import CWebDataDbUtis
 from Common.CWebSpiderUtils import CWebSpiderUtils
 from Common.CWebParserProcess import CWebParserProcess
-from copy import deepcopy
 from pyquery import PyQuery as pq
+from copy import deepcopy
 from urllib.parse import urljoin
 
 
@@ -24,8 +25,6 @@ class CWebParserSiteCommon(CWebParserProcess):
 
     #
     def parse_item(self, item):
-        data = None
-
         url = urljoin('https://www.babesmachine.com/', item.attr('href'))
         name = item('img').attr('alt')
 

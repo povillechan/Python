@@ -4,7 +4,9 @@ Created on 2018年6月1日
 
 @author: chenzf
 '''
-import os, sys, re, json, collections
+import os
+import sys
+import re
 
 parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, parentdir)
@@ -24,8 +26,6 @@ class CWebParserSiteCommon(CWebParserProcess):
 
     #
     def parse_item(self, item):
-        data = None
-
         board = item('img').attr('src')
         url = item('a').attr('href')
         result = re.search('.*?(\?\d+x\d+x\d+)', item('a').attr('href'))
@@ -34,16 +34,6 @@ class CWebParserSiteCommon(CWebParserProcess):
 
         url = urljoin('http://www.hotxart.com/', url)
         name = item('img').attr('alt')
-
-        #         data = {
-        #             'url'  : url,
-        #             'name' : self.webParser.utils.format_name(name),
-        #             'board': board
-        #         }
-        #         if self.webParser.parseOnly == CParseType.Parse_Brief:
-        #             return data
-        #         else:
-        #             return self.parse_detail_fr_brief(data)
 
         data_brief = {
             'url': url,
@@ -70,7 +60,6 @@ class CWebParserSiteCommon(CWebParserProcess):
             stills = []
             for photo in photos.items():
                 detail_url = urljoin('http://www.hotxart.com/', photo.attr('href'))
-                small = photo('img').attr('src')
                 detail_html = self.webParser.utils.get_page(detail_url)
                 large = None
                 if detail_html:
@@ -80,13 +69,6 @@ class CWebParserSiteCommon(CWebParserProcess):
                 stills.append(large)
 
             if len(stills) > 0:
-                #                 data = {
-                #                 'url'  : item.get('url'),
-                #                 'name' : item.get('name'),
-                #                 'board': item.get('board'),
-                #                 'stills' :  stills
-                #                 }
-
                 data_detail = {
                     'galleries': {
                         'name': item.get('brief').get('name'),
@@ -100,40 +82,6 @@ class CWebParserSiteCommon(CWebParserProcess):
                 data['detail'] = data_detail
 
         return data
-
-    #     def process_data(self, data):
-
-
-# #         print(data)
-#         result = True
-#         sub_dir_name = "%s" %(data.get('name'))
-#        
-#         dir_name = self.webParser.savePath.format(filePath=sub_dir_name)
-#         if not os.path.exists(dir_name):
-#             os.makedirs(dir_name)
-#         
-#         with open(dir_name + '\\info.json', 'w') as f:    
-#             json.dump(data, f)
-#             
-#         board = data.get('board')
-#         result &=  self.webParser.utils.download_file(board,
-#                                 '%s\\%s' % (sub_dir_name, data.get('name')),
-#                                 headers={'Referer':'http://www.hotxart.com/'}
-#                                  )                 
-#         
-#    
-#      
-#         stills = data.get('stills')
-#         for i, val in enumerate(stills, start=1): 
-#             for subVal in val:
-#                 if subVal:
-#                     result &= self.webParser.utils.download_file(subVal,
-#                                      '%s\\%s' % (sub_dir_name, str(i)),
-#                                      headers={'Referer':'http://www.hotxart.com/'}
-#                              )   
-#                     break
-#         
-#         return result      
 
 
 class CWebParserSite(CWebParserSingleUrl):
@@ -163,8 +111,6 @@ class CWebParserSite(CWebParserSingleUrl):
                     # items
                     items = a('ul.picmain li')
                     for item in items.items():
-                        #                         data = self.common.parse_item(item)
-                        #                         yield data
                         data_p = self.common.parse_item(item)
                         data_t = {
                             'name': "HotXArt",

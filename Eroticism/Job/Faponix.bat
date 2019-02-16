@@ -1,1 +1,1 @@
-call cmd /c start python ..\Site\Faponix\Photos.py -p 3
+call cmd /c start python ..\Site\Faponix\Photos.py -p 3 -t 20

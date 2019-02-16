@@ -4,7 +4,8 @@ Created on 2018年6月1日
 
 @author: chenzf
 '''
-import os, sys, re, json, collections
+import os
+import sys
 
 parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, parentdir)
@@ -15,7 +16,6 @@ from Common.CWebSpiderUtils import CWebSpiderUtils
 from Common.CWebParserProcess import CWebParserProcess
 from copy import deepcopy
 from pyquery import PyQuery as pq
-from urllib.parse import urljoin
 
 
 class CWebParserSiteCommon(CWebParserProcess):
@@ -24,7 +24,6 @@ class CWebParserSiteCommon(CWebParserProcess):
 
     #
     def parse_item(self, item):
-        data = None
         url = item.attr('href')
         name = item.attr('title')
 
@@ -76,9 +75,6 @@ class CWebParserSiteCommon(CWebParserProcess):
         dir_name = self.webParser.savePath.format(filePath=sub_dir_name)
         if not os.path.exists(dir_name):
             os.makedirs(dir_name)
-
-        #         with open(dir_name + '\\info.json', 'w') as f:
-        #             json.dump(data, f)
 
         board = data.get('detail').get('videos').get('board')
         if board:

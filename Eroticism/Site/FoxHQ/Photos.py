@@ -4,7 +4,8 @@ Created on 2018年6月1日
 
 @author: chenzf
 '''
-import os, sys, re, json, collections
+import os
+import sys
 
 parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, parentdir)
@@ -24,7 +25,6 @@ class CWebParserSiteCommon(CWebParserProcess):
 
     #
     def parse_item(self, item):
-        data = None
         url = item.attr('href')
         name = item('img').attr('alt')
 
@@ -47,7 +47,6 @@ class CWebParserSiteCommon(CWebParserProcess):
         if html:
             b = pq(html)
 
-            video = None
             video_src = b('center video')
             if video_src:
                 video = urljoin(url, video_src.attr('src'))
@@ -109,8 +108,7 @@ class CWebParserSite(CWebParserMultiUrl):
                 if html:
                     a = pq(html)
                     # items
-                    items = a(
-                        'body > table:nth-child(2) center table:nth-child(1) > table:nth-child(1) td > a[target="_blank"]')
+                    items = a('body > table:nth-child(2) center table:nth-child(1) > table:nth-child(1) td > a[target="_blank"]')
                     parse_succeed = True
                     for item in items.items():
                         try:

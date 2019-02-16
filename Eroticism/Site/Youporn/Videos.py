@@ -4,7 +4,9 @@ Created on 2018年6月1日
 
 @author: chenzf
 '''
-import os, sys, re, json, collections
+import os
+import sys
+import re
 
 parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, parentdir)
@@ -18,15 +20,12 @@ from pyquery import PyQuery as pq
 from urllib.parse import urljoin
 
 
-
 class CWebParserSiteCommon(CWebParserProcess):
     def __init__(self, webParser):
         super().__init__(webParser)
 
     #
     def parse_item(self, item):
-        data = None
-
         url = urljoin('https://www.youporn.com/', item.attr('href'))
         name = item('div.video-box-title').text()
 
@@ -169,7 +168,6 @@ class CWebParserSite(CWebParserSingleUrl):
 
                         next_url = pq(html2)('#next .prev-next a').attr("data-page-number")
                         if next_url:
-                            # search_url = urljoin('https://www.youporn.com/', next_url)
                             search_url = "%s?page=%s" % (url_origin, next_url)
                         else:
                             break

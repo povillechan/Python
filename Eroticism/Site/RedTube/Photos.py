@@ -4,7 +4,9 @@ Created on 2018年6月1日
 
 @author: chenzf
 '''
-import os, sys, re, json, collections
+import os
+import sys
+import re
 
 parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, parentdir)
@@ -24,8 +26,6 @@ class CWebParserSiteCommon(CWebParserProcess):
 
     #
     def parse_item(self, item):
-        data = None
-
         url = urljoin('https://www.redtube.com/', item.attr('href'))
         name = item('img').attr('alt')
 
@@ -63,7 +63,7 @@ class CWebParserSiteCommon(CWebParserProcess):
                     break
             else:
                 parse_succeed = False
-                break;
+                break
 
         if parse_succeed:
             data_detail = {
@@ -81,6 +81,7 @@ class CWebParserSiteCommon(CWebParserProcess):
     def get_sub_dir_name(self, data):
         sub_dir_name = ""
         return sub_dir_name
+
 
 class CWebParserSite(CWebParserMultiUrl):
     def __init__(self, **kwArgs):
@@ -138,6 +139,7 @@ class CWebParserSite(CWebParserMultiUrl):
                 continue
 
         yield None
+
 
 def job_start():
     para_args = {

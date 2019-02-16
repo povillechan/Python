@@ -4,7 +4,9 @@ Created on 2018年6月1日
 
 @author: chenzf
 '''
-import os, sys, re, json, collections
+import os
+import sys
+import re
 
 parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, parentdir)
@@ -15,7 +17,6 @@ from Common.CWebSpiderUtils import CWebSpiderUtils
 from Common.CWebParserProcess import CWebParserProcess
 from copy import deepcopy
 from pyquery import PyQuery as pq
-from urllib.parse import urljoin
 
 
 class CWebParserSiteCommon(CWebParserProcess):
@@ -24,7 +25,6 @@ class CWebParserSiteCommon(CWebParserProcess):
 
     #
     def parse_item(self, item):
-        data = None
         url = item('a').attr('href')
         name = item('a').attr('title')
         still = item('img').attr('src')
@@ -35,18 +35,7 @@ class CWebParserSiteCommon(CWebParserProcess):
             stills.append(
                 result + str(i) + '.jpg'
             )
-        #
-        #         data = {
-        #             'productName' : self.webParser.utils.format_name(name),
-        #             'productUrl'  : url,
-        #             'stills'      : stills
-        #             }
-        #
-        #         if self.webParser.parseOnly == CParseType.Parse_Brief:
-        #             return data
-        #         else:
-        #             return self.parse_detail_fr_brief(data)
-        #
+
         data_brief = {
             'name': self.webParser.utils.format_name(name),
             'url': url,
@@ -81,37 +70,6 @@ class CWebParserSiteCommon(CWebParserProcess):
             data = deepcopy(item)
             data['detail'] = data_detail
         return data
-    #
-
-
-#     def process_data(self, data):
-#         result = True
-#         sub_dir_name = "%s\\%s" %(data.get('model'), data.get('productName'))
-#        
-#         dir_name = self.webParser.savePath.format(filePath=sub_dir_name)
-#         if not os.path.exists(dir_name):
-#             os.makedirs(dir_name)
-#         
-#         with open(dir_name + '\\info.json', 'w') as f:    
-#             json.dump(data, f)
-#             
-#         stills = data.get('stills')
-#         for i, subVal in enumerate(stills, start=1):
-#             if subVal:
-#                 result &= self.webParser.utils.download_file(subVal,
-#                                  '%s\\%s' % (sub_dir_name, str(i)),
-#                                 headers={'Referer':data.get('productUrl')}
-#                          )   
-# 
-#                 
-#         video = data.get('video')
-#         if video:
-#             result &=  self.webParser.utils.download_file(video,
-#                                 '%s\\%s' % (sub_dir_name, data.get('productName')),
-#                                 headers={'Referer':data.get('productUrl')}
-#                                  ) 
-#  
-#         return result      
 
 
 class CWebParserSite(CWebParserMultiUrl):
@@ -154,12 +112,6 @@ class CWebParserSite(CWebParserMultiUrl):
                             b = pq(html2)
                             items_model = b('div.content div.item')
                             for item_model in items_model.items():
-                                #                                 data = self.common.parse_item(item_model)
-                                #                                 if data:
-                                #                                     data['url']   = modelurl
-                                #                                     data['model'] = model
-                                #
-                                #                                 yield data
                                 data_p = self.common.parse_item(item_model)
                                 data_t = {
                                     'name': model,

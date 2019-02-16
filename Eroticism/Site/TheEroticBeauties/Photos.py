@@ -4,7 +4,9 @@ Created on 2018年6月1日
 
 @author: chenzf
 '''
-import os, sys, re, json, collections
+import os
+import sys
+import re
 
 parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, parentdir)
@@ -23,9 +25,6 @@ class CWebParserSiteCommon(CWebParserProcess):
         super().__init__(webParser)
 
     def parse_item(self, item):
-        data = None
-        #         ?4x174x20576
-        url = None
         url_pre = re.search('(.*?)\?\d+x\d+x\d+', item.attr('href'), re.S)
         if url_pre.group():
             url = urljoin('http://theeroticbeauties.com/', url_pre.group(1))
@@ -46,7 +45,6 @@ class CWebParserSiteCommon(CWebParserProcess):
             return self.parse_detail_fr_brief(data)
 
     def parse_detail_fr_brief(self, item):
-        data = None
         url = item.get('brief').get('url')
         while True:
             html = self.webParser.utils.get_page(url)
@@ -78,38 +76,6 @@ class CWebParserSiteCommon(CWebParserProcess):
                 data['detail'] = data_detail
                 break
         return data
-
-    #     def process_data(self, data):
-
-
-#         result = True
-#         sub_dir_name = "%s\\galleries\\%s" %(data.get('modelName'), data.get('productName'))
-#        
-#         dir_name = self.webParser.savePath.format(filePath=sub_dir_name)
-#         if not os.path.exists(dir_name):
-#             os.makedirs(dir_name)
-#         
-#         with open(dir_name + '\\info.json', 'w') as f:    
-#             json.dump(data, f)
-#             
-#         board = data.get('board')
-#         if board:
-#             result &=  self.webParser.utils.download_file(board,
-#                                 '%s\\%s' % (sub_dir_name, data.get('productName')),
-#                                 headers={'Referer':'https://www.babehub.com/'}
-#                                  )  
-#      
-#         stills = data.get('stills')
-#         for i, val in enumerate(stills, start=1): 
-#             for subVal in val:
-#                 if subVal:
-#                     result &= self.webParser.utils.download_file(subVal,
-#                                      '%s\\%s' % (sub_dir_name, str(i)),
-#                                      headers={'Referer':data.get('url')}
-#                              )   
-#                     break        
-#  
-#         return result      
 
 
 class CWebParserSite(CWebParserMultiUrl):

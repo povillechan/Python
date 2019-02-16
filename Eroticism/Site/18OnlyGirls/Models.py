@@ -4,9 +4,8 @@ Created on 2018年6月1日
 
 @author: chenzf
 '''
-import os, sys, re, json
-import argparse
-from copy import deepcopy
+import os
+import sys
 
 parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, parentdir)
@@ -15,14 +14,8 @@ from Common.CWebParser import CParseType, CWebParser, CWebParserMultiUrl, CWebPa
 from Common.CWebDataDbUtis import CWebDataDbUtis
 from Common.CWebSpiderUtils import CWebSpiderUtils
 from Common.CWebParserProcess import CWebParserProcess
-from copy import deepcopy
-from bs4 import BeautifulSoup
 from pyquery import PyQuery as pq
-from urllib.parse import urljoin
-import vthread
-import pymongo
 from copy import deepcopy
-from multiprocessing import cpu_count
 
 
 class CWebParserSiteCommon(CWebParserProcess):
@@ -31,8 +24,6 @@ class CWebParserSiteCommon(CWebParserProcess):
 
     #
     def parse_item(self, item):
-        data = None
-
         board = item('img').attr('src')
         product_url = item('a').attr('href')
         product_name = item('a').attr('title')
@@ -66,20 +57,6 @@ class CWebParserSiteCommon(CWebParserProcess):
             for preview in previews.items():
                 stills.append(preview('a').attr('href'))
 
-            #             product_data = {
-            #                 'board': item.get('product').get('board'),
-            #                 'url'  : item.get('product').get('url'),
-            #                 'name' : self.webParser.utils.format_name(item.get('product').get('name')),
-            #                 'stills'  :  stills,
-            #                 'video'   :  video
-            #                }
-            #
-            #             data = {
-            #                 'name': item.get('name'),
-            #                 'url' : item.get('url'),
-            #                 'product': product_data
-            #                 }
-            data_detail = None
             if video:
                 data_detail = {
                     'videos': {
@@ -103,75 +80,6 @@ class CWebParserSiteCommon(CWebParserProcess):
             data = deepcopy(item)
             data['detail'] = data_detail
         return data
-
-    def process_data(self, data):
-        result = True
-        sub_dir_name = self.get_sub_dir_name(data)
-
-        dir_name = self.webParser.savePath.format(filePath=sub_dir_name)
-        if not os.path.exists(dir_name):
-            os.makedirs(dir_name)
-
-        # board    
-        board = data.get('board')
-        if board:
-            result &= self.webParser.utils.download_file(board,
-                                                         '%s\\%s' % (sub_dir_name, data.get('name')),
-                                                         headers={'Referer': data.get('url')}
-                                                         )
-
-            # galleries
-        galleries = data.get('detail').get('galleries')
-        if galleries:
-            board = galleries.get('board')
-            if board:
-                result &= self.webParser.utils.download_file(board,
-                                                             '%s\\galleries\\%s\\%s' % (
-                                                             sub_dir_name, galleries.get('name'),
-                                                             galleries.get('name')),
-                                                             headers={'Referer': galleries.get('url')}
-                                                             )
-
-            stills = galleries.get('stills')
-            if stills:
-                for i, subVal in enumerate(stills, start=1):
-                    if subVal:
-                        result &= self.webParser.utils.download_file(subVal,
-                                                                     '%s\\galleries\\%s\\%s' % (
-                                                                     sub_dir_name, galleries.get('name'), str(i)),
-                                                                     headers={'Referer': galleries.get('url')}
-                                                                     )
-
-                        # videos
-        videos = data.get('detail').get('videos')
-        if videos:
-            board = videos.get('board')
-            if board:
-                result &= self.webParser.utils.download_file(board,
-                                                             '%s\\videos\\%s\\%s' % (
-                                                             sub_dir_name, videos.get('name'), videos.get('name')),
-                                                             headers={'Referer': videos.get('url')}
-                                                             )
-
-            stills = videos.get('stills')
-            if stills:
-                for i, subVal in enumerate(stills, start=1):
-                    if subVal:
-                        result &= self.webParser.utils.download_file(subVal,
-                                                                     '%s\\videos\\%s\\%s' % (
-                                                                     sub_dir_name, videos.get('name'), str(i)),
-                                                                     headers={'Referer': videos.get('url')}
-                                                                     )
-
-            video = videos.get('video')
-            if video:
-                self.webParser.utils.download_file(video,
-                                                   '%s\\videos\\%s\\%s' % (
-                                                   sub_dir_name, videos.get('name'), videos.get('name')),
-                                                   headers={'Referer': videos.get('url')}
-                                                   )
-
-        return result
 
 
 class CWebParserSite(CWebParserSingleUrl):

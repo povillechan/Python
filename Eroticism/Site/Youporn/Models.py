@@ -4,7 +4,9 @@ Created on 2018年6月1日
 
 @author: chenzf
 '''
-import os, sys, re, json, collections
+import os
+import sys
+import re
 
 parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, parentdir)
@@ -24,8 +26,6 @@ class CWebParserSiteCommon(CWebParserProcess):
 
     #
     def parse_item(self, item):
-        data = None
-
         url = urljoin('https://www.youporn.com/', item.attr('href'))
         name = item('div.video-box-title').text()
 
@@ -103,15 +103,7 @@ class CWebParserSite(CWebParserMultiUrl):
                         pass
                     else:
                         a = pq(html)
-                        # items
-                        # items = a('#content > ul  li.pornstars a')
-                        # for item in items.items():
-                        #     name = item('a img').attr('alt')
-                        #     board = item('a img').attr('src')
-                        #     model_url_origin = urljoin('https://www.thumbzilla.com/', item.attr('href'))
-                        #     # items
                         items = a('div.fifteen-column > div > div.three-column > a')
-                        parse_url_success = True
                         for item in items.items():
                             model_url_origin = urljoin('https://www.youporn.com/', item.attr('href'))
                             name = item('img').attr('alt')

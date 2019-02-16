@@ -4,7 +4,9 @@ Created on 2018年6月1日
 
 @author: chenzf
 '''
-import os, sys, re, json, collections
+import os
+import sys
+import re
 
 parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, parentdir)
@@ -24,8 +26,6 @@ class CWebParserSiteCommon(CWebParserProcess):
 
     #
     def parse_item(self, item):
-        data = None
-
         modelurl = urljoin('https://au.fleshlight.com/', item('a.permacover').attr('href'))
         name = item('a.permacover .v-bottom h3').text()
         board_str = re.search('url\(\'(.*?)\'', item('.grid-image').attr('style'))
@@ -62,12 +62,6 @@ class CWebParserSiteCommon(CWebParserProcess):
                 board = urljoin('https://', board_str.group(1))
                 stills.append(board)
 
-            #             previews = b('div.owl-stage .owl-item .image')
-            #             for preview in previews.items():
-            #                 board_str = re.search('url\(\'(.*?)\'', item('.main-product-container--pornstar').attr('style'))
-            #                 board     = urljoin('https://', board_str.group(1))
-            #                 stills.append(board)
-            #
             if b('#combos'):
                 board_str = re.search('url\(\'(.*?)\'', b('#combos').attr('style'))
                 if board_str and len(board_str.group(1)) > 0:

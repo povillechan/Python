@@ -4,7 +4,9 @@ Created on 2018年6月1日
 
 @author: chenzf
 '''
-import os, sys, re, json, collections
+import os
+import sys
+import re
 
 parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, parentdir)
@@ -15,7 +17,6 @@ from Common.CWebSpiderUtils import CWebSpiderUtils
 from Common.CWebParserProcess import CWebParserProcess
 from copy import deepcopy
 from pyquery import PyQuery as pq
-from urllib.parse import urljoin
 
 
 class CWebParserSiteCommon(CWebParserProcess):
@@ -24,7 +25,6 @@ class CWebParserSiteCommon(CWebParserProcess):
 
     #
     def parse_item(self, item):
-        data = None
         url = item('a.title').attr('href')
         name = item('a.title').attr('title')
 
@@ -56,7 +56,6 @@ class CWebParserSiteCommon(CWebParserProcess):
             poster = videos.attr('poster')
             result = re.search('https.*?(\d+b).jpg', poster, re.S)
             large = poster.replace(result.group(1), '{index}b')
-            small = poster.replace(result.group(1), '{index}')
 
             for i in range(1, 11):
                 stills.append(large.format(index=i))
@@ -115,13 +114,6 @@ class CWebParserSite(CWebParserMultiUrl):
                             b = pq(html2)
                             items_model = b('div.content div.item')
                             for item_model in items_model.items():
-                                #                                 data = self.common.parse_item(item_model)
-                                #                                 if data:
-                                #                                     data['url']   = modelurl
-                                #                                     data['model'] = model
-                                #                                     data['board'] = board
-                                #                                 yield data
-
                                 data_p = self.common.parse_item(item_model)
                                 data_t = {
                                     'name': self.utils.format_name(model),

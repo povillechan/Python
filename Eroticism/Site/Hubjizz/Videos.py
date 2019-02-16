@@ -14,9 +14,8 @@ from Common.CWebParser import CParseType, CWebParser, CWebParserMultiUrl, CWebPa
 from Common.CWebDataDbUtis import CWebDataDbUtis
 from Common.CWebSpiderUtils import CWebSpiderUtils
 from Common.CWebParserProcess import CWebParserProcess
-from pyquery import PyQuery as pq
 from copy import deepcopy
-from urllib.parse import urljoin
+from pyquery import PyQuery as pq
 
 
 class CWebParserSiteCommon(CWebParserProcess):
@@ -25,12 +24,12 @@ class CWebParserSiteCommon(CWebParserProcess):
 
     #
     def parse_item(self, item):
-        url = urljoin('https://www.babesmachine.com/', item.attr('href'))
-        name = item.attr('title')
+        url = item.attr('href')
+        name = item('span').text()
 
         data_brief = {
             'url': url,
-            'name': self.webParser.utils.format_name(name)
+            'name': self.webParser.utils.format_name(name),
         }
 
         data = {'brief': data_brief}
@@ -46,16 +45,16 @@ class CWebParserSiteCommon(CWebParserProcess):
         html = self.webParser.utils.get_page(url)
         if html:
             b = pq(html)
-            items = b('#gallery table:nth-of-type(1) a img')
-            stills = []
-            for still in items.items():
-                stills.append(urljoin('https://www.babesmachine.com/', still.attr('src').replace('tn_', '')))
+
+            video = b('video source')
+            if video:
+                video = video.attr('src')
 
             data_detail = {
-                'galleries': {
+                'videos': {
                     'name': item.get('brief').get('name'),
                     'url': item.get('brief').get('url'),
-                    'stills': stills
+                    'video': video,
                 }
             }
             data = deepcopy(item)
@@ -63,31 +62,21 @@ class CWebParserSiteCommon(CWebParserProcess):
 
         return data
 
-    def get_sub_dir_name(self, data):
-        sub_dir_name = ""
-        return sub_dir_name
-
     def process_data(self, data):
-        #         print(data)
         result = True
-        sub_dir_name = self.get_sub_dir_name(data)
 
-        dir_name = self.webParser.savePath.format(filePath=sub_dir_name)
-        if not os.path.exists(dir_name):
-            os.makedirs(dir_name)
+        # videos
+        videos = data.get('detail').get('videos')
+        if videos:
+            video = videos.get('video')
+            if video:
+                if type(video) is list:
+                    video = video[0]
+                result &= self.webParser.utils.download_file(video,
+                                                             '\\%s' % (videos.get('name')),
+                                                             headers={'Referer': videos.get('url')}
+                                                             )
 
-        # galleries
-        galleries = data.get('detail').get('galleries')
-        if galleries:
-            stills = galleries.get('stills')
-            if stills:
-                for i, subVal in enumerate(stills, start=1):
-                    if subVal:
-                        self.webParser.utils.verify = False
-                        result &= self.webParser.utils.download_file(subVal,
-                                                                     '%s\\galleries\\%s\\%s' % (
-                                                                         sub_dir_name, galleries.get('name'), str(i))
-                                                                      )
         return result
 
 
@@ -100,7 +89,7 @@ class CWebParserSite(CWebParserMultiUrl):
 
     '''
     parse_page
-    
+
     @author: chenzf
     '''
 
@@ -119,13 +108,13 @@ class CWebParserSite(CWebParserMultiUrl):
                 if html:
                     a = pq(html)
                     # items
-                    items = a('section.blackback table tr td a')
+                    items = a('div.thumb-div a.black_a')
                     parse_succeed = True
                     for item in items.items():
                         try:
                             data_p = self.common.parse_item(item)
                             data_t = {
-                                'name': "galleries",
+                                'name': data_p.get('brief').get('name'),
                                 'url': data_p.get('brief').get('url'),
                                 'refurl': url
                             }
@@ -148,19 +137,14 @@ class CWebParserSite(CWebParserMultiUrl):
 
         yield None
 
-    def urls_genarator(self):
-        for i in range(self.start, self.end + 1, 60):
-            yield self.url.format(page=i)
-        yield None
-
 
 def job_start():
     para_args = {
-        'savePath': 'BabesMachine\\{filePath}',
-        'url': 'https://www.babesmachine.com/galleries?from={page}',
-        'database': 'BabesMachinePhotos',
-        'start': 0,
-        'end': 5520
+        'savePath': 'Hubjizz\\{filePath}',
+        'url': 'http://hubjizz.com/page{page}.html',
+        'database': 'Hubjizz',
+        'start': 1,
+        'end': 2076
     }
 
     job = CWebParserSite(**para_args)
