@@ -6,6 +6,7 @@ Created on 2018年6月1日
 '''
 import os
 import sys
+import re
 
 parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, parentdir)
@@ -25,7 +26,7 @@ class CWebParserSiteCommon(CWebParserProcess):
     #
     def parse_item(self, item):
         url = item.attr('href')
-        name = item('span').text()
+        name = item.attr('title')
 
         data_brief = {
             'url': url,
@@ -44,40 +45,37 @@ class CWebParserSiteCommon(CWebParserProcess):
 
         html = self.webParser.utils.get_page(url)
         if html:
-            b = pq(html)
+            script_pattern = re.search('jwplayer\("videoplayer"\).setup\((.*?)\)', html, re.S)
+            if script_pattern:
+                value_json = script_pattern.group(1)
+                video = None
+                stills = []
 
-            video = b('video source')
-            if video:
-                video = video.attr('src')
+                value_parttern = re.search('file:.*?\'(http.*?)\',', value_json, re.S)
+                if value_parttern:
+                    video = value_parttern.group(1)
 
-            data_detail = {
-                'videos': {
-                    'name': item.get('brief').get('name'),
-                    'url': item.get('brief').get('url'),
-                    'video': video,
+                still_pattern = re.search('image:.*?\'(http.*?)\d+\.jpg\',', value_json, re.S)
+                if still_pattern:
+                    for i in range(1, 30):
+                        stills.append('%s%s.jpg' % (still_pattern.group(1), i))
+
+                data_detail = {
+                    'videos': {
+                        'name': item.get('brief').get('name'),
+                        'url': item.get('brief').get('url'),
+                        'video': video,
+                        'stills': stills
+                    }
                 }
-            }
-            data = deepcopy(item)
-            data['detail'] = data_detail
+                data = deepcopy(item)
+                data['detail'] = data_detail
 
         return data
 
-    def process_data(self, data):
-        result = True
-
-        # videos
-        videos = data.get('detail').get('videos')
-        if videos:
-            video = videos.get('video')
-            if video:
-                if type(video) is list:
-                    video = video[0]
-                result &= self.webParser.utils.download_file(video,
-                                                             '\\%s' % (videos.get('name')),
-                                                             headers={'Referer': videos.get('url')}
-                                                             )
-
-        return result
+    def get_sub_dir_name(self, data):
+        sub_dir_name = ""
+        return sub_dir_name
 
 
 class CWebParserSite(CWebParserMultiUrl):
@@ -108,13 +106,13 @@ class CWebParserSite(CWebParserMultiUrl):
                 if html:
                     a = pq(html)
                     # items
-                    items = a('div.thumb-div a.black_a')
+                    items = a('ul.listThumbs li a.title')
                     parse_succeed = True
                     for item in items.items():
                         try:
                             data_p = self.common.parse_item(item)
                             data_t = {
-                                'name': data_p.get('brief').get('name'),
+                                'name': 'videos',
                                 'url': data_p.get('brief').get('url'),
                                 'refurl': url
                             }

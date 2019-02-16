@@ -65,7 +65,7 @@ class CWebParserSiteCommon(CWebParserProcess):
                 img_pattern = re.search('(https.*?-)\d+\.jpg', img_text, re.S)
                 if img_pattern:
                     for i in range(1, 10):
-                        stills.append('%s%s.jpg'%(img_pattern.group(1),i))
+                        stills.append('%s%s.jpg'%(img_pattern.group(1), i))
 
             data_detail = {
                 'videos': {

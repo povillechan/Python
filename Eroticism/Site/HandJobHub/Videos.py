@@ -48,8 +48,6 @@ class CWebParserSiteCommon(CWebParserProcess):
         html = self.webParser.utils.get_page(url)
         if html:
             b = pq(html)
-
-            video = None
             video_src = b('video source')
             if video_src:
                 video = video_src.attr('src')
@@ -83,8 +81,8 @@ class CWebParserSiteCommon(CWebParserProcess):
                         'stills': stills
                     }
                 }
-        data = deepcopy(item)
-        data['detail'] = data_detail
+            data = deepcopy(item)
+            data['detail'] = data_detail
 
         return data
 
