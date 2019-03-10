@@ -27,7 +27,7 @@ class CParseType(Enum):
 class CWebParser(object):
     def __init__(self, savePath):
         self.parseOnly = 0
-        self.savePath = 'E:\\Pictures\\' + savePath
+        self.savePath = 'H:\\Pictures\\' + savePath
         self.thread_num = None
         self.threadRunningCount = 1
         self.job_list = []
@@ -322,6 +322,7 @@ class CWebParserMultiUrl(CWebParser):
             # save path
             if self.args.f:
                 super().__init__(self.args.f)
+                self.savePath = self.args.f + "\\{filePath}"
             elif kwArgs.get('savePath'):
                 super().__init__(kwArgs.get('savePath'))
             else:
@@ -376,6 +377,7 @@ class CWebParserSingleUrl(CWebParser):
             # save path
             if self.args.f:
                 super().__init__(self.args.f)
+                self.savePath = self.args.f + "\\{filePath}"
             elif kwArgs.get('savePath'):
                 super().__init__(kwArgs.get('savePath'))
             else:
