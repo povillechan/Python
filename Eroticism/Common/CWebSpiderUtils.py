@@ -19,17 +19,17 @@ from requests.adapters import HTTPAdapter
 
 class CWebSpiderUtils(object):
     m_defHeaders = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Accept-Language": "zh-CN,zh;q=0.9",
-        "Cache-Control": "max-age=0",
-        'Connection': 'close',
+        "user-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36",
+        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+        "accept-Encoding": "gzip, deflate, br",
+        "accept-Language": "zh-CN,zh;q=0.9",
+        "cache-Control": "max-age=0",
+        'connection': 'close',
         #                     "Connection":"keep-alive",
 
     }
     m_defTimeout = (30, 30)
-    m_defSuccessCode = [200, 204, 206]
+    m_defSuccessCode = [200, 204, 206, 304]
     m_savePath = ''
     m_retry_times = 3
     m_verify = True
@@ -58,8 +58,21 @@ class CWebSpiderUtils(object):
                 response = s.get(url, headers=new_headers, timeout=self.m_defTimeout)
             else:
                 response = s.get(url, headers=self.m_defHeaders, timeout=self.m_defTimeout)
-
             if response.status_code in self.m_defSuccessCode:
+                return response.text
+            return None
+        except RequestException as e:
+            print(e)
+            return None
+
+    def get_page_raw(self, url):
+        try:
+            s = requests.Session()
+            s.mount('http://', HTTPAdapter(max_retries=3))
+            s.mount('https://', HTTPAdapter(max_retries=3))
+            response = s.get(url)
+            if response.status_code in self.m_defSuccessCode:
+                response.encoding = 'UTF-8'
                 return response.text
             return None
         except RequestException as e:
@@ -233,7 +246,6 @@ class CWebSpiderUtils(object):
         patterns = [('\"', '_'),
                     (',', '_'),
                     (':', '_'),
-                    (',', '_'),
                     ('!', '_'),
                     ('?', '_'),
                     ('/', '_'),
@@ -243,6 +255,8 @@ class CWebSpiderUtils(object):
                     (']', '_'),
                     ('\r', '_'),
                     ('\n', '_'),
+                    ('*', '_'),
+                    ('.', '_'),
                     ]
         for pattern in patterns:
             name = name.replace(pattern[0], pattern[1])
