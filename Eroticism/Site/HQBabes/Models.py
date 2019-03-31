@@ -27,6 +27,8 @@ class CWebParserSiteCommon(CWebParserProcess):
     def parse_item(self, item):
         url = urljoin('https://www.hqbabes.com/', item('a:nth-child(2)').attr('href'))
         name = item('b span').text()
+        if not name:
+            name = item('a:nth-child(2)').attr('href').split('/')[1]
 
         data_brief = {
             'url': url,
