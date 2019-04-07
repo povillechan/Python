@@ -19,12 +19,12 @@ from requests.adapters import HTTPAdapter
 
 class CWebSpiderUtils(object):
     m_defHeaders = {
-        "user-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36",
-        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
-        "accept-Encoding": "gzip, deflate, br",
-        "accept-Language": "zh-CN,zh;q=0.9",
-        "cache-Control": "max-age=0",
-        'connection': 'close',
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Accept-Language": "zh-CN,zh;q=0.9",
+        "Cache-Control": "max-age=0",
+        'Connection': 'close',
         #                     "Connection":"keep-alive",
 
     }
