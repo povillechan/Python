@@ -6,7 +6,6 @@ Created on 2018年6月1日
 '''
 import os
 import sys
-import re
 
 parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, parentdir)
@@ -26,8 +25,8 @@ class CWebParserSiteCommon(CWebParserProcess):
 
     #
     def parse_item(self, item):
-        name = item('span a').text()
-        url = urljoin('https://www.stasyq.com/', item('span a').attr('href'))
+        url = urljoin('https://www.novoporn.com/', item.attr('href'))
+        name = item('img').attr('alt')
 
         data_brief = {
             'url': url,
@@ -47,45 +46,41 @@ class CWebParserSiteCommon(CWebParserProcess):
         html = self.webParser.utils.get_page(url)
         if html:
             b = pq(html)
+            items = b('#content div.gallery a.gallery-picture img')
+            if items:
+                stills = []
+                for still in items.items():
+                    stills.append(urljoin('https://www.novoporn.com/', still.attr("src").replace("/tn_", "/")))
 
-            video = []
-            videos = b('#videoPlayer')
-            for vid in videos('source').items():
-                video.append(vid.attr('src'))
-
-            stills = []
-            poster = videos.attr('poster')
-            result = re.search('https.*?(\d+b).jpg', poster, re.S)
-            large = poster.replace(result.group(1), '{index}b')
-            small = poster.replace(result.group(1), '{index}')
-
-            for i in range(1, 11):
-                stills.append(large.format(index=i))
-
-            data_detail = {
-                'videos': {
-                    'name': item.get('brief').get('name'),
-                    'url': item.get('brief').get('url'),
-                    'video': video[0] if len(video) > 1 else [],
-                    'stills': stills
+                data_detail = {
+                    'galleries': {
+                        'name': item.get('brief').get('name'),
+                        'url': item.get('brief').get('url'),
+                        'stills': stills
+                    }
                 }
-            }
-            data = deepcopy(item)
-            data['detail'] = data_detail
+
+                data = deepcopy(item)
+                data['detail'] = data_detail
 
         return data
+
+    def get_sub_dir_name(self, data):
+        sub_dir_name = ""
+        return sub_dir_name
 
 
 class CWebParserSite(CWebParserMultiUrl):
     def __init__(self, **kwArgs):
         super().__init__(**kwArgs)
         self.utils = CWebSpiderUtils(self.savePath)
+        self.utils.verify = False
         self.common = CWebParserSiteCommon(self)
         self.dbUtils = CWebDataDbUtis(kwArgs.get('database'))
 
     '''
     parse_page
-    
+
     @author: chenzf
     '''
 
@@ -104,20 +99,27 @@ class CWebParserSite(CWebParserMultiUrl):
                 if html:
                     a = pq(html)
                     # items
-                    items = a('#mainscroll .wrapbox__box .content__text')
+                    items = a('#content div.gallery div.refpost a')
+                    parse_succeed = True
+                    icount = 0
                     for item in items.items():
-                        data_p = self.common.parse_item(item)
-                        data_t = {
-                            'name': data_p.get('brief').get('name'),
-                            'url': data_p.get('brief').get('url'),
-                            'refurl': url
-                        }
+                        try:
+                            data_p = self.common.parse_item(item)
+                            data_t = {
+                                'name': data_p.get('brief').get('name'),
+                                'url': data_p.get('brief').get('url'),
+                                'refurl': url
+                            }
 
-                        data = dict(data_t, **data_p)
-                        yield data
-
-                    self.log('parsed url %s' % url)
-                    self.dbUtils.put_db_url(url)
+                            data = dict(data_t, **data_p)
+                            yield data
+                            icount += 1
+                        except:
+                            parse_succeed = False
+                            continue
+                    if parse_succeed and icount > 0:
+                        self.log('parsed url %s' % url)
+                        self.dbUtils.put_db_url(url)
                 else:
                     self.log('request %s error' % url)
             except (GeneratorExit, StopIteration):
@@ -128,14 +130,19 @@ class CWebParserSite(CWebParserMultiUrl):
 
         yield None
 
+    def urls_genarator(self):
+        for i in range(self.start, self.end + 1):
+            yield self.url.format(page=i * 24)
+        yield None
+
 
 def job_start():
     para_args = {
-        'savePath': 'StasyQ\\{filePath}',
-        'url': 'https://www.stasyq.com/releases/page/{page}',
-        'database': 'StasyQ',
-        'start': 1,
-        'end': 9
+        'savePath': 'Novoporn\\{filePath}',
+        'url': 'https://www.novoporn.com/galleries?from={page}',
+        'database': 'Novoporn',
+        'start': 0,
+        'end': 25
     }
 
     job = CWebParserSite(**para_args)
