@@ -22,6 +22,7 @@ class CParseType(Enum):
     Parse_Detail = 2
     Parse_RealData = 3
     Parse_Detail2Brief = 4
+    Parse_ClearUrl = 5
 
 
 class CWebParser(object):
@@ -78,6 +79,9 @@ class CWebParser(object):
 
     def parse_detail_to_brief(self):
         self.dbUtils.switch_db_detail_to_breif()
+
+    def parse_clear_url(self):
+        self.dbUtils.parse_clear_url()
 
     '''
     process_image
@@ -148,6 +152,9 @@ class CWebParser(object):
                 datas = self.parse_detail()
             elif self.parseOnly == CParseType.Parse_Detail2Brief:
                 self.parse_detail_to_brief()
+                return
+            elif self.parseOnly == CParseType.Parse_ClearUrl:
+                self.parse_clear_url()
                 return
             else:
                 datas = self.parse_detail_data()

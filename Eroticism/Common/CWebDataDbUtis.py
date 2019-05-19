@@ -105,3 +105,5 @@ class CWebDataDbUtis(object):
 
         self.dbBriefJob.insert_one(data)
 
+    def parse_clear_url(self):
+        self.dbUrl.remove()
