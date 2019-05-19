@@ -20,7 +20,7 @@ def isdir(path):
     return result
 
 
-def format_name( name):
+def format_name(name):
     name = name.strip()
     patterns = [('\"', '_'),
                 (',', '_'),
@@ -52,4 +52,4 @@ if len(sys.argv) >= 2 and sys.argv[1] != "":
                 print("old:", oldpath)
                 print("new:", newpath)
                 dirname = os.path.dirname(dirpath)
-                os.rename(os.path.join(dirname,oldpath),os.path.join(dirname,newpath))
+                os.rename(os.path.join(dirname, oldpath), os.path.join(dirname, newpath))
