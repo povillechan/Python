@@ -143,7 +143,7 @@ class CWebParserSite(CWebParserMultiUrl):
 
 def job_start():
     para_args = {
-        'savePath': 'BabeHub\\{filePath}',
+        'savePath': os.path.join('BabeHub', '{filePath}'),
         'url': 'https://www.babehub.com/page/{page}/',
         'database': 'BabeHub',
         'start': 0,

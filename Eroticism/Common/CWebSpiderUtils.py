@@ -15,6 +15,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from requests.adapters import HTTPAdapter
+import platform
 
 
 class CWebSpiderUtils(object):
@@ -36,7 +37,12 @@ class CWebSpiderUtils(object):
 
     def __init__(self, savePath):
         self.savePath = savePath
-        self.chrome_service = Service("C:\\Windows\\System32\\chromedriver.exe")
+        curPath = os.path.dirname(os.path.abspath('.'))
+        if platform.system() == "Windows":
+            # self.chrome_service = Service("C:\\Windows\\System32\\chromedriver.exe")
+            self.chrome_service = Service(curPath + "\\..\\Driver\\chromedriver.exe")
+        else:
+            self.chrome_service = Service(curPath + "/../Driver/chromedriver")
         self.chrome_service.start()
         self.verify = True
 
@@ -257,6 +263,8 @@ class CWebSpiderUtils(object):
                     ('\n', '_'),
                     ('*', '_'),
                     ('.', '_'),
+                    ('/', '_'),
+                    ('\'', '_'),
                     ]
         for pattern in patterns:
             name = name.replace(pattern[0], pattern[1])

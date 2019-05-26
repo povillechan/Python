@@ -142,7 +142,7 @@ def job_start():
     job.call_process()
 
     para_args = {
-        'savePath': '54zipai\\{filePath}',
+        'savePath': os.path.join('54zipai', '{filePath}'),
         'url': 'https://54zipai.com/selfies/index_{page}.html',
         'database': '54zipai',
         'start': 1,

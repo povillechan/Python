@@ -150,7 +150,7 @@ class CWebParserSite(CWebParserSingleUrl):
 
 def job_start():
     para_args = {
-        'savePath': '18OnlyGirls\\{filePath}',
+        'savePath': os.path.join('18OnlyGirls', '{filePath}'),
         'url': 'https://www.18onlygirlsblog.com/models-list/',
         'database': '18OnlyGirls'
     }

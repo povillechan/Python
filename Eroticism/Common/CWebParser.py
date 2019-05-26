@@ -14,6 +14,7 @@ from enum import Enum
 from copy import deepcopy
 import sys
 import argparse
+import platform
 
 
 class CParseType(Enum):
@@ -28,7 +29,10 @@ class CParseType(Enum):
 class CWebParser(object):
     def __init__(self, savePath):
         self.parseOnly = 0
-        self.savePath = 'E:\\Pictures\\' + savePath
+        if platform.system() == "Windows":
+            self.savePath = os.path.join('E:\\Pictures\\', savePath)
+        else:
+            self.savePath = os.path.join(os.path.expanduser('~'), 'Pictures', savePath)
         self.thread_num = None
         self.threadRunningCount = 1
         self.job_list = []
@@ -384,7 +388,7 @@ class CWebParserSingleUrl(CWebParser):
             # save path
             if self.args.f:
                 super().__init__(self.args.f)
-                self.savePath = self.args.f + "\\{filePath}"
+                self.savePath = os.path.join(self.args.f, "{filePath}")
             elif kwArgs.get('savePath'):
                 super().__init__(kwArgs.get('savePath'))
             else:
