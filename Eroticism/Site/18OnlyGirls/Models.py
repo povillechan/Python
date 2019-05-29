@@ -95,55 +95,49 @@ class CWebParserSite(CWebParserSingleUrl):
     @author: chenzf
     '''
 
-    def parse_page(self):
-        urlsGen = self.urls_genarator()
-        while True:
-            try:
-                url = next(urlsGen)
-                if not url:
-                    yield None
+    def parse_page(self, url):
+        try:
+            if not url:
+                yield None
 
-                html = self.utils.get_page(url, headers={"Accept-Encoding": "", })
-                if html:
-                    a = pq(html)
-                    # items
-                    items = a('ul.links li')
+            html = self.utils.get_page(url, headers={"Accept-Encoding": "", })
+            if html:
+                a = pq(html)
+                # items
+                items = a('ul.links li.hideli')
 
-                    for item in items.items():
-                        modelurl = item('a').attr('href')
-                        name = item('a').attr('title')
+                for item in items.items():
+                    modelurl = item('a').attr('href')
+                    name = item('a').attr('title')
 
-                        if self.dbUtils.get_db_url(modelurl):
+                    if self.dbUtils.get_db_url(modelurl):
+                        continue
+
+                    html = self.utils.get_page(modelurl, headers={"Accept-Encoding": "", })
+                    if html:
+                        b = pq(html)
+                        products = b('li.box-shadow')
+                        try:
+                            for product in products.items():
+                                data_p = self.common.parse_item(product)
+                                data_t = {
+                                    'name': self.utils.format_name(name),
+                                    'url': modelurl,
+                                    'refurl': modelurl
+                                }
+
+                                data = dict(data_t, **data_p)
+                                yield data
+                        except:
                             continue
 
-                        html = self.utils.get_page(modelurl, headers={"Accept-Encoding": "", })
-                        if html:
-                            b = pq(html)
-                            products = b('li.box-shadow')
-                            try:
-                                for product in products.items():
-                                    data_p = self.common.parse_item(product)
-                                    data_t = {
-                                        'name': self.utils.format_name(name),
-                                        'url': modelurl,
-                                        'refurl': modelurl
-                                    }
+                        self.dbUtils.put_db_url(modelurl)
 
-                                    data = dict(data_t, **data_p)
-                                    yield data
-                            except:
-                                continue
-
-                            self.dbUtils.put_db_url(modelurl)
-
-                    self.log('parsed url %s' % url)
-                else:
-                    self.log('request %s error' % url)
-            except (GeneratorExit, StopIteration):
-                break
-            except:
-                self.log('error in parse url %s' % url)
-                continue
+                self.log('parsed url %s' % url)
+            else:
+                self.log('request %s error' % url)
+        except:
+            self.log('error in parse url %s' % url)
 
         yield None
 

@@ -43,11 +43,11 @@ class CWebParser(object):
     @author: chenzf
     '''
 
-    def parse_page(self):
+    def parse_page(self, url):
         return None
 
-    def parse_brief(self):
-        return self.parse_page()
+    def parse_brief(self, url):
+        return self.parse_page(url)
 
     def parse_detail(self):
         while True:
@@ -100,7 +100,11 @@ class CWebParser(object):
             else:
                 self.dbUtils.switch_db_one_detail_to_breif(data)
         elif self.parseOnly == CParseType.Parse_Brief:
-            self.dbUtils.insert_db_item(data)
+            for item in self.parse_brief(data):
+                if item:
+                    self.dbUtils.insert_db_item(item)
+                else:
+                    break
         elif self.parseOnly == CParseType.Parse_Detail:
             try:
                 dataDetail = self.common.parse_detail_fr_brief(data)
@@ -151,7 +155,7 @@ class CWebParser(object):
             if self.parseOnly == CParseType.Parse_Entire:
                 datas = self.parse_page()
             elif self.parseOnly == CParseType.Parse_Brief:
-                datas = self.parse_brief()
+                datas = self.urls_genarator()
             elif self.parseOnly == CParseType.Parse_Detail:
                 datas = self.parse_detail()
             elif self.parseOnly == CParseType.Parse_Detail2Brief:
@@ -164,13 +168,6 @@ class CWebParser(object):
                 datas = self.parse_detail_data()
 
             self.dataLocker = threading.Lock()
-            #             while True:
-            #                 data = next(datas)
-            #                 if data:
-            #                     self.process_data(data)
-            #                 else:
-            #                     break
-
             thread_list = []
             t = threading.Thread(target=self.job_thread, args=(datas,))
             t.start()
@@ -179,11 +176,8 @@ class CWebParser(object):
                 thread_num = self.thread_num
             else:
                 thread_num = cpu_count() - 1
-            #             thread_num = 1
-            #             if self.parseOnly == 1 or self.parseOnly == 2:
-            #                 thread_num = 0
 
-            for i in range(thread_num):  # 创建10个线程
+            for i in range(thread_num):  # 创建线程
                 t = threading.Thread(target=self.process_thread)
                 t.start()
                 thread_list.append(t)
@@ -193,21 +187,7 @@ class CWebParser(object):
         except:
             print('error occured in parse image')
 
-    # vthread
-    #     def process(self):
-    #         try:
-    #             datas = self.parse_page()
-    #             while True:
-    #                 data = next(datas)
-    #                 if data:
-    #                     self.process_data(data)
-    #                 else:
-    #                     break
-    #         except:
-    #             print('error occured in parse image')
-
     def job_thread(self, datas):
-        #         times = 0
         while True:
             data = next(datas)
             while True:
@@ -218,7 +198,6 @@ class CWebParser(object):
                     break
 
             if not data:
-                # print("job parse ended!")
                 return
 
     def process_thread(self):
@@ -248,17 +227,12 @@ class CWebParser(object):
             thread_num = cpu_count() - 1
 
         if len(self.job_list) >= thread_num:
-            # print('Job full, need waitting')
             rel = False
         elif self.args and self.args.l and self.parseOnly == CParseType.Parse_Detail and self.args.l <= self.dbUtils.get_db_detail_item_count():
-            # print('Job limit reached, need pending')
             rel = False
         else:
-            self.job_list.append({"status": 0,
-                                  "data": data})
-            # print('New job is pushed, size %s' % len(self.job_list))
+            self.job_list.append({"status": 0, "data": data})
             rel = True
-        # print('thread %s leave push data' % threading.currentThread())
         self.dataLocker.release()
         return rel
 
@@ -266,7 +240,6 @@ class CWebParser(object):
         self.dataLocker.acquire()
         for i in range(0, len(self.job_list)):
             if self.job_list[i].get("data") == data:
-                # print('a job is popped, size %s, index %s' % (len(self.job_list), i))
                 del self.job_list[i]
                 break
 
@@ -291,7 +264,6 @@ class CWebParser(object):
                     if self.job_list[i].get("status") == 0:
                         data = self.job_list[i].get('data')
                         self.job_list[i]["status"] = 1
-                        # print('A job is getted, size %s, index %s' % (len(self.job_list),i))
                         break
         else:
             data = None
@@ -326,14 +298,13 @@ class CWebParser(object):
 
 
 class CWebParserMultiUrl(CWebParser):
-    # def __init__(self, url, start, end, savePath):
     def __init__(self, **kwArgs):
         super().param_parse()
         try:
             # save path
             if self.args.f:
                 super().__init__(self.args.f)
-                self.savePath = self.args.f + "\\{filePath}"
+                self.savePath = os.path.join(self.args.f, "{filePath}")
             elif kwArgs.get('savePath'):
                 super().__init__(kwArgs.get('savePath'))
             else:
@@ -363,11 +334,16 @@ class CWebParserMultiUrl(CWebParser):
             else:
                 raise Exception('no end positon!')
 
+            # p
+            if self.args.p:
+                self.parseOnly = CParseType(self.args.p)
+            elif kwArgs.get('ParseType') is not None:
+                self.end = kwArgs.get('ParseType')
+            else:
+                raise Exception('no ParseType!')
+
             # thread num
             self.thread_num = self.args.t
-
-            # parse only
-            self.parseOnly = CParseType(self.args.p)
 
         except Exception as e:
             print(e)
