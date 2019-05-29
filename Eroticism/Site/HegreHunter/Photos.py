@@ -106,9 +106,9 @@ class CWebParserSiteCommon(CWebParserProcess):
 
     def get_sub_dir_name(self, data):
         if data.get('detail').get('videos'):
-            sub_dir_name = "%s\\%s" % (data.get('detail').get('videos').get('site'), data.get('name'))
+            sub_dir_name = os.path.join("%s", "%s") % (data.get('detail').get('videos').get('site'), data.get('name'))
         else:
-            sub_dir_name = "%s\\%s" % (data.get('detail').get('galleries').get('site'), data.get('name'))
+            sub_dir_name = os.path.join("%s", "%s") % (data.get('detail').get('galleries').get('site'), data.get('name'))
         return sub_dir_name
 
 
@@ -256,7 +256,7 @@ def job_start():
     for job_item in job_list:
         if job_item[0] == 'S':
             para_args = {
-                'savePath': 'Hunter\\{filePath}',
+                'savePath': os.path.join('Hunter', '{filePath}'),
                 'url': job_item[1],
                 'database': 'HegreHunter'
             }
@@ -264,7 +264,7 @@ def job_start():
             job = CWebParserHunterSingleUrl(**para_args)
         else:
             para_args = {
-                'savePath': 'Hunter\\{filePath}',
+                'savePath': os.path.join('Hunter', '{filePath}'),
                 'url': job_item[1],
                 'database': 'HegreHunter',
                 'start': job_item[2],

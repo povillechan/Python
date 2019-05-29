@@ -136,7 +136,7 @@ class CWebParserSite(CWebParserMultiUrl):
 
 def job_start():
     para_args = {
-        'savePath': 'WatchMyGF\\{filePath}',
+        'savePath': os.path.join('WatchMyGF', '{filePath}'),
         'url': 'https://watch-my-gf.com/girls.html?mode=async&function=get_block&block_id=list_models_models_list&section=&sort_by=avg_videos_popularity&from={page}/',
         'database': 'WatchMyGF',
         'start': 1,

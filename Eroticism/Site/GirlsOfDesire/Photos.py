@@ -132,7 +132,7 @@ class CWebParserSite(CWebParserMultiUrl):
 
 def job_start():
     para_args = {
-        'savePath': 'GirlsOfDesire\\{filePath}',
+        'savePath': os.path.join('GirlsOfDesire', '{filePath}'),
         'url': 'https://www.girlsofdesire.org/own/page/{page}/',
         'database': 'GirlsOfDesire',
         'start': 1,

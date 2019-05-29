@@ -135,7 +135,7 @@ class CWebParserSite(CWebParserSingleUrl):
 
 def job_start():
     para_args = {
-        'savePath': 'HotXArt\\{filePath}',
+        'savePath': os.path.join('HotXArt', '{filePath}'),
         'url': 'http://www.hotxart.com/',
         'database': 'HotXArt',
     }

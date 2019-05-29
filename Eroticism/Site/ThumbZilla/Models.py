@@ -58,7 +58,7 @@ class CWebParserSiteCommon(CWebParserProcess):
                 img_pattern = re.search('(https.*?\))\d+\.jpg', img_text, re.S)
                 if img_pattern:
                     for i in range(1, 17):
-                        stills.append('%s%s.jpg'%(img_pattern.group(1),i) )
+                        stills.append('%s%s.jpg' % (img_pattern.group(1), i))
 
             data_detail = {
                 'videos': {
@@ -191,7 +191,7 @@ class CWebParserSite(CWebParserMultiUrl):
 
 def job_start():
     para_args = {
-        'savePath': 'ThumbZilla\\{filePath}',
+        'savePath': os.path.join('ThumbZilla', '{filePath}'),
         'url': 'https://www.thumbzilla.com/pornstars?page={page}',
         'database': 'ThumbZilla',
         'start': 1,

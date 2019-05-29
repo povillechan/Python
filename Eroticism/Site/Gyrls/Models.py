@@ -144,7 +144,7 @@ class CWebParserSite(CWebParserSingleUrl):
 
 def job_start():
     para_args = {
-        'savePath': 'Gyrls\\{filePath}',
+        'savePath': os.path.join('Gyrls', '{filePath}'),
         'url': 'http://www.gyrls.com/models/?search=&tshowcase-categories=',
         'database': 'Gyrls'
     }

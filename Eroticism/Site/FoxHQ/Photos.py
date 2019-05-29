@@ -140,7 +140,7 @@ class CWebParserSite(CWebParserMultiUrl):
 
 def job_start():
     para_args = {
-        'savePath': 'FoxHQ\\{filePath}',
+        'savePath': os.path.join('FoxHQ', '{filePath}'),
         'url': 'http://www.foxhq.com/showgals.php?page={page}',
         'database': 'FoxHQ',
         'start': 1,

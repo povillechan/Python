@@ -60,7 +60,7 @@ class CWebParserSiteCommon(CWebParserProcess):
                 img_pattern = re.search('(https.*?original/)\d+(/.*?-)\d+\.jpg', img_text, re.S)
                 if img_pattern:
                     for i in range(1, 17):
-                        stills.append('%s%s%s%s.jpg'%(img_pattern.group(1), i, img_pattern.group(2), i))
+                        stills.append('%s%s%s%s.jpg' % (img_pattern.group(1), i, img_pattern.group(2), i))
 
             data_detail = {
                 'videos': {
@@ -192,7 +192,7 @@ class CWebParserSite(CWebParserMultiUrl):
 
 def job_start():
     para_args = {
-        'savePath': 'Youporn\\{filePath}',
+        'savePath': os.path.join('Youporn', '{filePath}'),
         'url': 'https://www.youporn.com/pornstars/?page={page}',
         'database': 'Youporn',
         'start': 1,

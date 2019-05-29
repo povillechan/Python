@@ -127,7 +127,7 @@ class CWebParserSite(CWebParserMultiUrl):
 
 def job_start():
     para_args = {
-        'savePath': 'Erocurves\\{filePath}',
+        'savePath': os.path.join('Erocurves', '{filePath}'),
         'url': 'https://www.erocurves.com/model-archives/?tpage={page}',
         'database': 'Erocurves',
         'start': 1,

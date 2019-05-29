@@ -148,7 +148,7 @@ class CWebParserSite(CWebParserMultiUrl):
 
 def job_start():
     para_args = {
-        'savePath': 'Tube8\\{filePath}',
+        'savePath': os.path.join('Tube8', '{filePath}'),
         'url': 'https://www.tube8.com/latest/page/{page}/',
         'database': 'Tube8Video',
         'start': 1,

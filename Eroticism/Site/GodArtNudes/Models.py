@@ -94,19 +94,22 @@ class CWebParserSite(CWebParserSingleUrl):
                 if html:
                     a = pq(html)
                     # items
-                    items = a('div.row.gan-central.smallspacetop div.col-xxs-12.col-xs-6.col-sm-4.col-md-3 div a:last-of-type')
+                    items = a(
+                        'div.row.gan-central.smallspacetop div.col-xxs-12.col-xs-6.col-sm-4.col-md-3 div a:last-of-type')
                     processNum = 0
                     parse_succeed = True
                     for item in items.items():
                         try:
                             name = item.text()
                             # board = item('a img').attr('lsrc') + '.jpg'
-                            model_url = urljoin('http://godsartnudes.com/nude-pictures-sexy-girl/', name.replace(" ", "-"))
+                            model_url = urljoin('http://godsartnudes.com/nude-pictures-sexy-girl/',
+                                                name.replace(" ", "-"))
 
                             html2 = self.utils.get_page(model_url)
                             if html2:
                                 b = pq(html2)
-                                modelitems = b('div.container-fluid div.col-xxs-12.col-xs-6.col-md-4.col-lg-3 a:last-of-type')
+                                modelitems = b(
+                                    'div.container-fluid div.col-xxs-12.col-xs-6.col-md-4.col-lg-3 a:last-of-type')
                                 for modelitem in modelitems.items():
                                     try:
                                         data_p = self.common.parse_item(modelitem)
@@ -144,7 +147,7 @@ class CWebParserSite(CWebParserSingleUrl):
 def job_start():
     for url in range(ord("A"), ord("Z") + 1):
         para_args = {
-            'savePath': 'GodArtNudes\\{filePath}',
+            'savePath': os.path.join('GodArtNudes', '{filePath}'),
             'url': "http://godsartnudes.com/models-listing/letter-%s" % chr(url),
             'database': 'GodArtNudes'
         }

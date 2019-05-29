@@ -150,7 +150,7 @@ class CWebParserSite(CWebParserMultiUrl):
 
 def job_start():
     para_args = {
-        'savePath': 'Porn7\\{filePath}',
+        'savePath': os.path.join('Porn7', '{filePath}'),
         'url': 'https://www.porn7.xxx/rated/?mode=async&function=get_block&block_id=list_videos_common_videos_list&sort_by=rating&from={page}',
         'database': 'Porn7',
         'start': 0,

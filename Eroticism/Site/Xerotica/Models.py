@@ -140,7 +140,7 @@ class CWebParserSite(CWebParserMultiUrl):
 
 def job_start():
     para_args = {
-        'savePath': 'Xerotica\\{filePath}',
+        'savePath': os.path.join('Xerotica', '{filePath}'),
         'url': 'https://www.xerotica.com/models/page{page}.html',
         'database': 'Xerotica',
         'start': 1,

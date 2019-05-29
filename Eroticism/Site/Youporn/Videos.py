@@ -193,7 +193,7 @@ class CWebParserSite(CWebParserSingleUrl):
 
 def job_start():
     para_args = {
-        'savePath': 'Youporn\\{filePath}',
+        'savePath': os.path.join('Youporn', '{filePath}'),
         'url': "https://www.youporn.com/categories/alphabetical/",
         'database': 'YoupornVideo'
     }

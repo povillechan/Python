@@ -138,7 +138,7 @@ class CWebParserSite(CWebParserMultiUrl):
 
 def job_start():
     para_args = {
-        'savePath': 'Novoporn\\{filePath}',
+        'savePath': os.path.join('Novoporn', '{filePath}'),
         'url': 'https://www.novoporn.com/galleries?from={page}',
         'database': 'Novoporn',
         'start': 0,

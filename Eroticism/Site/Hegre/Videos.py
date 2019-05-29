@@ -162,7 +162,7 @@ class CWebParserSite(CWebParserSingleUrl):
 
 def job_start():
     para_args = {
-        'savePath': 'Hegre\\{filePath}',
+        'savePath': os.path.join('Hegre', '{filePath}'),
         'url': 'https://www.hegre.com/models',
         'database': 'Hegre'
     }

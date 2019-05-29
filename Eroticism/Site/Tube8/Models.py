@@ -57,7 +57,7 @@ class CWebParserSiteCommon(CWebParserProcess):
                 img_pattern = re.search('(https.*?)/\d*(\(.*?\))\.jpg', img_text, re.S)
                 if img_pattern:
                     for i in range(1, 17):
-                        stills.append('%s/%s%s.jpg'%(img_pattern.group(1),i, img_pattern.group(2)))
+                        stills.append('%s/%s%s.jpg' % (img_pattern.group(1), i, img_pattern.group(2)))
 
             data_detail = {
                 'videos': {
@@ -190,7 +190,7 @@ class CWebParserSite(CWebParserMultiUrl):
 
 def job_start():
     para_args = {
-        'savePath': 'Tube8\\{filePath}',
+        'savePath': os.path.join('Tube8', '{filePath}'),
         'url': 'https://www.tube8.com/pornstars/page/{page}/',
         'database': 'Tube8',
         'start': 1,

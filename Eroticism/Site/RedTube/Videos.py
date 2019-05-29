@@ -191,7 +191,7 @@ class CWebParserSite(CWebParserSingleUrl):
 
 def job_start():
     para_args = {
-        'savePath': 'RedTube\\{filePath}',
+        'savePath': os.path.join('RedTube', '{filePath}'),
         'url': "https://www.redtube.com/categories/",
         'database': 'RedTubeVideo'
     }

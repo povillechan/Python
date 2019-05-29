@@ -151,7 +151,7 @@ class CWebParserSite(CWebParserMultiUrl):
 
 def job_start():
     para_args = {
-        'savePath': 'HandJobHub\\{filePath}',
+        'savePath': os.path.join('HandJobHub', '{filePath}'),
         'url': 'https://handjobhub.com/top-rated/page{page}.html',
         'database': 'HandJobHub',
         'start': 1,

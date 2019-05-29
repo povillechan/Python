@@ -334,41 +334,9 @@ class CWebParserSite(CWebParserMultiUrl):
                 yield None
         yield None
 
-    '''
-    process_image
-    
-    @author: chenzf
-    '''
-
-    def process_data(self, data):
-        if self.parseOnly == CParseType.Parse_Entire:
-            if self.common.process_data(data):
-                self.dbUtils.switch_db_detail_item(data)
-        elif self.parseOnly == CParseType.Parse_RealData:
-            data_real = self.common.parse_video_realaddr(data)
-            if data_real:
-                if self.common.process_data(data_real):
-                    self.dbUtils.switch_db_detail_item(data)
-            else:
-                if self.common.process_data(data):
-                    self.dbUtils.switch_db_detail_item(data)
-
-        elif self.parseOnly == CParseType.Parse_Brief:
-            datatmp = deepcopy(data)
-            self.dbUtils.insert_db_item(datatmp)
-        elif self.parseOnly == CParseType.Parse_Detail:
-            try:
-                dataDetail = self.common.parse_detail_fr_brief(data)
-                if dataDetail:
-                    self.dbUtils.switch_db_item(data)
-                    self.dbUtils.insert_db_detail_item(dataDetail)
-            except:
-                self.log('error in parse detail_fr_brief item')
-
-
 def job_start():
     para_args = {
-        'savePath': 'PornVidHub\\{filePath}',
+        'savePath': os.path.join('PornVidHub', '{filePath}'),
         'url': 'http://www.pornvidhub.com/stars?p={page}}',
         'database': 'PornVidHub',
         'start': 1,

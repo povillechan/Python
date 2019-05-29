@@ -48,7 +48,8 @@ class CWebParserSiteCommon(CWebParserProcess):
         if html:
             b = pq(html)
             # video = b('div.player-container  a.player-container__no-player').attr('href')
-            video = b('body > div.main-wrap > div.width-wrap.with-player-container > div.player-container > a').attr('href')
+            video = b('body > div.main-wrap > div.width-wrap.with-player-container > div.player-container > a').attr(
+                'href')
             if video:
                 data_detail = {
                     'videos': {
@@ -75,10 +76,10 @@ class CWebParserSiteCommon(CWebParserProcess):
         board = data.get('board')
         if board:
             result &= self.webParser.utils.download_file(board,
-                                                         '%s\\%s' % (sub_dir_name, data.get('name')),
+                                                         os.path.join('%s', '%s') % (sub_dir_name, data.get('name')),
                                                          headers={'Referer': data.get('url')}
                                                          )
-                        # videos
+        # videos
         videos = data.get('detail').get('videos')
         if videos:
             video = videos.get('video')
@@ -86,12 +87,13 @@ class CWebParserSiteCommon(CWebParserProcess):
                 if type(video) is list:
                     video = video[0]
                 result &= self.webParser.utils.download_file(video,
-                                                             '%s\\videos\\%s' % (
+                                                             os.path.join('%s', 'videos', '%s') % (
                                                                  sub_dir_name, videos.get('name')),
                                                              headers={'Referer': videos.get('url')}
                                                              )
 
         return result
+
 
 class CWebParserSite(CWebParserMultiUrl):
     def __init__(self, **kwArgs):
@@ -120,7 +122,8 @@ class CWebParserSite(CWebParserMultiUrl):
                         pass
                     else:
                         a = pq(html)
-                        items = a('body > div.main-wrap > div.best-list-block.hide-on-search > div.width-wrap > div.thumb-container div.pornstar-thumb-container div.pornstar-thumb-container__info div.pornstar-thumb-container__info-title a')
+                        items = a(
+                            'body > div.main-wrap > div.best-list-block.hide-on-search > div.width-wrap > div.thumb-container div.pornstar-thumb-container div.pornstar-thumb-container__info div.pornstar-thumb-container__info-title a')
                         for item in items.items():
                             model_url_origin = item.attr('href')
                             name = item.text()
@@ -188,7 +191,8 @@ class CWebParserSite(CWebParserMultiUrl):
 
     def parse_sub_page(self, html):
         b = pq(html)
-        items = b('body > div.main-wrap > main > div > article > div.index-videos.mixed-section > div.thumb-list.thumb-list--sidebar.thumb-list--recent > div.thumb-list__item.video-thumb a.video-thumb-info__name')
+        items = b(
+            'body > div.main-wrap > main > div > article > div.index-videos.mixed-section > div.thumb-list.thumb-list--sidebar.thumb-list--recent > div.thumb-list__item.video-thumb a.video-thumb-info__name')
 
         sub_datas = []
         parse_successed = None
@@ -209,7 +213,7 @@ class CWebParserSite(CWebParserMultiUrl):
 
 def job_start():
     para_args = {
-        'savePath': 'Xhamster\\{filePath}',
+        'savePath': os.path.join('Xhamster', '{filePath}'),
         'url': 'https://xhamster.com/pornstars/{page}',
         'database': 'Xhamster',
         'start': 1,

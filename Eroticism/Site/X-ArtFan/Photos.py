@@ -97,8 +97,8 @@ class CWebParserSiteCommon(CWebParserProcess):
         boards = data.get('board')
         for board in boards:
             result &= self.webParser.utils.download_file(board,
-                                                         '%s\\%s\\%s' % (
-                                                         sub_dir_name, data.get('name'), data.get('name')),
+                                                         os.path.join('%s', '%s', '%s') % (
+                                                             sub_dir_name, data.get('name'), data.get('name')),
                                                          )
             break
 
@@ -107,20 +107,21 @@ class CWebParserSiteCommon(CWebParserProcess):
             for subVal in val:
                 if subVal:
                     result &= self.webParser.utils.download_file(subVal,
-                                                                 '%s\\%s\\%s' % (sub_dir_name, data.get('name'), str(i))
+                                                                 os.path.join('%s', '%s', '%s') % (
+                                                                     sub_dir_name, data.get('name'), str(i))
                                                                  )
                     break
 
         video = data.get('video')
         if video:
             result &= self.webParser.utils.download_file(video.get('src'),
-                                                         '%s\\%s\\%s' % (
-                                                         sub_dir_name, data.get('name'), data.get('name'))
+                                                         os.path.join('%s', '%s', '%s') % (
+                                                             sub_dir_name, data.get('name'), data.get('name'))
                                                          )
 
             result &= self.webParser.utils.download_file(video.get('board'),
-                                                         '%s\\%s\\%s' % (
-                                                         sub_dir_name, data.get('name'), 'video_preview')
+                                                         os.path.join('%s', '%s', '%s') % (
+                                                             sub_dir_name, data.get('name'), 'video_preview')
                                                          )
         return result
 
@@ -174,7 +175,7 @@ class CWebParserSite(CWebParserMultiUrl):
 
 def job_start():
     para_args = {
-        'savePath': 'X-ArtFan\\{filePath}',
+        'savePath': os.path.join('X-ArtFan', '{filePath}'),
         'url': 'https://xartfan.com/page/{page}',
         'database': 'X-ArtFan',
         'start': 1,

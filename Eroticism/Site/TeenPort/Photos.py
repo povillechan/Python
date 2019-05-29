@@ -67,7 +67,7 @@ class CWebParserSiteCommon(CWebParserProcess):
         return data
 
     def get_sub_dir_name(self, data):
-        sub_dir_name = "%s\\%s" % (data.get('detail').get('galleries').get('site'), data.get('name'))
+        sub_dir_name = os.path.join("%s", "%s") % (data.get('detail').get('galleries').get('site'), data.get('name'))
         return sub_dir_name
 
 
@@ -156,7 +156,7 @@ def job_start():
 
     for job_item in job_list:
         para_args = {
-            'savePath': 'TeenPort\\{filePath}',
+            'savePath': os.path.join('TeenPort', '{filePath}'),
             'url': job_item[1],
             'database': 'TeenPort'
         }

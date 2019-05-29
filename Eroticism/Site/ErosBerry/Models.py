@@ -97,7 +97,7 @@ class CWebParserSiteCommon(CWebParserProcess):
         board = data.get('board')
         if board:
             result &= self.webParser.utils.download_file(board,
-                                                         '%s\\%s' % (sub_dir_name, data.get('name')),
+                                                         os.path.join('%s', '%s') % (sub_dir_name, data.get('name')),
                                                          headers={'Referer': data.get('url')}
                                                          )
 
@@ -107,7 +107,7 @@ class CWebParserSiteCommon(CWebParserProcess):
             board = galleries.get('board')
             if board:
                 result &= self.webParser.utils.download_file(board,
-                                                             '%s\\galleries\\%s\\%s' % (
+                                                             os.path.join('%s', 'galleries', '%s', '%s') % (
                                                                  sub_dir_name, galleries.get('name'),
                                                                  galleries.get('name')),
                                                              headers={'Referer': galleries.get('url')}
@@ -118,7 +118,7 @@ class CWebParserSiteCommon(CWebParserProcess):
                 for i, subVal in enumerate(stills, start=1):
                     if subVal:
                         result &= self.webParser.utils.download_file(subVal,
-                                                                     '%s\\galleries\\%s\\%s' % (
+                                                                     os.path.join('%s', 'galleries', '%s', '%s') % (
                                                                          sub_dir_name, galleries.get('name'), str(i)),
                                                                      headers={'Referer': galleries.get('url')}
                                                                      )
@@ -129,7 +129,7 @@ class CWebParserSiteCommon(CWebParserProcess):
             board = videos.get('board')
             if board:
                 result &= self.webParser.utils.download_file(board,
-                                                             '%s\\videos\\%s\\%s' % (
+                                                             os.path.join('%s', 'videos', '%s', '%s') % (
                                                                  sub_dir_name, videos.get('name'), videos.get('name')),
                                                              headers={'Referer': videos.get('url')}
                                                              )
@@ -139,7 +139,7 @@ class CWebParserSiteCommon(CWebParserProcess):
                 for i, subVal in enumerate(stills, start=1):
                     if subVal:
                         result &= self.webParser.utils.download_file(subVal,
-                                                                     '%s\\videos\\%s\\%s' % (
+                                                                     os.path.join('%s', 'videos', '%s', '%s') % (
                                                                          sub_dir_name, videos.get('name'), str(i)),
                                                                      headers={'Referer': videos.get('url')}
                                                                      )
@@ -149,7 +149,7 @@ class CWebParserSiteCommon(CWebParserProcess):
                 if type(video) is list:
                     video = video[0]
                 result &= self.webParser.utils.download_file(video,
-                                                             '%s\\videos\\%s' % (
+                                                             os.path.join('%s', 'videos', '%s') % (
                                                                  sub_dir_name, videos.get('name')),
                                                              headers={'Referer': videos.get('url')}
                                                              )
@@ -240,7 +240,7 @@ class CWebParserSite(CWebParserMultiUrl):
 
 def job_start():
     para_args = {
-        'savePath': 'ErosBerry\\{filePath}',
+        'savePath': os.path.join('ErosBerry', '{filePath}'),
         'url': 'https://www.erosberry.com/models?from={page}',
         'database': 'ErosBerry',
         'start': 0,

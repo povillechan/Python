@@ -192,7 +192,7 @@ class CWebParserSite(CWebParserMultiUrl):
 
 def job_start():
     para_args = {
-        'savePath': 'RedTube\\{filePath}',
+        'savePath': os.path.join('RedTube', '{filePath}'),
         'url': 'https://www.redtube.com/pornstar?page={page}',
         'database': 'RedTube',
         'start': 1,

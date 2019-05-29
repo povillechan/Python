@@ -149,7 +149,7 @@ class CWebParserSite(CWebParserMultiUrl):
 
 def job_start():
     para_args = {
-        'savePath': 'ThumbZilla\\{filePath}',
+        'savePath': os.path.join('ThumbZilla', '{filePath}'),
         'url': 'https://www.thumbzilla.com/categories/all?page={page}',
         'database': 'ThumbZillaVideo',
         'start': 1,

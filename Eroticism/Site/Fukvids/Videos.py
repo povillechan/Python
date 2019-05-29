@@ -25,7 +25,7 @@ class CWebParserSiteCommon(CWebParserProcess):
 
     #
     def parse_item(self, item):
-        url  = item.attr('href')
+        url = item.attr('href')
         name = item.attr('title')
 
         data_brief = {
@@ -45,11 +45,11 @@ class CWebParserSiteCommon(CWebParserProcess):
 
         html = self.webParser.utils.get_page(url, headers={'Referer': 'https://www.fukvids.com',
                                                            "User-Agent": "",
-                                                            "Accept": "",
-                                                            "Accept-Encoding": "",
-                                                            "Accept-Language": "",
-                                                            "Cache-Control": "",
-                                                            'Connection': ''})
+                                                           "Accept": "",
+                                                           "Accept-Encoding": "",
+                                                           "Accept-Language": "",
+                                                           "Cache-Control": "",
+                                                           'Connection': ''})
         if html:
             b = pq(html)
 
@@ -65,7 +65,7 @@ class CWebParserSiteCommon(CWebParserProcess):
                 img_pattern = re.search('(https.*?-)\d+\.jpg', img_text, re.S)
                 if img_pattern:
                     for i in range(1, 10):
-                        stills.append('%s%s.jpg'%(img_pattern.group(1), i))
+                        stills.append('%s%s.jpg' % (img_pattern.group(1), i))
 
             data_detail = {
                 'videos': {
@@ -82,6 +82,7 @@ class CWebParserSiteCommon(CWebParserProcess):
 
     def get_sub_dir_name(self, data):
         return ""
+
 
 class CWebParserSite(CWebParserMultiUrl):
     def __init__(self, **kwArgs):
@@ -108,11 +109,11 @@ class CWebParserSite(CWebParserMultiUrl):
                     continue
 
                 html = self.utils.get_page(url, headers={"User-Agent": "",
-                                                        "Accept": "",
-                                                        "Accept-Encoding": "",
-                                                        "Accept-Language": "",
-                                                        "Cache-Control": "",
-                                                        'Connection': ''})
+                                                         "Accept": "",
+                                                         "Accept-Encoding": "",
+                                                         "Accept-Language": "",
+                                                         "Cache-Control": "",
+                                                         'Connection': ''})
                 if html:
                     a = pq(html)
                     # items
@@ -145,9 +146,10 @@ class CWebParserSite(CWebParserMultiUrl):
 
         yield None
 
+
 def job_start():
     para_args = {
-        'savePath': 'Fukvids\\{filePath}',
+        'savePath': os.path.join('Fukvids', '{filePath}'),
         'url': 'https://www.fukvids.com/page{page}.html',
         'database': 'Fukvids',
         'start': 1,

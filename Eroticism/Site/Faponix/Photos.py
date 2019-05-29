@@ -102,7 +102,7 @@ class CWebParserSite(CWebParserSingleUrl):
                     for page in range(1, int(data_total) + 1):
                         try:
                             cate_url = '%s?mode=async&action=get_block&block_id=list_albums_common_albums_list&from=%s' % (
-                            url, page)
+                                url, page)
 
                             if self.dbUtils.get_db_url(cate_url):
                                 continue
@@ -138,28 +138,6 @@ class CWebParserSite(CWebParserSingleUrl):
         yield None
 
     '''
-    process_image
-    
-    @author: chenzf
-    '''
-
-    def process_data(self, data):
-        if self.parseOnly == CParseType.Parse_Entire or self.parseOnly == CParseType.Parse_RealData:
-            if self.common.process_data(data):
-                self.dbUtils.switch_db_detail_item(data)
-        elif self.parseOnly == CParseType.Parse_Brief:
-            datatmp = deepcopy(data)
-            self.dbUtils.insert_db_item(datatmp)
-        elif self.parseOnly == CParseType.Parse_Detail:
-            try:
-                dataDetail = self.common.parse_detail_fr_brief(data)
-                if dataDetail:
-                    self.dbUtils.switch_db_item(data)
-                    self.dbUtils.insert_db_detail_item(dataDetail)
-            except:
-                self.log('error in parse detail_fr_brief item')
-
-    '''
     urls_genarator
     
     @author: chenzf
@@ -177,7 +155,7 @@ class CWebParserSite(CWebParserSingleUrl):
 
 def job_start():
     para_args = {
-        'savePath': 'Faponix\\{filePath}',
+        'savePath': os.path.join('Faponix', '{filePath}'),
         'url': 'https://www.faponix.com/categories/',
         'database': 'Faponix'
     }

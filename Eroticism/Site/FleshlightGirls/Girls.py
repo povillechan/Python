@@ -153,22 +153,22 @@ class CWebParserSite(CWebParserSingleUrl):
 def job_start():
     job_list = [
         {
-            'savePath': 'FleshlightGirls\\{filePath}',
+            'savePath': os.path.join('FleshlightGirls', '{filePath}'),
             'url': 'https://au.fleshlight.com/collections/fleshlight-girls/',
             'database': 'FleshlightGirls'
         },
         {
-            'savePath': 'FleshlightGirls\\{filePath}',
+            'savePath': os.path.join('FleshlightGirls', '{filePath}'),
             'url': 'https://au.fleshlight.com/collections/legends',
             'database': 'FleshlightGirls'
         },
         {
-            'savePath': 'FleshlightGirls\\{filePath}',
+            'savePath': os.path.join('FleshlightGirls', '{filePath}'),
             'url': 'https://au.fleshlight.com/collections/dorcel-girls',
             'database': 'FleshlightGirls'
         },
         {
-            'savePath': 'FleshlightGirls\\{filePath}',
+            'savePath': os.path.join('FleshlightGirls', '{filePath}'),
             'url': 'https://au.fleshlight.com/collections/camstars',
             'database': 'FleshlightGirls'
         }

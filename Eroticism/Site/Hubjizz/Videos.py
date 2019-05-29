@@ -138,7 +138,7 @@ class CWebParserSite(CWebParserMultiUrl):
 
 def job_start():
     para_args = {
-        'savePath': 'Hubjizz\\{filePath}',
+        'savePath': os.path.join('Hubjizz', '{filePath}'),
         'url': 'http://hubjizz.com/page{page}.html',
         'database': 'Hubjizz',
         'start': 1,

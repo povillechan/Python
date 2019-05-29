@@ -74,12 +74,12 @@ class CWebParserSiteCommon(CWebParserProcess):
                 if type(video) is list:
                     video = video[0]
                 result &= self.webParser.utils.download_file(video,
-                                                             '\\%s' % (
-                                                                 videos.get('name')),
+                                                             os.path.join('', '%s') % (videos.get('name')),
                                                              headers={'Referer': videos.get('url')}
                                                              )
 
         return result
+
 
 class CWebParserSite(CWebParserMultiUrl):
     def __init__(self, **kwArgs):
@@ -141,7 +141,7 @@ class CWebParserSite(CWebParserMultiUrl):
 
 def job_start():
     para_args = {
-        'savePath': 'Hubetubex\\{filePath}',
+        'savePath': os.path.join('Hubetubex', '{filePath}'),
         'url': 'http://www.hubetubex.com/videos?p={page}',
         'database': 'Hubetubex',
         'start': 1,

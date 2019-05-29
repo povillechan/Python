@@ -150,7 +150,7 @@ class CWebParserSite(CWebParserMultiUrl):
 
 def job_start():
     para_args = {
-        'savePath': 'Xhamster\\{filePath}',
+        'savePath': os.path.join('Xhamster', '{filePath}'),
         'url': 'https://xhamster.com/photos/{page}',
         'database': 'XhamsterPhotos',
         'start': 0,

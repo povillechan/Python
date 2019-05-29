@@ -140,7 +140,7 @@ class CWebParserSite(CWebParserSingleUrl):
 def job_start():
     for url in range(ord("A"), ord("Z") + 1):
         para_args = {
-            'savePath': 'BabesMachine\\{filePath}',
+            'savePath': os.path.join('BabesMachine', '{filePath}'),
             'url': "https://www.babesmachine.com/model/?letter=%s" % chr(url),
             'database': 'BabesMachine'
         }

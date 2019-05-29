@@ -175,7 +175,7 @@ class CWebParserSite(CWebParserMultiUrl):
 
 def job_start():
     para_args = {
-        'savePath': 'Hegre\\{filePath}',
+        'savePath': os.path.join('Hegre', '{filePath}'),
         'url': 'http://hegregirls.com/models?page={page}',
         'database': 'Hegre',
         'start': 0,

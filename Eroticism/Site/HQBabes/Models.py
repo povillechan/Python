@@ -121,7 +121,7 @@ class CWebParserSite(CWebParserSingleUrl):
                                                 data = dict(data_t, **data_p)
                                                 yield data
                                             except:
-                                                self.log('parsed error 1 %s_%s' % (url,modelitem))
+                                                self.log('parsed error 1 %s_%s' % (url, modelitem))
                                                 parse_succeed = False
                                                 continue
                                 except:
@@ -153,7 +153,7 @@ class CWebParserSite(CWebParserSingleUrl):
 def job_start():
     for url in range(ord("A"), ord("Z") + 1):
         para_args = {
-            'savePath': 'HQBabes\\{filePath}',
+            'savePath': os.path.join('HQBabes', '{filePath}'),
             'url': "https://www.hqbabes.com/babes/%s/" % chr(url),
             'database': 'HQBabes'
         }

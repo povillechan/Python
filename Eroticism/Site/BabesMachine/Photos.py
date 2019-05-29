@@ -85,9 +85,9 @@ class CWebParserSiteCommon(CWebParserProcess):
                     if subVal:
                         self.webParser.utils.verify = False
                         result &= self.webParser.utils.download_file(subVal,
-                                                                     '%s\\galleries\\%s\\%s' % (
+                                                                     os.path.join('%s', 'galleries', '%s', '%s') % (
                                                                          sub_dir_name, galleries.get('name'), str(i))
-                                                                      )
+                                                                     )
         return result
 
 
@@ -156,7 +156,7 @@ class CWebParserSite(CWebParserMultiUrl):
 
 def job_start():
     para_args = {
-        'savePath': 'BabesMachine\\{filePath}',
+        'savePath': os.path.join('BabesMachine', '{filePath}'),
         'url': 'https://www.babesmachine.com/galleries?from={page}',
         'database': 'BabesMachinePhotos',
         'start': 0,

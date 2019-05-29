@@ -151,7 +151,7 @@ class CWebParserSite(CWebParserSingleUrl):
 def job_start():
     for url in range(ord("A"), ord("Z") + 1):
         para_args = {
-            'savePath': 'HQSluts\\{filePath}',
+            'savePath': os.path.join('HQSluts', '{filePath}'),
             'url': "https://www.hqsluts.com/sluts/%s/" % chr(url),
             'database': 'HQSluts'
         }
