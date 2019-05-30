@@ -30,7 +30,7 @@ class CWebParserSiteCommon(CWebParserProcess):
 
         data_brief = {
             'url': url,
-            'name': self.webParser.utils.format_name(name),
+            'name': name,
         }
 
         data = {'brief': data_brief}
@@ -79,60 +79,55 @@ class CWebParserSite(CWebParserSingleUrl):
     @author: chenzf
     '''
 
-    def parse_page(self):
-        urlsGen = self.urls_genarator()
-        while True:
-            try:
-                url = next(urlsGen)
-                if url is None:
-                    yield None
+    def parse_page(self, url):
+        try:
+            if url is None:
+                yield None
 
-                html = self.utils.get_page(url)
-                if html:
-                    a = pq(html)
-                    # items
-                    items = a('#models tr td a')
-                    for item in items.items():
-                        name = item.attr('title')
-                        model_url = urljoin('https://www.babesmachine.com', item.attr('href'))
+            html = self.utils.get_page(url)
+            if html:
+                a = pq(html)
+                # items
+                items = a('#models tr td a')
+                for item in items.items():
+                    name = item.attr('title')
+                    model_url = urljoin('https://www.babesmachine.com', item.attr('href'))
 
-                        if self.dbUtils.get_db_url(model_url):
-                            continue
+                    if self.dbUtils.get_db_url(model_url):
+                        yield None
 
-                        html2 = self.utils.get_page(model_url)
-                        if html2:
-                            b = pq(html2)
-                            modelitems = b('#posts tr td a')
-                            parse_succeed = True
-                            for modelitem in modelitems.items():
-                                try:
-                                    data_p = self.common.parse_item(modelitem)
-                                    data_t = {
-                                        'name': self.utils.format_name(name),
-                                        'url': model_url,
-                                        'refurl': url
-                                    }
+                    html2 = self.utils.get_page(model_url)
+                    if html2:
+                        b = pq(html2)
+                        modelitems = b('#posts tr td a')
+                        parse_succeed = True
+                        for modelitem in modelitems.items():
+                            try:
+                                data_p = self.common.parse_item(modelitem)
+                                data_t = {
+                                    'name': name,
+                                    'url': model_url,
+                                    'refurl': url
+                                }
 
-                                    data = dict(data_t, **data_p)
-                                    yield data
-                                except:
-                                    parse_succeed = False
-                                    continue
+                                data = dict(data_t, **data_p)
+                                yield data
+                            except:
+                                parse_succeed = False
+                                continue
 
-                            if parse_succeed:
-                                self.log('parsed url %s' % model_url)
-                                self.dbUtils.put_db_url(model_url)
-                        else:
-                            self.log('request %s error' % model_url)
-                            continue
-                else:
-                    self.log('request %s error' % url)
-                    continue
-            except (GeneratorExit, StopIteration):
-                break
-            except:
-                self.log('error in parse url %s' % url)
-                continue
+                        if parse_succeed:
+                            self.log('parsed url %s' % model_url)
+                            self.dbUtils.put_db_url(model_url)
+                    else:
+                        self.log('request %s error' % model_url)
+                        continue
+            else:
+                self.log('request %s error' % url)
+                yield None
+        except:
+            self.log('error in parse url %s' % url)
+            yield None
 
         yield None
 

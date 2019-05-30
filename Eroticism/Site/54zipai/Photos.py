@@ -30,7 +30,7 @@ class CWebParserSiteCommon(CWebParserProcess):
 
         data_brief = {
             'url': url,
-            'name': self.webParser.utils.format_name(name)
+            'name': name
         }
 
         data = {'brief': data_brief}
@@ -126,7 +126,7 @@ class CWebParserSite(CWebParserMultiUrl):
 
 def job_start():
     para_args = {
-        'savePath': '54zipai\\{filePath}',
+        'savePath': os.path.join('54zipai', '{filePath}'),
         'url': 'https://54zipai.com/index_{page}.html',
         'database': '54zipai',
         'start': 1,

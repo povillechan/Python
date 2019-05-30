@@ -248,26 +248,6 @@ class CWebSpiderUtils(object):
     '''
 
     def format_name(self, name):
-        name = name.strip()
-        patterns = [('\"', '_'),
-                    (',', '_'),
-                    (':', '_'),
-                    ('!', '_'),
-                    ('?', '_'),
-                    ('/', '_'),
-                    ('|', '_'),
-                    ('#', '_'),
-                    ('[', '_'),
-                    (']', '_'),
-                    ('\r', '_'),
-                    ('\n', '_'),
-                    ('*', '_'),
-                    ('.', '_'),
-                    ('/', '_'),
-                    ('\'', '_'),
-                    ]
-        for pattern in patterns:
-            name = name.replace(pattern[0], pattern[1])
         return name
 
     '''

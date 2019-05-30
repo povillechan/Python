@@ -30,7 +30,7 @@ class CWebParserSiteCommon(CWebParserProcess):
         data_brief = {
             'board': board,
             'url': product_url,
-            'name': self.webParser.utils.format_name(product_name)
+            'name': product_name
         }
 
         data = {'brief': data_brief}
@@ -60,7 +60,7 @@ class CWebParserSiteCommon(CWebParserProcess):
             if video:
                 data_detail = {
                     'videos': {
-                        'name': self.webParser.utils.format_name(item.get('brief').get('name')),
+                        'name': item.get('brief').get('name'),
                         'url': item.get('brief').get('url'),
                         'board': item.get('brief').get('board'),
                         'video': video,
@@ -70,7 +70,7 @@ class CWebParserSiteCommon(CWebParserProcess):
             else:
                 data_detail = {
                     'galleries': {
-                        'name': self.webParser.utils.format_name(item.get('brief').get('name')),
+                        'name': item.get('brief').get('name'),
                         'url': item.get('brief').get('url'),
                         'board': item.get('brief').get('board'),
                         'stills': stills,
@@ -121,7 +121,7 @@ class CWebParserSite(CWebParserSingleUrl):
                             for product in products.items():
                                 data_p = self.common.parse_item(product)
                                 data_t = {
-                                    'name': self.utils.format_name(name),
+                                    'name': name,
                                     'url': modelurl,
                                     'refurl': modelurl
                                 }

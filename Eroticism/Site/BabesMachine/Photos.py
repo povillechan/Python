@@ -30,7 +30,7 @@ class CWebParserSiteCommon(CWebParserProcess):
 
         data_brief = {
             'url': url,
-            'name': self.webParser.utils.format_name(name)
+            'name': name
         }
 
         data = {'brief': data_brief}
@@ -68,7 +68,6 @@ class CWebParserSiteCommon(CWebParserProcess):
         return sub_dir_name
 
     def process_data(self, data):
-        #         print(data)
         result = True
         sub_dir_name = self.get_sub_dir_name(data)
 
@@ -85,9 +84,9 @@ class CWebParserSiteCommon(CWebParserProcess):
                     if subVal:
                         self.webParser.utils.verify = False
                         result &= self.webParser.utils.download_file(subVal,
-                                                                     os.path.join('%s', 'galleries', '%s', '%s') % (
-                                                                         sub_dir_name, galleries.get('name'), str(i))
-                                                                     )
+                                      os.path.join('%s', 'galleries', '%s', '%s') % (
+                                        sub_dir_name, self.format_save_name(galleries.get('name')), str(i))
+                                )
         return result
 
 
@@ -104,47 +103,42 @@ class CWebParserSite(CWebParserMultiUrl):
     @author: chenzf
     '''
 
-    def parse_page(self):
-        urlsGen = self.urls_genarator()
-        while True:
-            try:
-                url = next(urlsGen)
-                if url is None:
-                    yield None
+    def parse_page(self, url):
+        try:
+            if url is None:
+                yield None
 
-                if self.dbUtils.get_db_url(url):
-                    continue
+            if self.dbUtils.get_db_url(url):
+                yield None
 
-                html = self.utils.get_page(url)
-                if html:
-                    a = pq(html)
-                    # items
-                    items = a('section.blackback table tr td a')
-                    parse_succeed = True
-                    for item in items.items():
-                        try:
-                            data_p = self.common.parse_item(item)
-                            data_t = {
-                                'name': "galleries",
-                                'url': data_p.get('brief').get('url'),
-                                'refurl': url
-                            }
+            html = self.utils.get_page(url)
+            if html:
+                a = pq(html)
+                # items
+                items = a('section.blackback table tr td a')
+                parse_succeed = True
+                for item in items.items():
+                    try:
+                        data_p = self.common.parse_item(item)
+                        data_t = {
+                            'name': "galleries",
+                            'url': data_p.get('brief').get('url'),
+                            'refurl': url
+                        }
 
-                            data = dict(data_t, **data_p)
-                            yield data
-                        except:
-                            parse_succeed = False
-                            continue
-                    if parse_succeed:
-                        self.log('parsed url %s' % url)
-                        self.dbUtils.put_db_url(url)
-                else:
-                    self.log('request %s error' % url)
-            except (GeneratorExit, StopIteration):
-                break
-            except:
-                self.log('error in parse url %s' % url)
-                continue
+                        data = dict(data_t, **data_p)
+                        yield data
+                    except:
+                        parse_succeed = False
+                        continue
+                if parse_succeed:
+                    self.log('parsed url %s' % url)
+                    self.dbUtils.put_db_url(url)
+            else:
+                self.log('request %s error' % url)
+        except:
+            self.log('error in parse url %s' % url)
+            yield None
 
         yield None
 

@@ -11,6 +11,30 @@ class CWebParserProcess(object):
     def __init__(self, webParser):
         self.webParser = webParser
 
+
+    def format_save_name(self, name):
+        name = name.strip()
+        patterns = [('\"', '_'),
+                    (',', '_'),
+                    (':', '_'),
+                    ('!', '_'),
+                    ('?', '_'),
+                    ('/', '_'),
+                    ('|', '_'),
+                    ('#', '_'),
+                    ('[', '_'),
+                    (']', '_'),
+                    ('\r', '_'),
+                    ('\n', '_'),
+                    ('*', '_'),
+                    ('.', '_'),
+                    ('/', '_'),
+                    ('\'', '_'),
+                    ]
+        for pattern in patterns:
+            name = name.replace(pattern[0], pattern[1])
+        return name
+
     def parse_item(self, item):
         pass
 
@@ -18,7 +42,7 @@ class CWebParserProcess(object):
         pass
 
     def get_sub_dir_name(self, data):
-        sub_dir_name = "%s" % (data.get('name'))
+        sub_dir_name = "%s" % self.format_save_name(data.get('name'))
         return sub_dir_name
 
     def process_data(self, data):
@@ -34,7 +58,7 @@ class CWebParserProcess(object):
         board = data.get('board')
         if board:
             result &= self.webParser.utils.download_file(board,
-                                                         os.path.join('%s', '%s') % (sub_dir_name, data.get('name')),
+                                                         os.path.join('%s', '%s') % (sub_dir_name, self.format_save_name(data.get('name'))),
                                                          headers={'Referer': data.get('url')}
                                                          )
 
@@ -45,8 +69,8 @@ class CWebParserProcess(object):
             if board:
                 result &= self.webParser.utils.download_file(board,
                                                              os.path.join('%s', 'galleries', '%s', '%s') % (
-                                                                 sub_dir_name, galleries.get('name'),
-                                                                 galleries.get('name')),
+                                                                 sub_dir_name, self.format_save_name(galleries.get('name')),
+                                                                 self.format_save_name(galleries.get('name'))),
                                                              headers={'Referer': galleries.get('url')}
                                                              )
 
@@ -56,18 +80,18 @@ class CWebParserProcess(object):
                     if subVal:
                         result &= self.webParser.utils.download_file(subVal,
                                                                      os.path.join('%s', 'galleries', '%s', '%s') % (
-                                                                         sub_dir_name, galleries.get('name'), str(i)),
+                                                                         sub_dir_name, self.format_save_name(galleries.get('name')), str(i)),
                                                                      headers={'Referer': galleries.get('url')}
                                                                      )
 
-                        # videos
+    # videos
         videos = data.get('detail').get('videos')
         if videos:
             board = videos.get('board')
             if board:
                 result &= self.webParser.utils.download_file(board,
                                                              os.path.join('%s', 'videos', '%s', '%s') % (
-                                                                 sub_dir_name, videos.get('name'), videos.get('name')),
+                                                                 sub_dir_name, self.format_save_name(videos.get('name')), self.format_save_name(videos.get('name'))),
                                                              headers={'Referer': videos.get('url')}
                                                              )
 
@@ -77,7 +101,7 @@ class CWebParserProcess(object):
                     if subVal:
                         result &= self.webParser.utils.download_file(subVal,
                                                                      os.path.join('%s', 'videos', '%s', '%s') % (
-                                                                         sub_dir_name, videos.get('name'), str(i)),
+                                                                         sub_dir_name, self.format_save_name(videos.get('name')), str(i)),
                                                                      headers={'Referer': videos.get('url')}
                                                                      )
 
@@ -87,7 +111,7 @@ class CWebParserProcess(object):
                     video = video[0]
                 result &= self.webParser.utils.download_file(video,
                                                              os.path.join('%s', 'videos', '%s', '%s') % (
-                                                                 sub_dir_name, videos.get('name'), videos.get('name')),
+                                                                 sub_dir_name, self.format_save_name(videos.get('name')), self.format_save_name(videos.get('name'))),
                                                              headers={'Referer': videos.get('url')}
                                                              )
 
