@@ -52,7 +52,7 @@ class CWebParserSiteCommon(CWebParserProcess):
             product_name = b('div.single_inside_content h1').text()
             data_detail = {
                 'galleries': {
-                    'name': self.webParser.utils.format_name(product_name),
+                    'name': product_name,
                     'url': product_url,
                     'stills': stills,
                 }
@@ -77,67 +77,62 @@ class CWebParserSite(CWebParserSingleUrl):
     @author: chenzf
     '''
 
-    def parse_page(self):
-        urlsGen = self.urls_genarator()
-        while True:
-            try:
-                url = next(urlsGen)
-                if not url:
-                    yield None
+    def parse_page(self, url):
+        try:
+            if not url:
+                yield None
 
-                html = self.utils.get_page(url)
-                if html:
-                    a = pq(html)
-                    # items
-                    items = a('div.ts-responsive-wrap div.tshowcase-inner-box div.tshowcase-box-photo > a')
+            html = self.utils.get_page(url)
+            if html:
+                a = pq(html)
+                # items
+                items = a('div.ts-responsive-wrap div.tshowcase-inner-box div.tshowcase-box-photo > a')
 
-                    for item in items.items():
-                        modelurl = item.attr('href')
-                        modelsearch = modelurl
-                        name = item('img').attr('title')
-                        board = item('img').attr('src')
+                for item in items.items():
+                    modelurl = item.attr('href')
+                    modelsearch = modelurl
+                    name = item('img').attr('title')
+                    board = item('img').attr('src')
 
-                        try:
-                            while modelsearch is not None:
-                                html = self.utils.get_page(modelsearch)
+                    try:
+                        while modelsearch is not None:
+                            html = self.utils.get_page(modelsearch)
 
-                                if html:
-                                    b = pq(html)
-                                    if self.dbUtils.get_db_url(modelsearch):
-                                        pass
-                                    else:
-                                        products = b('div.home_box > a')
-                                        for product in products.items():
-                                            data_p = self.common.parse_item(product)
-                                            data_t = {
-                                                'name': self.utils.format_name(name),
-                                                'url': modelurl,
-                                                'board': board,
-                                                'refurl': modelurl
-                                            }
+                            if html:
+                                b = pq(html)
+                                if self.dbUtils.get_db_url(modelsearch):
+                                    continue
+                                else:
+                                    products = b('div.home_box > a')
+                                    for product in products.items():
+                                        data_p = self.common.parse_item(product)
+                                        data_t = {
+                                            'name': self.utils.format_name(name),
+                                            'url': modelurl,
+                                            'board': board,
+                                            'refurl': modelurl
+                                        }
 
-                                            data = dict(data_t, **data_p)
-                                            yield data
+                                        data = dict(data_t, **data_p)
+                                        yield data
 
-                                        self.dbUtils.put_db_url(modelsearch)
-                                    nexturl = b('link[rel=next]')
-                                    if nexturl:
-                                        modelsearch = nexturl.attr('href')
-                                    else:
-                                        modelsearch = None
+                                    self.dbUtils.put_db_url(modelsearch)
+                                nexturl = b('link[rel=next]')
+                                if nexturl:
+                                    modelsearch = nexturl.attr('href')
                                 else:
                                     modelsearch = None
-                        except:
-                            continue
+                            else:
+                                modelsearch = None
+                    except:
+                        continue
 
-                    self.log('parsed url %s' % url)
-                else:
-                    self.log('request %s error' % url)
-            except (GeneratorExit, StopIteration):
-                break
-            except:
-                self.log('error in parse url %s' % url)
-                continue
+                self.log('parsed url %s' % url)
+            else:
+                self.log('request %s error' % url)
+        except:
+            self.log('error in parse url %s' % url)
+            yield None
 
         yield None
 

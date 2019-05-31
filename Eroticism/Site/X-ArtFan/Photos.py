@@ -74,7 +74,7 @@ class CWebParserSiteCommon(CWebParserProcess):
                 break
             data = {
                 'name': item.get('name'),
-                'modelName': self.webParser.utils.format_name(modelName),
+                'modelName': modelName,
                 'url': url,
                 'board': item.get('board'),
                 'video': video,
@@ -82,48 +82,6 @@ class CWebParserSiteCommon(CWebParserProcess):
             }
 
         return data
-
-    def process_data(self, data):
-        result = True
-        sub_dir_name = "%s" % (data.get('modelName'))
-
-        dir_name = self.webParser.savePath.format(filePath=sub_dir_name)
-        if not os.path.exists(dir_name):
-            os.makedirs(dir_name)
-
-        with open(dir_name + '\\info.json', 'w') as f:
-            json.dump(data, f)
-
-        boards = data.get('board')
-        for board in boards:
-            result &= self.webParser.utils.download_file(board,
-                                                         os.path.join('%s', '%s', '%s') % (
-                                                             sub_dir_name, data.get('name'), data.get('name')),
-                                                         )
-            break
-
-        stills = data.get('stills')
-        for i, val in enumerate(stills, start=1):
-            for subVal in val:
-                if subVal:
-                    result &= self.webParser.utils.download_file(subVal,
-                                                                 os.path.join('%s', '%s', '%s') % (
-                                                                     sub_dir_name, data.get('name'), str(i))
-                                                                 )
-                    break
-
-        video = data.get('video')
-        if video:
-            result &= self.webParser.utils.download_file(video.get('src'),
-                                                         os.path.join('%s', '%s', '%s') % (
-                                                             sub_dir_name, data.get('name'), data.get('name'))
-                                                         )
-
-            result &= self.webParser.utils.download_file(video.get('board'),
-                                                         os.path.join('%s', '%s', '%s') % (
-                                                             sub_dir_name, data.get('name'), 'video_preview')
-                                                         )
-        return result
 
 
 class CWebParserSite(CWebParserMultiUrl):
@@ -139,36 +97,31 @@ class CWebParserSite(CWebParserMultiUrl):
     @author: chenzf
     '''
 
-    def parse_page(self):
-        urlsGen = self.urls_genarator()
-        while True:
-            try:
-                url = next(urlsGen)
-                if not url:
-                    yield None
+    def parse_page(self, url):
+        try:
+            if not url:
+                yield None
 
-                if self.dbUtils.get_db_url(url):
-                    continue
+            if self.dbUtils.get_db_url(url):
+                yield None
 
-                html = self.utils.get_page(url)
-                if html:
-                    a = pq(html)
-                    # items
-                    items = a('li.g1-collection-item')
+            html = self.utils.get_page(url)
+            if html:
+                a = pq(html)
+                # items
+                items = a('li.g1-collection-item')
 
-                    for item in items.items():
-                        data = self.common.parse_item(item)
-                        yield data
+                for item in items.items():
+                    data = self.common.parse_item(item)
+                    yield data
 
-                    self.log('parsed url %s' % url)
-                    self.dbUtils.put_db_url(url)
-                else:
-                    self.log('request %s error' % url)
-            except (GeneratorExit, StopIteration):
-                break
-            except:
-                self.log('error in parse url %s' % url)
-                continue
+                self.log('parsed url %s' % url)
+                self.dbUtils.put_db_url(url)
+            else:
+                self.log('request %s error' % url)
+        except:
+            self.log('error in parse url %s' % url)
+            yield None
 
         yield None
 

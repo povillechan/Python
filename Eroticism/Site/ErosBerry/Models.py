@@ -30,7 +30,7 @@ class CWebParserSiteCommon(CWebParserProcess):
 
         data_brief = {
             'url': url,
-            'name': self.webParser.utils.format_name(name)
+            'name': name
         }
 
         data = {'brief': data_brief}
@@ -97,7 +97,9 @@ class CWebParserSiteCommon(CWebParserProcess):
         board = data.get('board')
         if board:
             result &= self.webParser.utils.download_file(board,
-                                                         os.path.join('%s', '%s') % (sub_dir_name, data.get('name')),
+                                                         os.path.join('%s', '%s') % (
+                                                             sub_dir_name,
+                                                             self.format_save_name(data.get('name'))),
                                                          headers={'Referer': data.get('url')}
                                                          )
 
@@ -108,8 +110,9 @@ class CWebParserSiteCommon(CWebParserProcess):
             if board:
                 result &= self.webParser.utils.download_file(board,
                                                              os.path.join('%s', 'galleries', '%s', '%s') % (
-                                                                 sub_dir_name, galleries.get('name'),
-                                                                 galleries.get('name')),
+                                                                 sub_dir_name,
+                                                                 self.format_save_name(galleries.get('name')),
+                                                                 self.format_save_name(galleries.get('name'))),
                                                              headers={'Referer': galleries.get('url')}
                                                              )
 
@@ -119,7 +122,9 @@ class CWebParserSiteCommon(CWebParserProcess):
                     if subVal:
                         result &= self.webParser.utils.download_file(subVal,
                                                                      os.path.join('%s', 'galleries', '%s', '%s') % (
-                                                                         sub_dir_name, galleries.get('name'), str(i)),
+                                                                         sub_dir_name,
+                                                                         self.format_save_name(galleries.get('name')),
+                                                                         str(i)),
                                                                      headers={'Referer': galleries.get('url')}
                                                                      )
 
@@ -130,7 +135,9 @@ class CWebParserSiteCommon(CWebParserProcess):
             if board:
                 result &= self.webParser.utils.download_file(board,
                                                              os.path.join('%s', 'videos', '%s', '%s') % (
-                                                                 sub_dir_name, videos.get('name'), videos.get('name')),
+                                                                 sub_dir_name,
+                                                                 self.format_save_name(videos.get('name')),
+                                                                 videos.get('name')),
                                                              headers={'Referer': videos.get('url')}
                                                              )
 
@@ -140,7 +147,9 @@ class CWebParserSiteCommon(CWebParserProcess):
                     if subVal:
                         result &= self.webParser.utils.download_file(subVal,
                                                                      os.path.join('%s', 'videos', '%s', '%s') % (
-                                                                         sub_dir_name, videos.get('name'), str(i)),
+                                                                         sub_dir_name,
+                                                                         self.format_save_name(videos.get('name')),
+                                                                         str(i)),
                                                                      headers={'Referer': videos.get('url')}
                                                                      )
 
@@ -150,7 +159,8 @@ class CWebParserSiteCommon(CWebParserProcess):
                     video = video[0]
                 result &= self.webParser.utils.download_file(video,
                                                              os.path.join('%s', 'videos', '%s') % (
-                                                                 sub_dir_name, videos.get('name')),
+                                                                 sub_dir_name,
+                                                                 self.format_save_name(videos.get('name'))),
                                                              headers={'Referer': videos.get('url')}
                                                              )
 
@@ -171,64 +181,58 @@ class CWebParserSite(CWebParserMultiUrl):
     @author: chenzf
     '''
 
-    def parse_page(self):
-        urlsGen = self.urls_genarator()
-        while True:
-            try:
-                url = next(urlsGen)
-                if url is None:
-                    yield None
+    def parse_page(self, url):
+        try:
+            if url is None:
+                yield None
 
-                if self.dbUtils.get_db_url(url):
-                    pass
+            if self.dbUtils.get_db_url(url):
+                yield None
 
-                html = self.utils.get_page(url)
-                if html:
-                    a = pq(html)
-                    # items
-                    items = a('div.thumbs div.thumb > a')
-                    processNum = 0
-                    parse_succeed = True
-                    for item in items.items():
-                        try:
-                            name = item.text()
-                            model_url = urljoin('https://www.erosberry.com/', item.attr('href'))
+            html = self.utils.get_page(url)
+            if html:
+                a = pq(html)
+                # items
+                items = a('div.thumbs div.thumb > a')
+                processNum = 0
+                parse_succeed = True
+                for item in items.items():
+                    try:
+                        name = item.text()
+                        model_url = urljoin('https://www.erosberry.com/', item.attr('href'))
 
-                            html2 = self.utils.get_page(model_url)
-                            if html2:
-                                b = pq(html2)
-                                board = urljoin('https://www.erosberry.com/', b('div.info > img').attr('src'))
-                                modelitems = b('div.girl_thumbs div.container > a')
-                                for modelitem in modelitems.items():
-                                    try:
-                                        data_p = self.common.parse_item(modelitem)
-                                        data_t = {
-                                            'name': self.utils.format_name(name),
-                                            'url': model_url,
-                                            'board': board,
-                                            'refurl': url
-                                        }
+                        html2 = self.utils.get_page(model_url)
+                        if html2:
+                            b = pq(html2)
+                            board = urljoin('https://www.erosberry.com/', b('div.info > img').attr('src'))
+                            modelitems = b('div.girl_thumbs div.container > a')
+                            for modelitem in modelitems.items():
+                                try:
+                                    data_p = self.common.parse_item(modelitem)
+                                    data_t = {
+                                        'name': name,
+                                        'url': model_url,
+                                        'board': board,
+                                        'refurl': url
+                                    }
 
-                                        data = dict(data_t, **data_p)
-                                        yield data
-                                        processNum += 1
-                                    except:
-                                        parse_succeed = False
-                                        continue
-                        except:
-                            parse_succeed = False
-                            continue
-                    if parse_succeed and processNum > 0:
-                        self.log('parsed url %s' % url)
-                        self.dbUtils.put_db_url(url)
-                else:
-                    self.log('request %s error' % url)
-                    continue
-            except (GeneratorExit, StopIteration):
-                break
-            except:
-                self.log('error in parse url %s' % url)
-                continue
+                                    data = dict(data_t, **data_p)
+                                    yield data
+                                    processNum += 1
+                                except:
+                                    parse_succeed = False
+                                    continue
+                    except:
+                        parse_succeed = False
+                        continue
+                if parse_succeed and processNum > 0:
+                    self.log('parsed url %s' % url)
+                    self.dbUtils.put_db_url(url)
+            else:
+                self.log('request %s error' % url)
+        except:
+            self.log('error in parse url %s' % url)
+            yield None
 
         yield None
 

@@ -30,7 +30,7 @@ class CWebParser(object):
     def __init__(self, savePath):
         self.parseOnly = 0
         if platform.system() == "Windows":
-            self.savePath = os.path.join('E:\\Pictures\\', savePath)
+            self.savePath = os.path.join('g:\\Pictures\\', savePath)
         else:
             self.savePath = os.path.join(os.path.expanduser('~'), 'Pictures', savePath)
         self.thread_num = None

@@ -31,7 +31,7 @@ class CWebParserSiteCommon(CWebParserProcess):
         data_brief = {
             'url': product_url,
             'board': board,
-            'name': self.webParser.utils.format_name(product_name)
+            'name': product_name
         }
 
         data = {'brief': data_brief}
@@ -84,56 +84,51 @@ class CWebParserSite(CWebParserSingleUrl):
     @author: chenzf
     '''
 
-    def parse_page(self):
-        urlsGen = self.urls_genarator()
-        while True:
-            try:
-                url = next(urlsGen)
-                if not url:
-                    yield None
+    def parse_page(self, url):
+        try:
+            if not url:
+                yield None
 
-                html = self.utils.get_page(url, headers={"Accept-Encoding": "", })
-                if html:
-                    a = pq(html)
-                    # items
-                    items = a('a.list_model')
+            html = self.utils.get_page(url, headers={"Accept-Encoding": "", })
+            if html:
+                a = pq(html)
+                # items
+                items = a('a.list_model')
 
-                    for item in items.items():
-                        modelurl = item.attr('href')
-                        name = item('b').text()
-                        board = item('img').attr('src')
+                for item in items.items():
+                    modelurl = item.attr('href')
+                    name = item('b').text()
+                    board = item('img').attr('src')
 
-                        if self.dbUtils.get_db_url(modelurl):
+                    if self.dbUtils.get_db_url(modelurl):
+                        continue
+
+                    html = self.utils.get_page(modelurl)
+                    if html:
+                        b = pq(html)
+                        products = b('a.list_model2')
+                        try:
+                            for product in products.items():
+                                data_p = self.common.parse_item(product)
+                                data_t = {
+                                    'name': self.utils.format_name(name),
+                                    'url': modelurl,
+                                    'board': board,
+                                    'refurl': modelurl
+                                }
+
+                                data = dict(data_t, **data_p)
+                                yield data
+                        except:
                             continue
 
-                        html = self.utils.get_page(modelurl)
-                        if html:
-                            b = pq(html)
-                            products = b('a.list_model2')
-                            try:
-                                for product in products.items():
-                                    data_p = self.common.parse_item(product)
-                                    data_t = {
-                                        'name': self.utils.format_name(name),
-                                        'url': modelurl,
-                                        'board': board,
-                                        'refurl': modelurl
-                                    }
-
-                                    data = dict(data_t, **data_p)
-                                    yield data
-                            except:
-                                continue
-
-                            self.dbUtils.put_db_url(modelurl)
-                    self.log('parsed url %s' % url)
-                else:
-                    self.log('request %s error' % url)
-            except (GeneratorExit, StopIteration):
-                break
-            except:
-                self.log('error in parse url %s' % url)
-                yield None
+                        self.dbUtils.put_db_url(modelurl)
+                self.log('parsed url %s' % url)
+            else:
+                self.log('request %s error' % url)
+        except:
+            self.log('error in parse url %s' % url)
+            yield None
 
         yield None
 

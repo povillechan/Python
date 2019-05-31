@@ -37,7 +37,7 @@ class CWebParserSiteCommon(CWebParserProcess):
 
         data_brief = {
             'url': url,
-            'name': self.webParser.utils.format_name(name),
+            'name': name,
             'product': product,
             'board': board
         }
@@ -116,59 +116,54 @@ class CWebParserSite(CWebParserMultiUrl):
     @author: chenzf
     '''
 
-    def parse_page(self):
-        urlsGen = self.urls_genarator()
-        while True:
-            try:
-                url = next(urlsGen)
-                if url is None:
-                    yield None
+    def parse_page(self, url):
+        try:
+            if url is None:
+                yield None
 
-                if self.dbUtils.get_db_url(url):
-                    continue
+            if self.dbUtils.get_db_url(url):
+                yield None
 
-                html = self.utils.get_page(url)
-                if html:
-                    a = pq(html, parser='html')
-                    # items
-                    items = a('#block-system-main .node-grid')
+            html = self.utils.get_page(url)
+            if html:
+                a = pq(html, parser='html')
+                # items
+                items = a('#block-system-main .node-grid')
 
-                    for item in items.items():
-                        board = item('div.field-type-image img').attr('src')
-                        name = item('.grid-meta a').text()
-                        modelurl = urljoin('http://www.hegregirls.com/', item('.grid-meta a').attr('href'))
+                for item in items.items():
+                    board = item('div.field-type-image img').attr('src')
+                    name = item('.grid-meta a').text()
+                    modelurl = urljoin('http://www.hegregirls.com/', item('.grid-meta a').attr('href'))
 
-                        html2 = self.utils.get_page(modelurl)
-                        if html2:
-                            b = pq(html2, parser='html')
-                            items_model = b('#main-content .content .content .grid-4')
-                            for item_model in items_model.items():
-                                try:
-                                    if not re.search('galleries', item_model.attr('about')):
-                                        continue
-
-                                    data_p = self.common.parse_item(item_model)
-                                    data_t = {
-                                        'name': self.utils.format_name(name),
-                                        'url': modelurl,
-                                        'board': board,
-                                        'refurl': url
-                                    }
-
-                                    data = dict(data_t, **data_p)
-                                    yield data
-                                except:
+                    html2 = self.utils.get_page(modelurl)
+                    if html2:
+                        b = pq(html2, parser='html')
+                        items_model = b('#main-content .content .content .grid-4')
+                        for item_model in items_model.items():
+                            try:
+                                if not re.search('galleries', item_model.attr('about')):
                                     continue
 
-                    self.log('parsed url %s' % url)
-                    self.dbUtils.put_db_url(url)
-                else:
-                    self.log('request %s error' % url)
-            except (GeneratorExit, StopIteration):
-                break
-            except:
-                self.log('error in parse url %s' % url)
-                continue
+                                data_p = self.common.parse_item(item_model)
+                                data_t = {
+                                    'name': name,
+                                    'url': modelurl,
+                                    'board': board,
+                                    'refurl': url
+                                }
+
+                                data = dict(data_t, **data_p)
+                                yield data
+                            except:
+                                continue
+
+                self.log('parsed url %s' % url)
+                self.dbUtils.put_db_url(url)
+            else:
+                self.log('request %s error' % url)
+        except:
+            self.log('error in parse url %s' % url)
+            yield None
 
         yield None
 

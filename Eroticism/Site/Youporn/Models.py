@@ -31,7 +31,7 @@ class CWebParserSiteCommon(CWebParserProcess):
 
         data_brief = {
             'url': url,
-            'name': self.webParser.utils.format_name(name),
+            'name': name,
         }
 
         data = {'brief': data_brief}
@@ -89,83 +89,77 @@ class CWebParserSite(CWebParserMultiUrl):
     @author: chenzf
     '''
 
-    def parse_page(self):
-        urlsGen = self.urls_genarator()
-        while True:
-            try:
-                url = next(urlsGen)
-                if url is None:
-                    yield None
+    def parse_page(self, url):
+        try:
+            if url is None:
+                yield None
 
-                html = self.utils.get_page(url)
-                if html:
-                    if self.dbUtils.get_db_url(url):
-                        pass
-                    else:
-                        a = pq(html)
-                        items = a('div.fifteen-column > div > div.three-column > a')
-                        for item in items.items():
-                            model_url_origin = urljoin('https://www.youporn.com/', item.attr('href'))
-                            name = item('img').attr('alt')
-                            board = item('img').attr('data-original')
+            html = self.utils.get_page(url)
+            if html:
+                if self.dbUtils.get_db_url(url):
+                    pass
+                else:
+                    a = pq(html)
+                    items = a('div.fifteen-column > div > div.three-column > a')
+                    for item in items.items():
+                        model_url_origin = urljoin('https://www.youporn.com/', item.attr('href'))
+                        name = item('img').attr('alt')
+                        board = item('img').attr('data-original')
 
-                            index = 1
-                            while True:
-                                model_url = "%s?page=%s" % (model_url_origin, index)
-                                if index == 1:
-                                    if self.dbUtils.get_db_url(model_url_origin):
-                                        index = index + 1
-                                        continue
-                                elif self.dbUtils.get_db_url(model_url):
+                        index = 1
+                        while True:
+                            model_url = "%s?page=%s" % (model_url_origin, index)
+                            if index == 1:
+                                if self.dbUtils.get_db_url(model_url_origin):
                                     index = index + 1
                                     continue
+                            elif self.dbUtils.get_db_url(model_url):
+                                index = index + 1
+                                continue
 
-                                break
+                            break
 
-                            if index > 2:
-                                index = index - 1
-                                model_url = "%s?page=%s" % (model_url_origin, index)
-                            else:
-                                model_url = model_url_origin
+                        if index > 2:
+                            index = index - 1
+                            model_url = "%s?page=%s" % (model_url_origin, index)
+                        else:
+                            model_url = model_url_origin
 
-                            while True:
-                                self.log('request %s' % model_url)
-                                html2 = self.utils.get_page(model_url)
-                                if html2:
-                                    if self.dbUtils.get_db_url(model_url):
-                                        pass
-                                    else:
-                                        data_ps, parse_res = self.parse_sub_page(html2)
-                                        for data_p in data_ps:
-                                            data_t = {
-                                                'name': self.utils.format_name(name),
-                                                'url': model_url,
-                                                'board': board,
-                                                'refurl': url
-                                            }
-
-                                            data = dict(data_t, **data_p)
-                                            yield data
-
-                                        if parse_res:
-                                            self.log('parsed url %s' % model_url)
-                                            self.dbUtils.put_db_url(model_url)
-
-                                    next_url = pq(html2)('#next .prev-next a').attr("data-page-number")
-                                    if next_url:
-                                        model_url = "%s?page=%s" % (model_url_origin, next_url)
-                                    else:
-                                        break
+                        while True:
+                            self.log('request %s' % model_url)
+                            html2 = self.utils.get_page(model_url)
+                            if html2:
+                                if self.dbUtils.get_db_url(model_url):
+                                    pass
                                 else:
-                                    break;
-                else:
-                    self.log('request %s error' % url)
-                    continue
-            except (GeneratorExit, StopIteration):
-                break
-            except:
-                self.log('error in parse url %s' % url)
-                continue
+                                    data_ps, parse_res = self.parse_sub_page(html2)
+                                    for data_p in data_ps:
+                                        data_t = {
+                                            'name': name,
+                                            'url': model_url,
+                                            'board': board,
+                                            'refurl': url
+                                        }
+
+                                        data = dict(data_t, **data_p)
+                                        yield data
+
+                                    if parse_res:
+                                        self.log('parsed url %s' % model_url)
+                                        self.dbUtils.put_db_url(model_url)
+
+                                next_url = pq(html2)('#next .prev-next a').attr("data-page-number")
+                                if next_url:
+                                    model_url = "%s?page=%s" % (model_url_origin, next_url)
+                                else:
+                                    break
+                            else:
+                                break;
+            else:
+                self.log('request %s error' % url)
+        except:
+            self.log('error in parse url %s' % url)
+            yield None
 
         yield None
 

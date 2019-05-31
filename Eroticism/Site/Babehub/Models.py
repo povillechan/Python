@@ -129,7 +129,6 @@ class CWebParserSite(CWebParserMultiUrl):
                 self.dbUtils.put_db_url(url)
             else:
                 self.log('request %s error' % url)
-
         except:
             self.log('error in parse url %s' % url)
             yield None
@@ -143,7 +142,7 @@ def job_start():
         'url': 'https://www.babehub.com/page/{page}/',
         'database': 'BabeHub',
         'start': 0,
-        'end': 131
+        'end': 146
     }
 
     job = CWebParserSite(**para_args)

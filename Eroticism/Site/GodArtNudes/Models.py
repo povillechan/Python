@@ -30,7 +30,7 @@ class CWebParserSiteCommon(CWebParserProcess):
 
         data_brief = {
             'url': url,
-            'name': self.webParser.utils.format_name(name),
+            'name': name,
         }
 
         data = {'brief': data_brief}
@@ -78,68 +78,62 @@ class CWebParserSite(CWebParserSingleUrl):
     @author: chenzf
     '''
 
-    def parse_page(self):
-        urlsGen = self.urls_genarator()
-        while True:
-            try:
-                url = next(urlsGen)
-                if url is None:
-                    yield None
+    def parse_page(self, url):
+        try:
+            if url is None:
+                yield None
 
-                if self.dbUtils.get_db_url(url):
-                    pass
+            if self.dbUtils.get_db_url(url):
+                yield None
 
-                html = self.utils.get_page(url, headers={"Host": "godsartnudes.com",
-                                                         "Upgrade-Insecure-Requests": "1"})
-                if html:
-                    a = pq(html)
-                    # items
-                    items = a(
-                        'div.row.gan-central.smallspacetop div.col-xxs-12.col-xs-6.col-sm-4.col-md-3 div a:last-of-type')
-                    processNum = 0
-                    parse_succeed = True
-                    for item in items.items():
-                        try:
-                            name = item.text()
-                            # board = item('a img').attr('lsrc') + '.jpg'
-                            model_url = urljoin('http://godsartnudes.com/nude-pictures-sexy-girl/',
-                                                name.replace(" ", "-"))
+            html = self.utils.get_page(url, headers={"Host": "godsartnudes.com",
+                                                     "Upgrade-Insecure-Requests": "1"})
+            if html:
+                a = pq(html)
+                # items
+                items = a(
+                    'div.row.gan-central.smallspacetop div.col-xxs-12.col-xs-6.col-sm-4.col-md-3 div a:last-of-type')
+                processNum = 0
+                parse_succeed = True
+                for item in items.items():
+                    try:
+                        name = item.text()
+                        # board = item('a img').attr('lsrc') + '.jpg'
+                        model_url = urljoin('http://godsartnudes.com/nude-pictures-sexy-girl/',
+                                            name.replace(" ", "-"))
 
-                            html2 = self.utils.get_page(model_url)
-                            if html2:
-                                b = pq(html2)
-                                modelitems = b(
-                                    'div.container-fluid div.col-xxs-12.col-xs-6.col-md-4.col-lg-3 a:last-of-type')
-                                for modelitem in modelitems.items():
-                                    try:
-                                        data_p = self.common.parse_item(modelitem)
-                                        data_t = {
-                                            'name': self.utils.format_name(name),
-                                            'url': model_url,
-                                            # 'board': board,
-                                            'refurl': url
-                                        }
+                        html2 = self.utils.get_page(model_url)
+                        if html2:
+                            b = pq(html2)
+                            modelitems = b(
+                                'div.container-fluid div.col-xxs-12.col-xs-6.col-md-4.col-lg-3 a:last-of-type')
+                            for modelitem in modelitems.items():
+                                try:
+                                    data_p = self.common.parse_item(modelitem)
+                                    data_t = {
+                                        'name': name,
+                                        'url': model_url,
+                                        # 'board': board,
+                                        'refurl': url
+                                    }
 
-                                        data = dict(data_t, **data_p)
-                                        yield data
-                                        processNum += 1
-                                    except:
-                                        parse_succeed = False
-                                        continue
-                        except:
-                            parse_succeed = False
-                            continue
-                    if parse_succeed and processNum > 0:
-                        self.log('parsed url %s' % url)
-                        self.dbUtils.put_db_url(url)
-                else:
-                    self.log('request %s error' % url)
-                    continue
-            except (GeneratorExit, StopIteration):
-                break
-            except:
-                self.log('error in parse url %s' % url)
-                continue
+                                    data = dict(data_t, **data_p)
+                                    yield data
+                                    processNum += 1
+                                except:
+                                    parse_succeed = False
+                                    continue
+                    except:
+                        parse_succeed = False
+                        continue
+                if parse_succeed and processNum > 0:
+                    self.log('parsed url %s' % url)
+                    self.dbUtils.put_db_url(url)
+            else:
+                self.log('request %s error' % url)
+        except:
+            self.log('error in parse url %s' % url)
+            yield None
 
         yield None
 

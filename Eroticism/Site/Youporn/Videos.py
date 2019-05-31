@@ -31,7 +31,7 @@ class CWebParserSiteCommon(CWebParserProcess):
 
         data_brief = {
             'url': url,
-            'name': self.webParser.utils.format_name(name),
+            'name': name,
         }
 
         data = {'brief': data_brief}
@@ -101,83 +101,77 @@ class CWebParserSite(CWebParserSingleUrl):
     @author: chenzf
     '''
 
-    def parse_page(self):
-        urlsGen = self.urls_genarator()
-        while True:
-            try:
-                url = next(urlsGen)
-                if not url:
-                    yield None
-                    break
+    def parse_page(self, url):
+        try:
+            if not url:
+                yield None
 
-                url_origin = url
-                index = 1
-                while True:
-                    search_url = "%s?page=%s" % (url_origin, index)
-                    if index == 1:
-                        if self.dbUtils.get_db_url(url_origin):
-                            index = index + 1
-                            continue
-                    elif self.dbUtils.get_db_url(search_url):
+            url_origin = url
+            index = 1
+            while True:
+                search_url = "%s?page=%s" % (url_origin, index)
+                if index == 1:
+                    if self.dbUtils.get_db_url(url_origin):
                         index = index + 1
                         continue
-                    break
+                elif self.dbUtils.get_db_url(search_url):
+                    index = index + 1
+                    continue
+                break
 
-                if index > 2:
-                    index = index - 1
-                    search_url = "%s?page=%s" % (url_origin, index)
-                else:
-                    search_url = url_origin
+            if index > 2:
+                index = index - 1
+                search_url = "%s?page=%s" % (url_origin, index)
+            else:
+                search_url = url_origin
 
-                while True:
-                    self.log('request %s' % search_url)
-                    html2 = self.utils.get_page(search_url)
-                    if html2:
-                        if self.dbUtils.get_db_url(search_url):
-                            pass
-                        else:
-                            a = pq(html2)
-                            items = a('div.js_video_row  div.video-box  a.video-box-image')
-                            parse_successed = True
-                            for item in items.items():
-                                try:
-                                    data_p = self.common.parse_item(item)
-                                    if not data_p:
-                                        parse_successed = False
-                                        continue
-                                    elif self.common.parse_detail_fr_brief_duplicate(data_p):
-                                        continue
-
-                                    data_t = {
-                                        'name': 'Categories',
-                                        'url': data_p.get('brief').get('url'),
-                                        # 'refurl': search_url
-                                    }
-
-                                    data = dict(data_t, **data_p)
-                                    yield data
-                                except:
+            while True:
+                self.log('request %s' % search_url)
+                html2 = self.utils.get_page(search_url)
+                if html2:
+                    if self.dbUtils.get_db_url(search_url):
+                        pass
+                    else:
+                        a = pq(html2)
+                        items = a('div.js_video_row  div.video-box  a.video-box-image')
+                        parse_successed = True
+                        for item in items.items():
+                            try:
+                                data_p = self.common.parse_item(item)
+                                if not data_p:
                                     parse_successed = False
                                     continue
+                                elif self.common.parse_detail_fr_brief_duplicate(data_p):
+                                    continue
 
-                            if parse_successed:
-                                self.log('parsed url %s' % search_url)
-                                self.dbUtils.put_db_url(search_url)
-                            else:
-                                self.log('request %s error' % search_url)
+                                data_t = {
+                                    'name': 'Categories',
+                                    'url': data_p.get('brief').get('url'),
+                                    # 'refurl': search_url
+                                }
 
-                        next_url = pq(html2)('#next .prev-next a').attr("data-page-number")
-                        if next_url:
-                            search_url = "%s?page=%s" % (url_origin, next_url)
+                                data = dict(data_t, **data_p)
+                                yield data
+                            except:
+                                parse_successed = False
+                                continue
+
+                        if parse_successed:
+                            self.log('parsed url %s' % search_url)
+                            self.dbUtils.put_db_url(search_url)
                         else:
-                            break
+                            self.log('request %s error' % search_url)
+
+                    next_url = pq(html2)('#next .prev-next a').attr("data-page-number")
+                    if next_url:
+                        search_url = "%s?page=%s" % (url_origin, next_url)
                     else:
                         break
-            except (GeneratorExit, StopIteration):
-                break
-            except:
-                self.log('error in parse url %s' % url)
-                continue
+                else:
+                    break
+        except:
+            self.log('error in parse url %s' % url)
+            yield None
 
         yield None
 

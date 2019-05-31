@@ -37,7 +37,7 @@ class CWebParserSiteCommon(CWebParserProcess):
             )
 
         data_brief = {
-            'name': self.webParser.utils.format_name(name),
+            'name': name,
             'url': url,
             'stills': stills,
         }
@@ -85,51 +85,46 @@ class CWebParserSite(CWebParserMultiUrl):
     @author: chenzf
     '''
 
-    def parse_page(self):
-        urlsGen = self.urls_genarator()
-        while True:
-            try:
-                url = next(urlsGen)
-                if url is None:
-                    yield None
+    def parse_page(self, url):
+        try:
+            if url is None:
+                yield None
 
-                if self.dbUtils.get_db_url(url):
-                    continue
+            if self.dbUtils.get_db_url(url):
+                yield None
 
-                html = self.utils.get_page(url)
-                if html:
-                    a = pq(html)
-                    # items
-                    items = a('span.model_items')
+            html = self.utils.get_page(url)
+            if html:
+                a = pq(html)
+                # items
+                items = a('span.model_items')
 
-                    for item in items.items():
-                        modelurlText = item.attr('onclick')
-                        modelurl = re.search('\'(http.*?)\'', modelurlText, re.S).group(1)
-                        model = item.attr('title')
+                for item in items.items():
+                    modelurlText = item.attr('onclick')
+                    modelurl = re.search('\'(http.*?)\'', modelurlText, re.S).group(1)
+                    model = item.attr('title')
 
-                        html2 = self.utils.get_page(modelurl)
-                        if html2:
-                            b = pq(html2)
-                            items_model = b('div.content div.item')
-                            for item_model in items_model.items():
-                                data_p = self.common.parse_item(item_model)
-                                data_t = {
-                                    'name': model,
-                                    'url': modelurl,
-                                    'refurl': url
-                                }
+                    html2 = self.utils.get_page(modelurl)
+                    if html2:
+                        b = pq(html2)
+                        items_model = b('div.content div.item')
+                        for item_model in items_model.items():
+                            data_p = self.common.parse_item(item_model)
+                            data_t = {
+                                'name': model,
+                                'url': modelurl,
+                                'refurl': url
+                            }
 
-                                data = dict(data_t, **data_p)
-                                yield data
-                    self.log('parsed url %s' % url)
-                    self.dbUtils.put_db_url(url)
-                else:
-                    self.log('request %s error' % url)
-            except (GeneratorExit, StopIteration):
-                break
-            except:
-                self.log('error in parse url %s' % url)
-                continue
+                            data = dict(data_t, **data_p)
+                            yield data
+                self.log('parsed url %s' % url)
+                self.dbUtils.put_db_url(url)
+            else:
+                self.log('request %s error' % url)
+        except:
+            self.log('error in parse url %s' % url)
+            yield None
 
         yield None
 

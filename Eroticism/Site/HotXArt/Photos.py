@@ -37,7 +37,7 @@ class CWebParserSiteCommon(CWebParserProcess):
 
         data_brief = {
             'url': url,
-            'name': self.webParser.utils.format_name(name),
+            'name': name,
             'board': board
         }
 
@@ -97,38 +97,33 @@ class CWebParserSite(CWebParserSingleUrl):
     @author: chenzf
     '''
 
-    def parse_page(self):
-        urlsGen = self.urls_genarator()
-        while True:
-            try:
-                url = next(urlsGen)
-                if not url:
-                    yield None
-
-                html = self.utils.get_page(url)
-                if html:
-                    a = pq(html)
-                    # items
-                    items = a('ul.picmain li')
-                    for item in items.items():
-                        data_p = self.common.parse_item(item)
-                        data_t = {
-                            'name': "HotXArt",
-                            'url': data_p.get('brief').get('url'),
-                            'refurl': url
-                        }
-
-                        data = dict(data_t, **data_p)
-                        yield data
-
-                    self.log('parsed url %s' % url)
-                else:
-                    self.log('request %s error' % url)
-            except (GeneratorExit, StopIteration):
-                break
-            except:
-                self.log('error in parse url %s' % url)
+    def parse_page(self, url):
+        try:
+            if not url:
                 yield None
+
+            html = self.utils.get_page(url)
+            if html:
+                a = pq(html)
+                # items
+                items = a('ul.picmain li')
+                for item in items.items():
+                    data_p = self.common.parse_item(item)
+                    data_t = {
+                        'name': "HotXArt",
+                        'url': data_p.get('brief').get('url'),
+                        'refurl': url
+                    }
+
+                    data = dict(data_t, **data_p)
+                    yield data
+
+                self.log('parsed url %s' % url)
+            else:
+                self.log('request %s error' % url)
+        except:
+            self.log('error in parse url %s' % url)
+            yield None
 
         yield None
 

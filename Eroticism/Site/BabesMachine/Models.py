@@ -124,7 +124,6 @@ class CWebParserSite(CWebParserSingleUrl):
                         continue
             else:
                 self.log('request %s error' % url)
-                yield None
         except:
             self.log('error in parse url %s' % url)
             yield None

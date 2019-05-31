@@ -31,7 +31,7 @@ class CWebParserSiteCommon(CWebParserProcess):
 
         data_brief = {
             'url': url,
-            'name': self.webParser.utils.format_name(name),
+            'name': name,
         }
 
         data = {'brief': data_brief}
@@ -70,7 +70,7 @@ class CWebParserSiteCommon(CWebParserProcess):
                 img_pattern = re.search('(https.*?\))\d+\.jpg', img_text, re.S)
                 if img_pattern:
                     for i in range(1, 17):
-                        stills.append('%s%s.jpg'%(img_pattern.group(1),i) )
+                        stills.append('%s%s.jpg' % (img_pattern.group(1), i))
 
             data_detail = {
                 'videos': {
@@ -99,53 +99,48 @@ class CWebParserSite(CWebParserMultiUrl):
     @author: chenzf
     '''
 
-    def parse_page(self):
-        urlsGen = self.urls_genarator()
-        while True:
-            try:
-                url = next(urlsGen)
-                if url is None:
-                    yield None
+    def parse_page(self, url):
+        try:
+            if url is None:
+                yield None
 
-                if self.dbUtils.get_db_url(url):
-                    continue
+            if self.dbUtils.get_db_url(url):
+                yield None
 
-                html = self.utils.get_page(url)
-                if html:
-                    self.log('request %s' % url)
-                    a = pq(html)
-                    # items
-                    items = a('a.js-thumb')
-                    parse_successed = True
-                    for item in items.items():
-                        data_p = self.common.parse_item(item)
-                        if not data_p:
-                            parse_successed = False
-                            continue
-                        elif self.common.parse_detail_fr_brief_duplicate(data_p):
-                            continue
+            html = self.utils.get_page(url)
+            if html:
+                self.log('request %s' % url)
+                a = pq(html)
+                # items
+                items = a('a.js-thumb')
+                parse_successed = True
+                for item in items.items():
+                    data_p = self.common.parse_item(item)
+                    if not data_p:
+                        parse_successed = False
+                        continue
+                    elif self.common.parse_detail_fr_brief_duplicate(data_p):
+                        continue
 
-                        data_t = {
-                            'name': 'Categories',
-                            'url': data_p.get('brief').get('url'),
-                            'refurl': url
-                        }
+                    data_t = {
+                        'name': 'Categories',
+                        'url': data_p.get('brief').get('url'),
+                        'refurl': url
+                    }
 
-                        data = dict(data_t, **data_p)
-                        yield data
+                    data = dict(data_t, **data_p)
+                    yield data
 
-                    if parse_successed:
-                        self.dbUtils.put_db_url(url)
-                else:
-                    self.log('request %s error' % url)
-                    continue
-            except (GeneratorExit, StopIteration):
-                break
-            except:
-                self.log('error in parse url %s' % url)
-                continue
+                if parse_successed:
+                    self.dbUtils.put_db_url(url)
+            else:
+                self.log('request %s error' % url)
+        except:
+            self.log('error in parse url %s' % url)
+            yield None
 
         yield None
+
 
 def job_start():
     para_args = {

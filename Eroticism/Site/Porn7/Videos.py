@@ -28,7 +28,7 @@ class CWebParserSiteCommon(CWebParserProcess):
         name = item.attr('title')
 
         data_brief = {
-            'name': self.webParser.utils.format_name(name),
+            'name': name,
             'url': url
         }
 
@@ -79,7 +79,8 @@ class CWebParserSiteCommon(CWebParserProcess):
         board = data.get('detail').get('videos').get('board')
         if board:
             result &= self.webParser.utils.download_file(board,
-                                                         data.get('detail').get('videos').get('name'),
+                                                         self.format_save_name(
+                                                             data.get('detail').get('videos').get('name')),
                                                          headers={
                                                              'Referer': data.get('detail').get('videos').get('url')}
                                                          )
@@ -87,7 +88,8 @@ class CWebParserSiteCommon(CWebParserProcess):
         video = data.get('detail').get('videos').get('video')
         if video:
             result &= self.webParser.utils.download_file(video,
-                                                         data.get('detail').get('videos').get('name'),
+                                                         self.format_save_name(
+                                                             data.get('detail').get('videos').get('name')),
                                                          fileType='mp4',
                                                          headers={
                                                              'Referer': data.get('detail').get('videos').get('url')}
@@ -108,42 +110,37 @@ class CWebParserSite(CWebParserMultiUrl):
     @author: chenzf
     '''
 
-    def parse_page(self):
-        urlsGen = self.urls_genarator()
-        while True:
-            try:
-                url = next(urlsGen)
-                if not url:
-                    yield None
+    def parse_page(self, url):
+        try:
+            if not url:
+                yield None
 
-                if self.dbUtils.get_db_url(url):
-                    continue
+            if self.dbUtils.get_db_url(url):
+                yield None
 
-                html = self.utils.get_page(url)
-                if html:
-                    a = pq(html)
-                    # items
-                    items = a('#list_videos_common_videos_list_items > div > a')
+            html = self.utils.get_page(url)
+            if html:
+                a = pq(html)
+                # items
+                items = a('#list_videos_common_videos_list_items > div > a')
 
-                    for item in items.items():
-                        data_p = self.common.parse_item(item)
-                        data_t = {
-                            'name': data_p.get('brief').get('name'),
-                            'url': data_p.get('brief').get('url'),
-                            'refurl': url
-                        }
+                for item in items.items():
+                    data_p = self.common.parse_item(item)
+                    data_t = {
+                        'name': data_p.get('brief').get('name'),
+                        'url': data_p.get('brief').get('url'),
+                        'refurl': url
+                    }
 
-                        data = dict(data_t, **data_p)
-                        yield data
-                    self.log('parsed url %s' % url)
-                    self.dbUtils.put_db_url(url)
-                else:
-                    self.log('request %s error' % url)
-            except (GeneratorExit, StopIteration):
-                break
-            except:
-                self.log('error in parse url %s' % url)
-                continue
+                    data = dict(data_t, **data_p)
+                    yield data
+                self.log('parsed url %s' % url)
+                self.dbUtils.put_db_url(url)
+            else:
+                self.log('request %s error' % url)
+        except:
+            self.log('error in parse url %s' % url)
+            yield None
 
         yield None
 

@@ -65,7 +65,7 @@ class CWebParserSiteCommon(CWebParserProcess):
 
                 data_detail = {
                     'galleries': {
-                        'name': self.webParser.utils.format_name(name),
+                        'name': name,
                         'url': item.get('brief').get('url'),
                         'board': item.get('brief').get('board'),
                         'stills': stills,
@@ -91,44 +91,39 @@ class CWebParserSite(CWebParserMultiUrl):
     @author: chenzf
     '''
 
-    def parse_page(self):
-        urlsGen = self.urls_genarator()
-        while True:
-            try:
-                url = next(urlsGen)
-                if not url:
-                    yield None
+    def parse_page(self, url):
+        try:
+            if not url:
+                yield None
 
-                if self.dbUtils.get_db_url(url):
-                    continue
+            if self.dbUtils.get_db_url(url):
+                yield None
 
-                html = self.utils.get_page(url)
-                if html:
-                    a = pq(html)
-                    # items
-                    items = a('div.thumbs a')
+            html = self.utils.get_page(url)
+            if html:
+                a = pq(html)
+                # items
+                items = a('div.thumbs a')
 
-                    for item in items.items():
-                        data_p = self.common.parse_item(item)
-                        data_t = {
-                            'name': 'TheEroticBeauties',
-                            'url': data_p.get('brief').get('url'),
-                            #                             'board':  data_p.get('brief').get('board'),
-                            'refurl': url
-                        }
+                for item in items.items():
+                    data_p = self.common.parse_item(item)
+                    data_t = {
+                        'name': 'TheEroticBeauties',
+                        'url': data_p.get('brief').get('url'),
+                        #                             'board':  data_p.get('brief').get('board'),
+                        'refurl': url
+                    }
 
-                        data = dict(data_t, **data_p)
-                        yield data
+                    data = dict(data_t, **data_p)
+                    yield data
 
-                    self.log('parsed url %s' % url)
-                    self.dbUtils.put_db_url(url)
-                else:
-                    self.log('request %s error' % url)
-            except (GeneratorExit, StopIteration):
-                break
-            except:
-                self.log('error in parse url %s' % url)
-                continue
+                self.log('parsed url %s' % url)
+                self.dbUtils.put_db_url(url)
+            else:
+                self.log('request %s error' % url)
+        except:
+            self.log('error in parse url %s' % url)
+            yield None
 
         yield None
 

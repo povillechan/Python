@@ -30,7 +30,7 @@ class CWebParserSiteCommon(CWebParserProcess):
 
         data_brief = {
             'url': url,
-            'name': self.webParser.utils.format_name(name)
+            'name': name
         }
 
         data = {'brief': data_brief}
@@ -119,7 +119,6 @@ class CWebParserSite(CWebParserMultiUrl):
                     self.dbUtils.put_db_url(url)
             else:
                 self.log('request %s error' % url)
-
         except:
             self.log('error in parse url %s' % url)
             yield None

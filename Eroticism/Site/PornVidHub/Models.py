@@ -295,43 +295,40 @@ class CWebParserSite(CWebParserMultiUrl):
     @author: chenzf
     '''
 
-    def parse_page(self):
-        urlsGen = self.urls_genarator()
-        while True:
-            try:
-                url = next(urlsGen)
-                if not url:
-                    yield None
-
-                if self.dbUtils.get_db_url(url):
-                    continue
-
-                html = self.utils.get_page(url)
-                if html:
-                    soup = pq(html)
-                    items = soup('.listProfiles li')
-
-                    for item in items.items():
-                        data = {}
-                        try:
-                            data_gen = self.common.parse_item(item)
-                            while True:
-                                data = next(data_gen)
-                                if not data:
-                                    break
-
-                                yield data
-
-                        except:
-                            self.log('error in item in url %s' % url)
-                            continue
-                    self.log('parsed url %s' % url)
-                    self.dbUtils.put_db_url(url)
-                else:
-                    self.log('request %s error' % url)
-            except:
-                self.log('error in parse url %s' % url)
+    def parse_page(self, url):
+        try:
+            if not url:
                 yield None
+
+            if self.dbUtils.get_db_url(url):
+                yield None
+
+            html = self.utils.get_page(url)
+            if html:
+                soup = pq(html)
+                items = soup('.listProfiles li')
+
+                for item in items.items():
+                    data = {}
+                    try:
+                        data_gen = self.common.parse_item(item)
+                        while True:
+                            data = next(data_gen)
+                            if not data:
+                                break
+
+                            yield data
+
+                    except:
+                        self.log('error in item in url %s' % url)
+                        continue
+                self.log('parsed url %s' % url)
+                self.dbUtils.put_db_url(url)
+            else:
+                self.log('request %s error' % url)
+        except:
+            self.log('error in parse url %s' % url)
+            yield None
         yield None
 
 def job_start():

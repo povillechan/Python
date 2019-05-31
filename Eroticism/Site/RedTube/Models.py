@@ -89,83 +89,77 @@ class CWebParserSite(CWebParserMultiUrl):
     @author: chenzf
     '''
 
-    def parse_page(self):
-        urlsGen = self.urls_genarator()
-        while True:
-            try:
-                url = next(urlsGen)
-                if url is None:
-                    yield None
+    def parse_page(self, url):
+        try:
+            if url is None:
+                yield None
 
-                html = self.utils.get_page(url)
-                if html:
-                    if self.dbUtils.get_db_url(url):
-                        pass
-                    else:
-                        a = pq(html)
-                        items = a('#pornstars_list li.ps_info a')
-                        for item in items.items():
-                            model_url_origin = urljoin('https://www.redtube.com/', item.attr('href'))
-                            name = item('img').attr('alt')
-                            board = item('img').attr('src')
+            html = self.utils.get_page(url)
+            if html:
+                if self.dbUtils.get_db_url(url):
+                    pass
+                else:
+                    a = pq(html)
+                    items = a('#pornstars_list li.ps_info a')
+                    for item in items.items():
+                        model_url_origin = urljoin('https://www.redtube.com/', item.attr('href'))
+                        name = item('img').attr('alt')
+                        board = item('img').attr('src')
 
-                            index = 1
-                            while True:
-                                model_url = "%s?page=%s" % (model_url_origin, index)
-                                if index == 1:
-                                    if self.dbUtils.get_db_url(model_url_origin):
-                                        index = index + 1
-                                        continue
-                                elif self.dbUtils.get_db_url(model_url):
+                        index = 1
+                        while True:
+                            model_url = "%s?page=%s" % (model_url_origin, index)
+                            if index == 1:
+                                if self.dbUtils.get_db_url(model_url_origin):
                                     index = index + 1
                                     continue
+                            elif self.dbUtils.get_db_url(model_url):
+                                index = index + 1
+                                continue
 
-                                break
+                            break
 
-                            if index > 2:
-                                index = index - 1
-                                model_url = "%s?page=%s" % (model_url_origin, index)
-                            else:
-                                model_url = model_url_origin
+                        if index > 2:
+                            index = index - 1
+                            model_url = "%s?page=%s" % (model_url_origin, index)
+                        else:
+                            model_url = model_url_origin
 
-                            while True:
-                                self.log('request %s' % model_url)
-                                html2 = self.utils.get_page(model_url)
-                                if html2:
-                                    if self.dbUtils.get_db_url(model_url):
-                                        pass
-                                    else:
-                                        data_ps, parse_res = self.parse_sub_page(html2)
-                                        for data_p in data_ps:
-                                            data_t = {
-                                                'name': self.utils.format_name(name),
-                                                'url': model_url,
-                                                'board': board,
-                                                'refurl': url
-                                            }
-
-                                            data = dict(data_t, **data_p)
-                                            yield data
-
-                                        if parse_res:
-                                            self.log('parsed url %s' % model_url)
-                                            self.dbUtils.put_db_url(model_url)
-
-                                    next_url = pq(html2)('#wp_navNext').attr("href")
-                                    if next_url:
-                                        model_url = urljoin('https://www.redtube.com/', next_url)
-                                    else:
-                                        break
+                        while True:
+                            self.log('request %s' % model_url)
+                            html2 = self.utils.get_page(model_url)
+                            if html2:
+                                if self.dbUtils.get_db_url(model_url):
+                                    pass
                                 else:
-                                    break;
-                else:
-                    self.log('request %s error' % url)
-                    continue
-            except (GeneratorExit, StopIteration):
-                break
-            except:
-                self.log('error in parse url %s' % url)
-                continue
+                                    data_ps, parse_res = self.parse_sub_page(html2)
+                                    for data_p in data_ps:
+                                        data_t = {
+                                            'name': self.utils.format_name(name),
+                                            'url': model_url,
+                                            'board': board,
+                                            'refurl': url
+                                        }
+
+                                        data = dict(data_t, **data_p)
+                                        yield data
+
+                                    if parse_res:
+                                        self.log('parsed url %s' % model_url)
+                                        self.dbUtils.put_db_url(model_url)
+
+                                next_url = pq(html2)('#wp_navNext').attr("href")
+                                if next_url:
+                                    model_url = urljoin('https://www.redtube.com/', next_url)
+                                else:
+                                    break
+                            else:
+                                break;
+            else:
+                self.log('request %s error' % url)
+        except:
+            self.log('error in parse url %s' % url)
+            yield None
 
         yield None
 

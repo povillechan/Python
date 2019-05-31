@@ -29,7 +29,7 @@ class CWebParserSiteCommon(CWebParserProcess):
 
         data_brief = {
             'url': product_url,
-            'name': self.webParser.utils.format_name(product_name),
+            'name': product_name,
         }
 
         data = {'brief': data_brief}
@@ -78,62 +78,60 @@ class CWebParserSite(CWebParserSingleUrl):
     @author: chenzf
     '''
 
-    def parse_page(self):
-        urlsGen = self.urls_genarator()
-        while True:
-            try:
-                url, name = next(urlsGen)
-                if not url:
-                    yield None
-                    break
+    def parse_page(self, url):
+        try:
+            if not url:
+                yield None
 
-                if self.dbUtils.get_db_url(url):
-                    continue
+            if self.dbUtils.get_db_url(url):
+                yield None
 
-                data_total = 1
-                html = self.utils.get_page(url)
-                if html:
-                    a = pq(html)
-                    data_total = a('button.js-load-more').attr('data-total')
-                    if not data_total:
-                        data_total = 1
+            end_pos = url.rfind('/') - 1  # 倒数第一个"/"的位置再左移一位
+            start_pos = url.rfind('/', 0, end_pos)  # 网址从开始截至到end_pos的位置，从右往左出现的第一个"/"也就是我们要找的倒数第二个"/"
+            name = url[start_pos + 1:]  # 截取网址的倒数第二个 "/" 后面的内容
 
-                if int(data_total) > 0:
-                    for page in range(1, int(data_total) + 1):
-                        try:
-                            cate_url = '%s?mode=async&action=get_block&block_id=list_albums_common_albums_list&from=%s' % (
-                                url, page)
+            data_total = 1
+            html = self.utils.get_page(url)
+            if html:
+                a = pq(html)
+                data_total = a('button.js-load-more').attr('data-total')
+                if not data_total:
+                    data_total = 1
 
-                            if self.dbUtils.get_db_url(cate_url):
-                                continue
+            if int(data_total) > 0:
+                for page in range(1, int(data_total) + 1):
+                    try:
+                        cate_url = '%s?mode=async&action=get_block&block_id=list_albums_common_albums_list&from=%s' % (
+                            url, page)
 
-                            html = self.utils.get_page(cate_url)
-                            if html:
-                                b = pq(html)
-
-                                items = b('div.masonry_item >a')
-                                for item in items.items():
-                                    data_p = self.common.parse_item(item)
-                                    data_t = {
-                                        'name': name,
-                                        'url': data_p.get('brief').get('url'),
-                                        'refurl': cate_url
-                                    }
-
-                                    data = dict(data_t, **data_p)
-                                    yield data
-                                self.dbUtils.put_db_url(cate_url)
-                        except:
+                        if self.dbUtils.get_db_url(cate_url):
                             continue
-                    self.log('parsed url %s' % url)
-                    self.dbUtils.put_db_url(url)
-                else:
-                    self.log('request %s error' % url)
-            except (GeneratorExit, StopIteration):
-                break
-            except:
-                self.log('error in parse url %s' % url)
-                continue
+
+                        html = self.utils.get_page(cate_url)
+                        if html:
+                            b = pq(html)
+
+                            items = b('div.masonry_item >a')
+                            for item in items.items():
+                                data_p = self.common.parse_item(item)
+                                data_t = {
+                                    'name': name,
+                                    'url': data_p.get('brief').get('url'),
+                                    'refurl': cate_url
+                                }
+
+                                data = dict(data_t, **data_p)
+                                yield data
+                            self.dbUtils.put_db_url(cate_url)
+                    except:
+                        continue
+                self.log('parsed url %s' % url)
+                self.dbUtils.put_db_url(url)
+            else:
+                self.log('request %s error' % url)
+        except:
+            self.log('error in parse url %s' % url)
+            yield None
 
         yield None
 

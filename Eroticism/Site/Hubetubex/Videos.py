@@ -29,7 +29,7 @@ class CWebParserSiteCommon(CWebParserProcess):
 
         data_brief = {
             'url': url,
-            'name': self.webParser.utils.format_name(name),
+            'name': name,
         }
 
         data = {'brief': data_brief}
@@ -74,7 +74,7 @@ class CWebParserSiteCommon(CWebParserProcess):
                 if type(video) is list:
                     video = video[0]
                 result &= self.webParser.utils.download_file(video,
-                                                             os.path.join('', '%s') % (videos.get('name')),
+                                                             os.path.join('', '%s') % (self.format_save_name(videos.get('name'))),
                                                              headers={'Referer': videos.get('url')}
                                                              )
 
@@ -94,47 +94,42 @@ class CWebParserSite(CWebParserMultiUrl):
     @author: chenzf
     '''
 
-    def parse_page(self):
-        urlsGen = self.urls_genarator()
-        while True:
-            try:
-                url = next(urlsGen)
-                if url is None:
-                    yield None
+    def parse_page(self, url):
+        try:
+            if url is None:
+                yield None
 
-                if self.dbUtils.get_db_url(url):
-                    continue
+            if self.dbUtils.get_db_url(url):
+                yield None
 
-                html = self.utils.get_page(url)
-                if html:
-                    a = pq(html)
-                    # items
-                    items = a('div.thumb-div a.black_a')
-                    parse_succeed = True
-                    for item in items.items():
-                        try:
-                            data_p = self.common.parse_item(item)
-                            data_t = {
-                                'name': data_p.get('brief').get('name'),
-                                'url': data_p.get('brief').get('url'),
-                                'refurl': url
-                            }
+            html = self.utils.get_page(url)
+            if html:
+                a = pq(html)
+                # items
+                items = a('div.thumb-div a.black_a')
+                parse_succeed = True
+                for item in items.items():
+                    try:
+                        data_p = self.common.parse_item(item)
+                        data_t = {
+                            'name': data_p.get('brief').get('name'),
+                            'url': data_p.get('brief').get('url'),
+                            'refurl': url
+                        }
 
-                            data = dict(data_t, **data_p)
-                            yield data
-                        except:
-                            parse_succeed = False
-                            continue
-                    if parse_succeed:
-                        self.log('parsed url %s' % url)
-                        self.dbUtils.put_db_url(url)
-                else:
-                    self.log('request %s error' % url)
-            except (GeneratorExit, StopIteration):
-                break
-            except:
-                self.log('error in parse url %s' % url)
-                continue
+                        data = dict(data_t, **data_p)
+                        yield data
+                    except:
+                        parse_succeed = False
+                        continue
+                if parse_succeed:
+                    self.log('parsed url %s' % url)
+                    self.dbUtils.put_db_url(url)
+            else:
+                self.log('request %s error' % url)
+        except:
+            self.log('error in parse url %s' % url)
+            yield None
 
         yield None
 

@@ -55,7 +55,7 @@ class CWebParserSiteCommon(CWebParserProcess):
             product_name = b('div.title').text().replace(' «', '').replace(b('div.title a').text(), '')
             data_detail = {
                 'galleries': {
-                    'name': self.webParser.utils.format_name(product_name),
+                    'name': product_name,
                     'url': product_url,
                     'stills': stills,
                     'board': item.get('brief').get('board'),
@@ -86,55 +86,49 @@ class CWebParserSite(CWebParserSingleUrl):
     @author: chenzf
     '''
 
-    def parse_page(self):
-        urlsGen = self.urls_genarator()
-        while True:
-            try:
-                url = next(urlsGen)
-                if not url:
-                    yield None
-
-                html = self.utils.get_page(url, headers={"Accept-Encoding": "", })
-                if html:
-                    a = pq(html)
-                    # items
-                    items = a('a.model_item')
-
-                    for item in items.items():
-                        modelurl = item.attr('href')
-                        name = item('img').attr('alt')
-                        board = item('img').attr('src')
-                        if self.dbUtils.get_db_url(modelurl):
-                            continue
-
-                        html = self.utils.get_page(modelurl)
-                        if html:
-                            b = pq(html)
-                            products = b('div.gallery_box a')
-                            try:
-                                for product in products.items():
-                                    data_p = self.common.parse_item(product)
-                                    data_t = {
-                                        'name': self.utils.format_name(name),
-                                        'url': modelurl,
-                                        'board': board,
-                                        'refurl': modelurl
-                                    }
-
-                                    data = dict(data_t, **data_p)
-                                    yield data
-                            except:
-                                continue
-
-                            self.dbUtils.put_db_url(modelurl)
-                    self.log('parsed url %s' % url)
-                else:
-                    self.log('request %s error' % url)
-            except (GeneratorExit, StopIteration):
-                break
-            except:
-                self.log('error in parse url %s' % url)
+    def parse_page(self, url):
+        try:
+            if not url:
                 yield None
+
+            html = self.utils.get_page(url, headers={"Accept-Encoding": "", })
+            if html:
+                a = pq(html)
+                # items
+                items = a('a.model_item')
+
+                for item in items.items():
+                    modelurl = item.attr('href')
+                    name = item('img').attr('alt')
+                    board = item('img').attr('src')
+                    if self.dbUtils.get_db_url(modelurl):
+                        continue
+
+                    html = self.utils.get_page(modelurl)
+                    if html:
+                        b = pq(html)
+                        products = b('div.gallery_box a')
+                        try:
+                            for product in products.items():
+                                data_p = self.common.parse_item(product)
+                                data_t = {
+                                    'name': self.utils.format_name(name),
+                                    'url': modelurl,
+                                    'board': board,
+                                    'refurl': modelurl
+                                }
+
+                                data = dict(data_t, **data_p)
+                                yield data
+                        except:
+                            continue
+                        self.dbUtils.put_db_url(modelurl)
+                self.log('parsed url %s' % url)
+            else:
+                self.log('request %s error' % url)
+        except:
+            self.log('error in parse url %s' % url)
+            yield None
 
         yield None
 

@@ -26,14 +26,10 @@ class CWebParserSiteCommon(CWebParserProcess):
     #
     def parse_item(self, item):
         url = item('a').attr('href')
-        discrib = item('a').attr('title')
-        if not discrib:
-            discrib = item('img').attr('alt')
         result = re.findall('[a-zA-z]+://[^\s]*', str(item('img').attr('srcset')))
 
         data_brief = {
             'url': url,
-            'discrib': self.webParser.utils.format_name(discrib),
             'board': result[0] if result and len(result) >= 2 else None,
         }
 
@@ -78,8 +74,7 @@ class CWebParserSiteCommon(CWebParserProcess):
             if video:
                 data_detail = {
                     'videos': {
-                        'name': '%s %s' % (
-                            self.webParser.utils.format_name(model), self.webParser.utils.format_name(name)),
+                        'name': '%s %s' % (model, name),
                         'url': item.get('brief').get('url'),
                         'board': video.get('board'),
                         'site': site,
@@ -90,8 +85,7 @@ class CWebParserSiteCommon(CWebParserProcess):
             else:
                 data_detail = {
                     'galleries': {
-                        'name': '%s %s' % (
-                            self.webParser.utils.format_name(model), self.webParser.utils.format_name(name)),
+                        'name': '%s %s' % (model, name),
                         'url': item.get('brief').get('url'),
                         'site': site,
                         'stills': stills,
@@ -100,15 +94,17 @@ class CWebParserSiteCommon(CWebParserProcess):
 
             data = deepcopy(item)
             data['detail'] = data_detail
-            data['name'] = self.webParser.utils.format_name(info_string[1])
+            data['name'] = info_string[1]
 
         return data
 
     def get_sub_dir_name(self, data):
         if data.get('detail').get('videos'):
-            sub_dir_name = os.path.join("%s", "%s") % (data.get('detail').get('videos').get('site'), data.get('name'))
+            sub_dir_name = os.path.join("%s", "%s") % (
+            data.get('detail').get('videos').get('site'), self.format_save_name(data.get('name')))
         else:
-            sub_dir_name = os.path.join("%s", "%s") % (data.get('detail').get('galleries').get('site'), data.get('name'))
+            sub_dir_name = os.path.join("%s", "%s") % (
+            data.get('detail').get('galleries').get('site'), self.format_save_name(data.get('name')))
         return sub_dir_name
 
 
@@ -125,47 +121,42 @@ class CWebParserHunterMultiUrl(CWebParserMultiUrl):
     @author: chenzf
     '''
 
-    def parse_page(self):
-        urlsGen = self.urls_genarator()
-        while True:
-            try:
-                url = next(urlsGen)
-                if not url:
-                    yield None
+    def parse_page(self, url):
+        try:
+            if not url:
+                yield None
 
-                if self.dbUtils.get_db_url(url):
-                    continue
+            if self.dbUtils.get_db_url(url):
+                yield None
 
-                html = self.utils.get_page(url)
-                if html:
-                    a = pq(html)
-                    # items
-                    items = a('nav.pagination-a').prev_all('ul li')
-                    parse_succeed = True
-                    for item in items.items():
-                        try:
-                            data_p = self.common.parse_item(item)
-                            data_t = {
-                                'url': data_p.get('brief').get('url'),
-                                'refurl': url
-                            }
+            html = self.utils.get_page(url)
+            if html:
+                a = pq(html)
+                # items
+                items = a('nav.pagination-a').prev_all('ul li')
+                parse_succeed = True
+                for item in items.items():
+                    try:
+                        data_p = self.common.parse_item(item)
+                        data_t = {
+                            'url': data_p.get('brief').get('url'),
+                            'refurl': url
+                        }
 
-                            data = dict(data_t, **data_p)
-                            yield data
+                        data = dict(data_t, **data_p)
+                        yield data
 
-                        except:
-                            parse_succeed = False
-                            continue
-                    if parse_succeed:
-                        self.log('parsed url %s' % url)
-                        self.dbUtils.put_db_url(url)
-                else:
-                    self.log('request %s error' % url)
-            except (GeneratorExit, StopIteration):
-                break
-            except:
-                self.log('error in parse url %s' % url)
-                continue
+                    except:
+                        parse_succeed = False
+                        continue
+                if parse_succeed:
+                    self.log('parsed url %s' % url)
+                    self.dbUtils.put_db_url(url)
+            else:
+                self.log('request %s error' % url)
+        except:
+            self.log('error in parse url %s' % url)
+            yield None
 
         yield None
 
@@ -183,47 +174,42 @@ class CWebParserHunterSingleUrl(CWebParserSingleUrl):
     @author: chenzf
     '''
 
-    def parse_page(self):
-        urlsGen = self.urls_genarator()
-        while True:
-            try:
-                url = next(urlsGen)
-                if not url:
-                    yield None
+    def parse_page(self, url):
+        try:
+            if not url:
+                yield None
 
-                if self.dbUtils.get_db_url(url):
-                    continue
+            if self.dbUtils.get_db_url(url):
+                yield None
 
-                html = self.utils.get_page(url)
-                if html:
-                    a = pq(html)
-                    # items
-                    items = a('#content h2').prev_all('ul.gallery-a li')
-                    parse_succeed = True
-                    for item in items.items():
-                        try:
-                            data_p = self.common.parse_item(item)
-                            data_t = {
-                                'url': data_p.get('brief').get('url'),
-                                'refurl': url
-                            }
+            html = self.utils.get_page(url)
+            if html:
+                a = pq(html)
+                # items
+                items = a('#content h2').prev_all('ul.gallery-a li')
+                parse_succeed = True
+                for item in items.items():
+                    try:
+                        data_p = self.common.parse_item(item)
+                        data_t = {
+                            'url': data_p.get('brief').get('url'),
+                            'refurl': url
+                        }
 
-                            data = dict(data_t, **data_p)
-                            yield data
+                        data = dict(data_t, **data_p)
+                        yield data
 
-                        except:
-                            parse_succeed = False
-                            continue
-                    if parse_succeed:
-                        self.log('parsed url %s' % url)
-                        self.dbUtils.put_db_url(url)
-                else:
-                    self.log('request %s error' % url)
-            except (GeneratorExit, StopIteration):
-                break
-            except:
-                self.log('error in parse url %s' % url)
-                continue
+                    except:
+                        parse_succeed = False
+                        continue
+                if parse_succeed:
+                    self.log('parsed url %s' % url)
+                    self.dbUtils.put_db_url(url)
+            else:
+                self.log('request %s error' % url)
+        except:
+            self.log('error in parse url %s' % url)
+            yield None
 
         yield None
 

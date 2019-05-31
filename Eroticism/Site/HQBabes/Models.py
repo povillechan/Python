@@ -32,7 +32,7 @@ class CWebParserSiteCommon(CWebParserProcess):
 
         data_brief = {
             'url': url,
-            'name': self.webParser.utils.format_name(name),
+            'name': name,
         }
 
         data = {'brief': data_brief}
@@ -80,72 +80,67 @@ class CWebParserSite(CWebParserSingleUrl):
     @author: chenzf
     '''
 
-    def parse_page(self):
-        urlsGen = self.urls_genarator()
-        while True:
-            try:
-                url = next(urlsGen)
-                if url is None:
-                    yield None
+    def parse_page(self, url):
+        try:
+            if url is None:
+                yield None
 
-                while True:
-                    html = self.utils.get_page(url)
-                    if html:
-                        if self.dbUtils.get_db_url(url):
-                            pass
-                        else:
-                            a = pq(html)
-                            # items
-                            items = a('ul.set.babes_main li')
-                            parse_succeed = True
-                            for item in items.items():
-                                try:
-                                    name = item('b a').text()
-                                    board = 'https:' + item('a img').attr('lsrc') + '.jpg'
-                                    model_url = urljoin('https://www.hqbabes.com/', item('b a').attr('href'))
-
-                                    html2 = self.utils.get_page(model_url)
-                                    if html2:
-                                        b = pq(html2)
-                                        modelitems = b('ul.set.babe li')
-                                        for modelitem in modelitems.items():
-                                            try:
-                                                data_p = self.common.parse_item(modelitem)
-                                                data_t = {
-                                                    'name': self.utils.format_name(name),
-                                                    'url': model_url,
-                                                    'board': board,
-                                                    'refurl': url
-                                                }
-
-                                                data = dict(data_t, **data_p)
-                                                yield data
-                                            except:
-                                                self.log('parsed error 1 %s_%s' % (url, modelitem))
-                                                parse_succeed = False
-                                                continue
-                                except:
-                                    self.log('parsed error 2 %s_%s' % (url, item))
-                                    parse_succeed = False
-                                    continue
-                            if parse_succeed:
-                                self.log('parsed url %s' % url)
-                                self.dbUtils.put_db_url(url)
-
-                        next_url = a('#pages li a[count="Next Page"]')
-                        if next_url:
-                            url = urljoin('https://www.hqbabes.com/', next_url.attr('href'))
-                            self.log('request %s' % url)
-                        else:
-                            break
+            while True:
+                html = self.utils.get_page(url)
+                if html:
+                    if self.dbUtils.get_db_url(url):
+                        pass
                     else:
-                        self.log('request %s error' % url)
-                        continue
-            except (GeneratorExit, StopIteration):
-                break
-            except:
-                self.log('error in parse url %s' % url)
-                continue
+                        a = pq(html)
+                        # items
+                        items = a('ul.set.babes_main li')
+                        parse_succeed = True
+                        for item in items.items():
+                            try:
+                                name = item('b a').text()
+                                board = 'https:' + item('a img').attr('lsrc') + '.jpg'
+                                model_url = urljoin('https://www.hqbabes.com/', item('b a').attr('href'))
+
+                                html2 = self.utils.get_page(model_url)
+                                if html2:
+                                    b = pq(html2)
+                                    modelitems = b('ul.set.babe li')
+                                    for modelitem in modelitems.items():
+                                        try:
+                                            data_p = self.common.parse_item(modelitem)
+                                            data_t = {
+                                                'name': self.utils.format_name(name),
+                                                'url': model_url,
+                                                'board': board,
+                                                'refurl': url
+                                            }
+
+                                            data = dict(data_t, **data_p)
+                                            yield data
+                                        except:
+                                            self.log('parsed error 1 %s_%s' % (url, modelitem))
+                                            parse_succeed = False
+                                            continue
+                            except:
+                                self.log('parsed error 2 %s_%s' % (url, item))
+                                parse_succeed = False
+                                continue
+                        if parse_succeed:
+                            self.log('parsed url %s' % url)
+                            self.dbUtils.put_db_url(url)
+
+                    next_url = a('#pages li a[count="Next Page"]')
+                    if next_url:
+                        url = urljoin('https://www.hqbabes.com/', next_url.attr('href'))
+                        self.log('request %s' % url)
+                    else:
+                        break
+                else:
+                    self.log('request %s error' % url)
+                    continue
+        except:
+            self.log('error in parse url %s' % url)
+            yield None
 
         yield None
 

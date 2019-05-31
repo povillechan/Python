@@ -30,7 +30,7 @@ class CWebParserSiteCommon(CWebParserProcess):
 
         data_brief = {
             'url': url,
-            'name': self.webParser.utils.format_name(name),
+            'name': name,
         }
 
         data = {'brief': data_brief}
@@ -97,52 +97,46 @@ class CWebParserSite(CWebParserMultiUrl):
     @author: chenzf
     '''
 
-    def parse_page(self):
-        urlsGen = self.urls_genarator()
-        while True:
-            try:
-                url = next(urlsGen)
-                if url is None:
-                    yield None
+    def parse_page(self, url):
+        try:
+            if url is None:
+                yield None
 
-                if self.dbUtils.get_db_url(url):
-                    continue
+            if self.dbUtils.get_db_url(url):
+                yield None
 
-                html = self.utils.get_page(url, headers={"User-Agent": "",
-                                                         "Accept": "",
-                                                         "Accept-Encoding": "",
-                                                         "Accept-Language": "",
-                                                         "Cache-Control": "",
-                                                         'Connection': ''})
-                if html:
-                    a = pq(html)
-                    # items
-                    items = a('div.inner-box-container > div.row div.item-col.col > div.item-inner-col.inner-col >a')
-                    parse_successed = True
-                    for item in items.items():
-                        data_p = self.common.parse_item(item)
-                        if not data_p:
-                            parse_successed = False
-                            continue
+            html = self.utils.get_page(url, headers={"User-Agent": "",
+                                                     "Accept": "",
+                                                     "Accept-Encoding": "",
+                                                     "Accept-Language": "",
+                                                     "Cache-Control": "",
+                                                     'Connection': ''})
+            if html:
+                a = pq(html)
+                # items
+                items = a('div.inner-box-container > div.row div.item-col.col > div.item-inner-col.inner-col >a')
+                parse_successed = True
+                for item in items.items():
+                    data_p = self.common.parse_item(item)
+                    if not data_p:
+                        parse_successed = False
+                        continue
 
-                        data_t = {
-                            'url': data_p.get('brief').get('name'),
-                            'url': data_p.get('brief').get('url'),
-                            'refurl': url
-                        }
+                    data_t = {
+                        'url': data_p.get('brief').get('name'),
+                        'url': data_p.get('brief').get('url'),
+                        'refurl': url
+                    }
 
-                        data = dict(data_t, **data_p)
-                        yield data
-                    if parse_successed:
-                        self.dbUtils.put_db_url(url)
-                else:
-                    self.log('request %s error' % url)
-                    continue
-            except (GeneratorExit, StopIteration):
-                break
-            except:
-                self.log('error in parse url %s' % url)
-                continue
+                    data = dict(data_t, **data_p)
+                    yield data
+                if parse_successed:
+                    self.dbUtils.put_db_url(url)
+            else:
+                self.log('request %s error' % url)
+        except:
+            self.log('error in parse url %s' % url)
+            yield None
 
         yield None
 

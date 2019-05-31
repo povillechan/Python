@@ -34,7 +34,7 @@ class CWebParserSiteCommon(CWebParserProcess):
         data_brief = {
             'board': board,
             'url': modelurl,
-            'name': self.webParser.utils.format_name(name)
+            'name': name
         }
 
         data = {'brief': data_brief}
@@ -76,7 +76,7 @@ class CWebParserSiteCommon(CWebParserProcess):
 
             data_detail = {
                 'galleries': {
-                    'name': self.webParser.utils.format_name(item.get('brief').get('name')),
+                    'name': item.get('brief').get('name'),
                     'url': item.get('brief').get('url'),
                     'board': item.get('brief').get('board'),
                     'stills': stills,
@@ -105,47 +105,42 @@ class CWebParserSite(CWebParserSingleUrl):
     @author: chenzf
     '''
 
-    def parse_page(self):
-        urlsGen = self.urls_genarator()
-        while True:
-            try:
-                url = next(urlsGen)
-                if not url:
-                    yield None
+    def parse_page(self, url):
+        try:
+            if not url:
+                yield None
 
-                if self.dbUtils.get_db_url(url):
-                    continue
+            if self.dbUtils.get_db_url(url):
+                yield None
 
-                html = self.utils.get_page(url)
-                if html:
-                    a = pq(html)
-                    # items
-                    items = a('.products .contain .grid .col-sm-12')
-                    parse_succeed = True
-                    for item in items.items():
-                        try:
-                            data_p = self.common.parse_item(item)
-                            data_t = {
-                                'name': data_p.get('brief').get('name'),
-                                'url': data_p.get('brief').get('url'),
-                                'board': data_p.get('brief').get('board'),
-                                'refurl': url
-                            }
+            html = self.utils.get_page(url)
+            if html:
+                a = pq(html)
+                # items
+                items = a('.products .contain .grid .col-sm-12')
+                parse_succeed = True
+                for item in items.items():
+                    try:
+                        data_p = self.common.parse_item(item)
+                        data_t = {
+                            'name': data_p.get('brief').get('name'),
+                            'url': data_p.get('brief').get('url'),
+                            'board': data_p.get('brief').get('board'),
+                            'refurl': url
+                        }
 
-                            data = dict(data_t, **data_p)
-                            yield data
-                        except:
-                            parse_succeed = False
-                            continue
-                    if parse_succeed:
-                        self.dbUtils.put_db_url(url)
-                else:
-                    self.log('html none in parse url %s' % url)
-            except (GeneratorExit, StopIteration):
-                break
-            except:
-                self.log('error in parse url %s' % url)
-                continue
+                        data = dict(data_t, **data_p)
+                        yield data
+                    except:
+                        parse_succeed = False
+                        continue
+                if parse_succeed:
+                    self.dbUtils.put_db_url(url)
+            else:
+                self.log('html none in parse url %s' % url)
+        except:
+            self.log('error in parse url %s' % url)
+            yield None
 
         yield None
 

@@ -84,78 +84,73 @@ class CWebParserSite(CWebParserSingleUrl):
     @author: chenzf
     '''
 
-    def parse_page(self):
-        urlsGen = self.urls_genarator()
-        while True:
-            try:
-                url = next(urlsGen)
-                if url is None:
-                    yield None
+    def parse_page(self, url):
+        try:
+            if url is None:
+                yield None
 
-                html = self.utils.get_page(url)
-                if html:
-                    a = pq(html, parser='html')
-                    # items
-                    items = a('a.artwork')
-                    for item in items.items():
-                        modelurl = urljoin('http://www.hegre.com/', item.attr('href').strip())
-                        board = item('img').attr('src')
-                        name = item.attr('title')
+            html = self.utils.get_page(url)
+            if html:
+                a = pq(html, parser='html')
+                # items
+                items = a('a.artwork')
+                for item in items.items():
+                    modelurl = urljoin('http://www.hegre.com/', item.attr('href').strip())
+                    board = item('img').attr('src')
+                    name = item.attr('title')
 
-                        if self.dbUtils.get_db_url(modelurl):
-                            continue
+                    if self.dbUtils.get_db_url(modelurl):
+                        continue
 
-                        bFarseSucceed = True
-                        html2 = self.utils.get_page(modelurl)
-                        if html2:
-                            b = pq(html2, parser='html')
-                            item_models = b('#films-wrapper div.item')
-                            for item_model in item_models.items():
-                                try:
-                                    data_p = self.common.parse_item(item_model)
-                                    data_t = {
-                                        'name': self.utils.format_name(name),
-                                        'url': modelurl,
-                                        'board': board,
-                                        'refurl': modelurl
-                                    }
+                    bFarseSucceed = True
+                    html2 = self.utils.get_page(modelurl)
+                    if html2:
+                        b = pq(html2, parser='html')
+                        item_models = b('#films-wrapper div.item')
+                        for item_model in item_models.items():
+                            try:
+                                data_p = self.common.parse_item(item_model)
+                                data_t = {
+                                    'name': self.utils.format_name(name),
+                                    'url': modelurl,
+                                    'board': board,
+                                    'refurl': modelurl
+                                }
 
-                                    data = dict(data_t, **data_p)
-                                    yield data
-                                except:
-                                    bFarseSucceed = False
-                                    continue
-                            b = pq(html2, parser='html')
-                            item_models = b('#massages-wrapper div.item')
-                            for item_model in item_models.items():
-                                try:
-                                    data_p = self.common.parse_item(item_model)
-                                    data_t = {
-                                        'name': self.utils.format_name(name),
-                                        'url': modelurl,
-                                        'board': board,
-                                        'refurl': modelurl
-                                    }
+                                data = dict(data_t, **data_p)
+                                yield data
+                            except:
+                                bFarseSucceed = False
+                                continue
+                        b = pq(html2, parser='html')
+                        item_models = b('#massages-wrapper div.item')
+                        for item_model in item_models.items():
+                            try:
+                                data_p = self.common.parse_item(item_model)
+                                data_t = {
+                                    'name': self.utils.format_name(name),
+                                    'url': modelurl,
+                                    'board': board,
+                                    'refurl': modelurl
+                                }
 
-                                    data = dict(data_t, **data_p)
-                                    yield data
-                                except:
-                                    bFarseSucceed = False
-                                    continue
+                                data = dict(data_t, **data_p)
+                                yield data
+                            except:
+                                bFarseSucceed = False
+                                continue
 
-                            self.log('parsed url %s' % modelurl)
-                            if bFarseSucceed:
-                                self.dbUtils.put_db_url(modelurl)
+                        self.log('parsed url %s' % modelurl)
+                        if bFarseSucceed:
+                            self.dbUtils.put_db_url(modelurl)
 
-                    self.log('parsed url %s' % url)
-                    self.dbUtils.put_db_url(url)
-                else:
-                    self.log('request %s error' % url)
-            except (GeneratorExit, StopIteration):
-                break
-            except:
-                self.log('error in parse url %s' % url)
-                continue
+                self.log('parsed url %s' % url)
+                self.dbUtils.put_db_url(url)
+            else:
+                self.log('request %s error' % url)
+        except:
+            self.log('error in parse url %s' % url)
+            yield None
 
         yield None
 
