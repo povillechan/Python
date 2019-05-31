@@ -28,7 +28,7 @@ class CWebParserProcess(object):
                     ('\n', '_'),
                     ('*', '_'),
                     ('.', '_'),
-                    ('/', '_'),
+                    ('\\', '_'),
                     ('\'', '_'),
                     ]
         for pattern in patterns:
