@@ -126,7 +126,7 @@ def job_start():
         'url': 'https://www.erocurves.com/model-archives/?tpage={page}',
         'database': 'Erocurves',
         'start': 1,
-        'end': 66
+        'end': 72
     }
 
     job = CWebParserSite(**para_args)

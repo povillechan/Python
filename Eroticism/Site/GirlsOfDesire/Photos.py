@@ -131,7 +131,7 @@ def job_start():
         'url': 'https://www.girlsofdesire.org/own/page/{page}/',
         'database': 'GirlsOfDesire',
         'start': 1,
-        'end': 250
+        'end': 267
     }
 
     job = CWebParserSite(**para_args)

@@ -167,6 +167,8 @@ class CWebParserSite(CWebParserSingleUrl):
                         search_url = urljoin('https://www.redtube.com/', next_url)
                     else:
                         break
+                else:
+                    break
         except:
             self.log('error in parse url %s' % url)
             yield None

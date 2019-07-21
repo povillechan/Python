@@ -141,7 +141,7 @@ def job_start():
         'url': 'https://54zipai.com/selfies/index_{page}.html',
         'database': '54zipai',
         'start': 1,
-        'end': 740
+        'end': 779
     }
 
     job = CWebParserSite(**para_args)

@@ -128,7 +128,7 @@ def job_start():
         'url': 'https://www.babeimpact.com/galleries/page/{page}/',
         'database': 'BabeImpact',
         'start': 1,
-        'end': 357
+        'end': 360
     }
 
     job = CWebParserSite(**para_args)
