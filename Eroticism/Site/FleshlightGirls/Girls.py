@@ -32,7 +32,7 @@ class CWebParserSiteCommon(CWebParserProcess):
         board = urljoin('https://', board_str.group(1))
 
         data_brief = {
-            'board': board,
+            # 'board': board,
             'url': modelurl,
             'name': name
         }
@@ -78,7 +78,7 @@ class CWebParserSiteCommon(CWebParserProcess):
                 'galleries': {
                     'name': item.get('brief').get('name'),
                     'url': item.get('brief').get('url'),
-                    'board': item.get('brief').get('board'),
+                    # 'board': item.get('brief').get('board'),
                     'stills': stills,
                 }
             }
@@ -125,7 +125,7 @@ class CWebParserSite(CWebParserSingleUrl):
                         data_t = {
                             'name': data_p.get('brief').get('name'),
                             'url': data_p.get('brief').get('url'),
-                            'board': data_p.get('brief').get('board'),
+                            # 'board': data_p.get('brief').get('board'),
                             'refurl': url
                         }
 

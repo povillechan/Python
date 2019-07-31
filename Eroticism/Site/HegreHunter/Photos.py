@@ -229,13 +229,13 @@ def job_start():
         ('S', 'https://www.w4bhub.com'),
         ('S', 'https://www.zemanihunter.com'),
         ('S', 'https://www.femangels.com/'),
-        ('M', 'https://www.elitebabes.com/archive/page/{page}', 0, 551),
-        ('M', 'https://www.femjoyhunter.com/archive/page/{page}', 1, 35),
-        ('M', 'https://www.hegrehunter.com/archive/page/{page}', 1, 17),
+        ('M', 'https://www.elitebabes.com/archive/page/{page}', 0, 665),
+        ('M', 'https://www.femjoyhunter.com/archive/page/{page}', 1, 36),
+        ('M', 'https://www.hegrehunter.com/archive/page/{page}', 1, 18),
         ('M', 'https://www.joymiihub.com/archive/page/{page}', 1, 8),
-        ('M', 'https://www.jperotica.com/archive/page/{page}', 1, 31),
+        ('M', 'https://www.jperotica.com/archive/page/{page}', 1, 36),
         ('M', 'https://www.metarthunter.com/archive/page/{page}', 1, 82),
-        ('M', 'https://www.pmatehunter.com/archive/page/{page}', 1, 40),
+        ('M', 'https://www.pmatehunter.com/archive/page/{page}', 1, 42),
         ('M', 'https://www.xarthunter.com/archive/page/{page}', 1, 9),
     ]
 

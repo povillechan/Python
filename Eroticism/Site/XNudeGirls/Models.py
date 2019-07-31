@@ -6,6 +6,7 @@ Created on 2018年6月1日
 '''
 import os
 import sys
+import re
 
 parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, parentdir)
@@ -14,8 +15,8 @@ from Common.CWebParser import CParseType, CWebParser, CWebParserMultiUrl, CWebPa
 from Common.CWebDataDbUtis import CWebDataDbUtis
 from Common.CWebSpiderUtils import CWebSpiderUtils
 from Common.CWebParserProcess import CWebParserProcess
-from pyquery import PyQuery as pq
 from copy import deepcopy
+from pyquery import PyQuery as pq
 from urllib.parse import urljoin
 
 
@@ -25,15 +26,16 @@ class CWebParserSiteCommon(CWebParserProcess):
 
     #
     def parse_item(self, item):
-        url = urljoin('https://www.babesmachine.com/', item.attr('href'))
-        name = item('img').attr('alt')
+        url = item.attr('href')
+        name = url.split('/')[1]
 
         data_brief = {
-            'url': url,
+            'url': urljoin('http://xnudegirls.com/', url),
             'name': name,
         }
 
         data = {'brief': data_brief}
+
         if self.webParser.parseOnly == CParseType.Parse_Brief:
             return data
         else:
@@ -47,10 +49,14 @@ class CWebParserSiteCommon(CWebParserProcess):
         if html:
             b = pq(html)
 
-            previews = b('#gallery table:eq(0) tr td a img')
+            previews = b('#gallery a')
             stills = []
+
+            if not previews:
+                return None
+
             for preview in previews.items():
-                stills.append(('https:' + preview.attr('src')).replace('/tn_', '/'))
+                stills.append(preview.attr('href'))
 
             data_detail = {
                 'galleries': {
@@ -75,57 +81,47 @@ class CWebParserSite(CWebParserSingleUrl):
         self.utils = CWebSpiderUtils(self.savePath)
         self.common = CWebParserSiteCommon(self)
         self.dbUtils = CWebDataDbUtis(kwArgs.get('database'))
-        self.utils.verify = False
 
     '''
     parse_page
-
+    
     @author: chenzf
     '''
 
     def parse_page(self, url):
         try:
-            if url is None:
+            if not url:
+                yield None
+
+            if self.dbUtils.get_db_url(url):
                 yield None
 
             html = self.utils.get_page(url)
             if html:
+                name = url.split('/')[-2]
+
                 a = pq(html)
                 # items
-                items = a('#models tr td a')
+                items = a('#content div.wrap.wrap2 div.thumbs a')
+                parse_succeed = True
                 for item in items.items():
-                    name = item.attr('title')
-                    model_url = urljoin('https://www.babesmachine.com', item.attr('href'))
+                    try:
+                        data_p = self.common.parse_item(item)
+                        data_t = {
+                            'name': name,
+                            'url': data_p.get('brief').get('url'),
+                            'refurl': url
+                        }
 
-                    if self.dbUtils.get_db_url(model_url):
-                        yield None
-
-                    html2 = self.utils.get_page(model_url)
-                    if html2:
-                        b = pq(html2)
-                        modelitems = b('#posts tr td a')
-                        parse_succeed = True
-                        for modelitem in modelitems.items():
-                            try:
-                                data_p = self.common.parse_item(modelitem)
-                                data_t = {
-                                    'name': name,
-                                    'url': model_url,
-                                    'refurl': url
-                                }
-
-                                data = dict(data_t, **data_p)
-                                yield data
-                            except:
-                                parse_succeed = False
-                                continue
-
-                        if parse_succeed:
-                            self.log('parsed url %s' % model_url)
-                            self.dbUtils.put_db_url(model_url)
-                    else:
-                        self.log('request %s error' % model_url)
+                        data = dict(data_t, **data_p)
+                        yield data
+                    except:
+                        parse_succeed = False
                         continue
+
+                if parse_succeed:
+                    self.log('parsed url %s' % url)
+                    self.dbUtils.put_db_url(url)
             else:
                 self.log('request %s error' % url)
         except:
@@ -134,17 +130,25 @@ class CWebParserSite(CWebParserSingleUrl):
 
         yield None
 
+    def urls_genarator(self):
+        html = self.utils.get_page(self.url)
+        if html:
+            a = pq(html)
+            models = a('ul.bottomLists2  ul li a')
+            for model in models.items():
+                yield urljoin('http://xnudegirls.com/', model.attr('href'))
+        yield None
+
 
 def job_start():
-    for url in range(ord("A"), ord("Z") + 1):
-        para_args = {
-            'savePath': os.path.join('BabesMachine', '{filePath}'),
-            'url': "https://www.babesmachine.com/model/?letter=%s" % chr(url),
-            'database': 'BabesMachine'
-        }
+    para_args = {
+        'savePath': os.path.join('XNudeGirls', '{filePath}'),
+        'url': 'http://xnudegirls.com',
+        'database': 'XNudeGirls',
+    }
 
-        job = CWebParserSite(**para_args)
-        job.call_process()
+    job = CWebParserSite(**para_args)
+    job.call_process()
 
 
 if __name__ == '__main__':

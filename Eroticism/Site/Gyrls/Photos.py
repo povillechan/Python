@@ -25,8 +25,8 @@ class CWebParserSiteCommon(CWebParserProcess):
 
     #
     def parse_item(self, item):
-        url = urljoin('https://www.babeimpact.com/', item.attr('href'))
-        name = item('img').attr('alt')
+        url = item.attr('href')
+        name = item.text()
 
         data_brief = {
             'url': url,
@@ -46,29 +46,30 @@ class CWebParserSiteCommon(CWebParserProcess):
         html = self.webParser.utils.get_page(url)
         if html:
             b = pq(html)
-            items = b('div.list.gallery div.item img')
-            stills = []
-            for still in items.items():
-                stills.append(urljoin('https://www.babeimpact.com/', still.attr("src").replace("_tn_", "_")))
+            items = b('#dgwt-jg-1 figure a')
+            if items:
+                stills = []
+                for still in items.items():
+                    stills.append(still.attr('href'))
 
-            data_detail = {
-                'galleries': {
-                    'name': item.get('brief').get('name'),
-                    'url': item.get('brief').get('url'),
-                    'stills': stills
+                data_detail = {
+                    'galleries': {
+                        'name': item.get('brief').get('name'),
+                        'url': item.get('brief').get('url'),
+                        'stills': stills,
+                        'board': item.get('brief').get('board')
+                    }
                 }
-            }
-            data = deepcopy(item)
-            data['detail'] = data_detail
+
+                data = deepcopy(item)
+                data['detail'] = data_detail
 
         return data
 
     def get_sub_dir_name(self, data):
-        return ''
+        sub_dir_name = ""
+        return sub_dir_name
 
-    @staticmethod
-    def get_gallery_dir():
-        return ''
 
 class CWebParserSite(CWebParserMultiUrl):
     def __init__(self, **kwArgs):
@@ -80,7 +81,7 @@ class CWebParserSite(CWebParserMultiUrl):
 
     '''
     parse_page
-    
+
     @author: chenzf
     '''
 
@@ -96,15 +97,16 @@ class CWebParserSite(CWebParserMultiUrl):
             if html:
                 a = pq(html)
                 # items
-                items = a('div.list.home div.item a.border')
+                items = a('#posts_cont div.home_box')
                 parse_succeed = True
                 for item in items.items():
                     try:
-                        data_p = self.common.parse_item(item)
+                        data_p = self.common.parse_item(item('h3 a'))
+                        data_p['brief']['board'] = item('a img').attr('src')
                         data_t = {
                             'name': data_p.get('brief').get('name'),
                             'url':  data_p.get('brief').get('url'),
-                            'refurl': url
+                            'refurl': url,
                         }
 
                         data = dict(data_t, **data_p)
@@ -126,11 +128,11 @@ class CWebParserSite(CWebParserMultiUrl):
 
 def job_start():
     para_args = {
-        'savePath': os.path.join('BabeImpact', '{filePath}'),
-        'url': 'https://www.babeimpact.com/galleries/page/{page}/',
-        'database': 'BabeImpact',
-        'start': 1,
-        'end': 360
+        'savePath': os.path.join('Gyrls', '{filePath}'),
+        'url': 'http://www.gyrls.com/page/{page}/',
+        'database': 'GyrlsPhotos',
+        'start': 0,
+        'end': 1506
     }
 
     job = CWebParserSite(**para_args)

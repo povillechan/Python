@@ -104,7 +104,7 @@ class CWebParser(object):
                 if item:
                     self.dbUtils.insert_db_item(item)
                 else:
-                    break
+                    pass
         elif self.parseOnly == CParseType.Parse_Detail:
             try:
                 dataDetail = self.common.parse_detail_fr_brief(data)
@@ -115,6 +115,8 @@ class CWebParser(object):
                     else:
                         self.dbUtils.switch_db_item(data)
                         self.dbUtils.insert_db_detail_item(dataDetail)
+                else:
+                    self.dbUtils.switch_db_item_no_parsed(data)
             except:
                 self.log('error in parse detail_fr_brief item')
             finally:

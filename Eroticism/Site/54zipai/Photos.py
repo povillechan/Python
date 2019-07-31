@@ -64,9 +64,11 @@ class CWebParserSiteCommon(CWebParserProcess):
         return data
 
     def get_sub_dir_name(self, data):
-        sub_dir_name = ""
-        return sub_dir_name
+        return ''
 
+    @staticmethod
+    def get_gallery_dir():
+        return ''
 
 class CWebParserSite(CWebParserMultiUrl):
     def __init__(self, **kwArgs):

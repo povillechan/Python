@@ -11,7 +11,6 @@ class CWebParserProcess(object):
     def __init__(self, webParser):
         self.webParser = webParser
 
-
     def format_save_name(self, name):
         name = name.strip()
         patterns = [('\"', '_'),
@@ -45,6 +44,14 @@ class CWebParserProcess(object):
         sub_dir_name = "%s" % self.format_save_name(data.get('name'))
         return sub_dir_name
 
+    @staticmethod
+    def get_gallery_dir():
+        return 'galleries'
+
+    @staticmethod
+    def get_video_dir():
+        return 'videos'
+
     def process_data(self, data):
         #         print(data)
         result = True
@@ -58,7 +65,8 @@ class CWebParserProcess(object):
         board = data.get('board')
         if board:
             result &= self.webParser.utils.download_file(board,
-                                                         os.path.join('%s', '%s') % (sub_dir_name, self.format_save_name(data.get('name'))),
+                                                         os.path.join('%s', '%s') % (
+                                                             sub_dir_name, self.format_save_name(data.get('name'))),
                                                          headers={'Referer': data.get('url')}
                                                          )
 
@@ -68,8 +76,9 @@ class CWebParserProcess(object):
             board = galleries.get('board')
             if board:
                 result &= self.webParser.utils.download_file(board,
-                                                             os.path.join('%s', 'galleries', '%s', '%s') % (
-                                                                 sub_dir_name, self.format_save_name(galleries.get('name')),
+                                                             os.path.join('%s', self.get_gallery_dir(), '%s', '%s') % (
+                                                                 sub_dir_name,
+                                                                 self.format_save_name(galleries.get('name')),
                                                                  self.format_save_name(galleries.get('name'))),
                                                              headers={'Referer': galleries.get('url')}
                                                              )
@@ -79,19 +88,24 @@ class CWebParserProcess(object):
                 for i, subVal in enumerate(stills, start=1):
                     if subVal:
                         result &= self.webParser.utils.download_file(subVal,
-                                                                     os.path.join('%s', 'galleries', '%s', '%s') % (
-                                                                         sub_dir_name, self.format_save_name(galleries.get('name')), str(i)),
+                                                                     os.path.join('%s', self.get_gallery_dir(), '%s',
+                                                                                  '%s') % (
+                                                                         sub_dir_name,
+                                                                         self.format_save_name(galleries.get('name')),
+                                                                         str(i)),
                                                                      headers={'Referer': galleries.get('url')}
                                                                      )
 
-    # videos
+        # videos
         videos = data.get('detail').get('videos')
         if videos:
             board = videos.get('board')
             if board:
                 result &= self.webParser.utils.download_file(board,
-                                                             os.path.join('%s', 'videos', '%s', '%s') % (
-                                                                 sub_dir_name, self.format_save_name(videos.get('name')), self.format_save_name(videos.get('name'))),
+                                                             os.path.join('%s', self.get_video_dir(), '%s', '%s') % (
+                                                                 sub_dir_name,
+                                                                 self.format_save_name(videos.get('name')),
+                                                                 self.format_save_name(videos.get('name'))),
                                                              headers={'Referer': videos.get('url')}
                                                              )
 
@@ -100,8 +114,11 @@ class CWebParserProcess(object):
                 for i, subVal in enumerate(stills, start=1):
                     if subVal:
                         result &= self.webParser.utils.download_file(subVal,
-                                                                     os.path.join('%s', 'videos', '%s', '%s') % (
-                                                                         sub_dir_name, self.format_save_name(videos.get('name')), str(i)),
+                                                                     os.path.join('%s', self.get_video_dir(), '%s',
+                                                                                  '%s') % (
+                                                                         sub_dir_name,
+                                                                         self.format_save_name(videos.get('name')),
+                                                                         str(i)),
                                                                      headers={'Referer': videos.get('url')}
                                                                      )
 
@@ -110,8 +127,10 @@ class CWebParserProcess(object):
                 if type(video) is list:
                     video = video[0]
                 result &= self.webParser.utils.download_file(video,
-                                                             os.path.join('%s', 'videos', '%s', '%s') % (
-                                                                 sub_dir_name, self.format_save_name(videos.get('name')), self.format_save_name(videos.get('name'))),
+                                                             os.path.join('%s', self.get_video_dir(), '%s', '%s') % (
+                                                                 sub_dir_name,
+                                                                 self.format_save_name(videos.get('name')),
+                                                                 self.format_save_name(videos.get('name'))),
                                                              headers={'Referer': videos.get('url')}
                                                              )
 

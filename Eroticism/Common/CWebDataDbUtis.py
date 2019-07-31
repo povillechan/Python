@@ -14,6 +14,7 @@ class CWebDataDbUtis(object):
         self.dbUrl = self.dbname["datas_url"]
         self.dbBriefJob = self.dbname["datas_brief"]
         self.dbBriefJobParsed = self.dbname["datas_brief_parsed"]
+        self.dbBriefJobNoParsed = self.dbname["datas_brief_no_parsed"]
         self.dbBriefJobError = self.dbname["datas_brief_error"]
         self.dbDetailJob = self.dbname["datas_detail"]
         self.dbDetailJobParsed = self.dbname["datas_detail_parsed"]
@@ -52,6 +53,14 @@ class CWebDataDbUtis(object):
             self.dbBriefJob.delete_one(data)
         if not self.dbBriefJobParsed.find_one(data):
             self.dbBriefJobParsed.insert_one(data)
+
+    def switch_db_item_no_parsed(self, data):
+        if data.get('_id'):
+            data.pop('_id')
+        if self.dbBriefJob.find_one(data):
+            self.dbBriefJob.delete_one(data)
+        if not self.dbBriefJobNoParsed.find_one(data):
+            self.dbBriefJobNoParsed.insert_one(data)
 
     def switch_db_item_error(self, data):
         if data.get('_id'):
