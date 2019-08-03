@@ -64,6 +64,10 @@ class CWebParserSiteCommon(CWebParserProcess):
 
         return data
 
+    @staticmethod
+    def get_gallery_dir():
+        return ''
+
 
 class CWebParserSite(CWebParserSingleUrl):
     def __init__(self, **kwArgs):
@@ -83,52 +87,48 @@ class CWebParserSite(CWebParserSingleUrl):
             if url is None:
                 yield None
 
-            if self.dbUtils.get_db_url(url):
-                yield None
-
             html = self.utils.get_page(url, headers={"Host": "godsartnudes.com",
                                                      "Upgrade-Insecure-Requests": "1"})
             if html:
                 a = pq(html)
                 # items
                 items = a(
-                    'div.row.gan-central.smallspacetop div.col-xxs-12.col-xs-6.col-sm-4.col-md-3 div a:last-of-type')
-                processNum = 0
-                parse_succeed = True
+                    'div.row.gan-central div.col-xxs-12.col-xs-6.col-sm-4.col-md-3 div.Thumb a:last-of-type')
                 for item in items.items():
-                    try:
-                        name = item.text()
-                        # board = item('a img').attr('lsrc') + '.jpg'
-                        model_url = urljoin('http://godsartnudes.com/nude-pictures-sexy-girl/',
-                                            name.replace(" ", "-"))
+                    name = item.text()
+                    # board = item('a img').attr('lsrc') + '.jpg'
+                    model_url = urljoin('http://godsartnudes.com', item.attr('href'))
 
-                        html2 = self.utils.get_page(model_url)
-                        if html2:
-                            b = pq(html2)
-                            modelitems = b(
-                                'div.container-fluid div.col-xxs-12.col-xs-6.col-md-4.col-lg-3 a:last-of-type')
-                            for modelitem in modelitems.items():
-                                try:
-                                    data_p = self.common.parse_item(modelitem)
-                                    data_t = {
-                                        'name': name,
-                                        'url': model_url,
-                                        # 'board': board,
-                                        'refurl': url
-                                    }
-
-                                    data = dict(data_t, **data_p)
-                                    yield data
-                                    processNum += 1
-                                except:
-                                    parse_succeed = False
-                                    continue
-                    except:
-                        parse_succeed = False
+                    if self.dbUtils.get_db_url(model_url):
                         continue
-                if parse_succeed and processNum > 0:
-                    self.log('parsed url %s' % url)
-                    self.dbUtils.put_db_url(url)
+
+                    html2 = self.utils.get_page(model_url)
+                    if html2:
+                        b = pq(html2)
+                        modelitems = b(
+                            'div.row.spacetop div.col-xxs-12.col-xs-6.col-sm-4.col-md-3 div.thumbImage > a:first-child')
+                        parse_succeed = True
+                        processNum = 0
+                        for modelitem in modelitems.items():
+                            parse_succeed &= True
+                            try:
+                                data_p = self.common.parse_item(modelitem)
+                                data_t = {
+                                    'name': name,
+                                    'url': model_url,
+                                    'refurl': url
+                                }
+
+                                data = dict(data_t, **data_p)
+                                yield data
+                                processNum += 1
+                            except:
+                                parse_succeed = False
+                                continue
+
+                        if parse_succeed and processNum > 0:
+                            self.log('parsed url %s' % model_url)
+                            self.dbUtils.put_db_url(model_url)
             else:
                 self.log('request %s error' % url)
         except:
@@ -137,17 +137,21 @@ class CWebParserSite(CWebParserSingleUrl):
 
         yield None
 
+    def urls_genarator(self):
+        for url in range(ord("A"), ord("Z") + 1):
+            yield self.url.format(page=chr(url))
+        yield None
+
 
 def job_start():
-    for url in range(ord("A"), ord("Z") + 1):
-        para_args = {
-            'savePath': os.path.join('GodArtNudes', '{filePath}'),
-            'url': "http://godsartnudes.com/models-listing/letter-%s" % chr(url),
-            'database': 'GodArtNudes'
-        }
+    para_args = {
+        'savePath': os.path.join('GodArtNudes', '{filePath}'),
+        'url': "http://godsartnudes.com/models-listing/letter-{page}",
+        'database': 'GodArtNudes'
+    }
 
-        job = CWebParserSite(**para_args)
-        job.call_process()
+    job = CWebParserSite(**para_args)
+    job.call_process()
 
 
 if __name__ == '__main__':
