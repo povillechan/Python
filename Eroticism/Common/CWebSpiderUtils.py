@@ -37,7 +37,7 @@ class CWebSpiderUtils(object):
 
     def __init__(self, savePath):
         self.savePath = savePath
-        curPath = os.path.dirname(os.path.abspath('.'))
+        curPath = os.path.dirname(os.path.abspath(__file__))
         if platform.system() == "Windows":
             # self.chrome_service = Service("C:\\Windows\\System32\\chromedriver.exe")
             self.chrome_service = Service(curPath + "\\..\\Driver\\chromedriver.exe")
