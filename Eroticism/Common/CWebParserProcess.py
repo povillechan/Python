@@ -52,6 +52,9 @@ class CWebParserProcess(object):
     def get_video_dir():
         return 'videos'
 
+    def get_video_file_path(self, videos):
+        return self.format_save_name(videos.get('name'))
+
     def process_data(self, data):
         #         print(data)
         result = True
@@ -127,9 +130,9 @@ class CWebParserProcess(object):
                 if type(video) is list:
                     video = video[0]
                 result &= self.webParser.utils.download_file(video,
-                                                             os.path.join('%s', self.get_video_dir(), '%s', '%s') % (
+                                                             os.path.join('%s', self.get_video_dir(),
+                                                                          self.get_video_file_path(videos), '%s') % (
                                                                  sub_dir_name,
-                                                                 self.format_save_name(videos.get('name')),
                                                                  self.format_save_name(videos.get('name'))),
                                                              headers={'Referer': videos.get('url')}
                                                              )
