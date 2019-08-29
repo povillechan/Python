@@ -11,10 +11,11 @@ import threading
 from multiprocessing import cpu_count
 import socket
 from enum import Enum
-from copy import deepcopy
 import sys
 import argparse
 import platform
+
+from Common.CWebLog import CWebLog
 
 
 class CParseType(Enum):
@@ -23,7 +24,8 @@ class CParseType(Enum):
     Parse_Detail = 2
     Parse_RealData = 3
     Parse_Detail2Brief = 4
-    Parse_ClearUrl = 5
+    Parse_Brief_NoParse_Reset = 5
+    Parse_ClearUrl = 6
 
 
 class CWebParser(object):
@@ -87,6 +89,9 @@ class CWebParser(object):
     def parse_clear_url(self):
         self.dbUtils.parse_clear_url()
 
+    def parse_brief_noparse_reset(self):
+        self.dbUtils.switch_db_brief_noparse_to_brief()
+
     '''
     process_image
     
@@ -126,14 +131,7 @@ class CWebParser(object):
 
     def log(self, logText):
         fileName = self.savePath.format(filePath='Runlog.log')
-        dirName = os.path.dirname(fileName)
-        if not os.path.exists(dirName):
-            os.makedirs(dirName)
-
-        with open(fileName, 'a+') as f:
-            f.write('%s %s\n' % (time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), logText))
-
-        print(logText)
+        CWebLog.log(logText, fileName=fileName)
 
     '''
     process
@@ -163,6 +161,9 @@ class CWebParser(object):
             elif self.parseOnly == CParseType.Parse_Detail2Brief:
                 self.parse_detail_to_brief()
                 return
+            elif self.parseOnly == CParseType.Parse_Brief_NoParse_Reset:
+                self.parse_brief_noparse_reset()
+                return
             elif self.parseOnly == CParseType.Parse_ClearUrl:
                 self.parse_clear_url()
                 return
@@ -187,7 +188,7 @@ class CWebParser(object):
             for t in thread_list:
                 t.join()
         except:
-            print('error occured in parse image')
+            CWebLog.log('error occured in parse image')
 
     def job_thread(self, datas):
         while True:
@@ -210,14 +211,13 @@ class CWebParser(object):
                     time.sleep(1)
                     continue
                 elif not data and endFlag:
-                    print('thread end!')
+                    CWebLog.log('thread end!')
                     return
 
                 self.process_data(data)
                 time.sleep(1)
 
             except Exception as e:
-                print(e)
                 continue
 
     def push_data_job(self, data):
@@ -253,7 +253,7 @@ class CWebParser(object):
         endflag = False
         self.threadRunningCount += 1
         if self.threadRunningCount > 50:
-            print("thread [%s]" % os.getpid(), 'job thread [%s]' % len(self.job_list), os.path.abspath(sys.argv[0]),
+            CWebLog.log("thread [%s]" % os.getpid(), 'job thread [%s]' % len(self.job_list), os.path.abspath(sys.argv[0]),
                   str(sys.argv[1:]))
             self.threadRunningCount = 1
 
@@ -348,7 +348,6 @@ class CWebParserMultiUrl(CWebParser):
             self.thread_num = self.args.t
 
         except Exception as e:
-            print(e)
             exit()
 
     def urls_genarator(self):
@@ -386,7 +385,7 @@ class CWebParserSingleUrl(CWebParser):
             # parse only
             self.parseOnly = CParseType(self.args.p)
         except Exception as e:
-            print(e)
+            # print(e)
             exit()
 
     def urls_genarator(self):

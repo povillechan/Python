@@ -56,7 +56,6 @@ class CWebParserProcess(object):
         return self.format_save_name(videos.get('name'))
 
     def process_data(self, data):
-        #         print(data)
         result = True
         sub_dir_name = self.get_sub_dir_name(data)
 

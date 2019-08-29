@@ -16,7 +16,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from requests.adapters import HTTPAdapter
 import platform
-
+from Common.CWebLog import CWebLog
 
 class CWebSpiderUtils(object):
     m_defHeaders = {
@@ -68,7 +68,6 @@ class CWebSpiderUtils(object):
                 return response.text
             return None
         except RequestException as e:
-            print(e)
             return None
 
     def get_page_raw(self, url):
@@ -82,7 +81,6 @@ class CWebSpiderUtils(object):
                 return response.text
             return None
         except RequestException as e:
-            print(e)
             return None
 
     '''
@@ -102,15 +100,6 @@ class CWebSpiderUtils(object):
         down_retrys = 0
         while True:
             try:
-
-                #             if os.path.exists(filePath):
-                #                 if  os.path.getsize(filePath) > 0:
-                #                     print(filePath + " is omitted")
-                #                     return
-                #                 else:
-                #                     os.remove(filePath)
-                #                   s = requests.Session()
-
                 s = requests.Session()
                 s.mount('http://', HTTPAdapter(max_retries=3))
                 s.mount('https://', HTTPAdapter(max_retries=3))
@@ -127,21 +116,21 @@ class CWebSpiderUtils(object):
                 if response.status_code in self.m_defSuccessCode:
                     if 'content-length' in response.headers:
                         content_size = int(response.headers['content-length'])
-                        #                 print('recevice size = %s'%content_size)
+
                         if os.path.exists(filePath):
                             if os.path.getsize(filePath) == content_size:
-                                print(filePath + " is omitted")
+                                CWebLog.log(filePath + " is omitted")
                                 return True
                             else:
                                 os.remove(filePath)
                     else:
                         if os.path.exists(filePath):
-                            print(filePath + " is omitted")
+                            CWebLog.log(filePath + " is omitted")
                             return True
 
                     return self.save_file(response, filePath)
                 else:
-                    print(url + " is error[%s]" % response.status_code)
+                    CWebLog.log(url + " is error[%s]" % response.status_code)
                     down_retrys += 1
                     if down_retrys >= self.m_retry_times:
                         return False
@@ -149,7 +138,6 @@ class CWebSpiderUtils(object):
                         time.sleep(10)
                         continue
             except Exception as e:
-                print(e)
                 down_retrys += 1
                 if down_retrys >= self.m_retry_times:
                     return False
@@ -228,17 +216,17 @@ class CWebSpiderUtils(object):
                     if report_count >= report_space:
                         report_count = 0
                         if content_size > 0:
-                            print("File %s [%.2f%%]" % (filePath, int(total_size * 100) / int(content_size)))
+                            CWebLog.log("File %s [%.2f%%]" % (filePath, int(total_size * 100) / int(content_size)))
                         else:
-                            print("File %s [%.0f Kb]" % (filePath, int(total_size) / 1024))
+                            CWebLog.log("File %s [%.0f Kb]" % (filePath, int(total_size) / 1024))
         except Exception as e:
-            print("Download file error [%s]" % e)
+            CWebLog.log("Download file error [%s]" % e)
             if os.path.exists(filePath):
                 os.remove(filePath)
-            print(filePath + '【abort】')
+            CWebLog.log(filePath + '【abort】')
             return False
 
-        print(filePath + '【done】')
+        CWebLog.log(filePath + '【done】')
         return True
 
     '''
@@ -276,7 +264,6 @@ class CWebSpiderUtils(object):
             self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, cssElement)))
             return self.browser.page_source
         except Exception as e:
-            print(e)
             return None
 
     '''
@@ -347,20 +334,3 @@ class CWebSpiderUtils(object):
 
             #             c_service.stop()
             return html
-
-    '''
-    process
-    
-    @author: chenzf
-    '''
-
-    def log(self, logText):
-        fileName = self.savePath.format(filePath='Utils.log')
-        dirName = os.path.dirname(fileName)
-        if not os.path.exists(dirName):
-            os.makedirs(dirName)
-
-        with open(fileName, 'a+') as f:
-            f.write('%s %s\n' % (time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), logText))
-
-        print(logText)

@@ -5,7 +5,7 @@ Created on 2018年6月1日
 @author: chenzf
 '''
 import pymongo
-
+from Common.CWebLog import CWebLog
 
 class CWebDataDbUtis(object):
     def __init__(self, clientName):
@@ -41,10 +41,10 @@ class CWebDataDbUtis(object):
 
     def insert_db_item(self, data):
         if self.dbBriefJob.find_one(data) or self.dbBriefJobParsed.find_one(data):
-            print('data already in database <brief>!')
+            CWebLog.log('data already in database <brief>!')
         else:
             self.dbBriefJob.insert_one(data)
-            print('data insert in database <brief>!')
+            CWebLog.log('data insert in database <brief>!')
 
     def switch_db_item(self, data):
         if data.get('_id'):
@@ -78,10 +78,10 @@ class CWebDataDbUtis(object):
 
     def insert_db_detail_item(self, data):
         if self.dbDetailJob.find_one(data) or self.dbDetailJobParsed.find_one(data):
-            print('data already in database <detail>!')
+            CWebLog.log('data already in database <detail>!')
         else:
             self.dbDetailJob.insert_one(data)
-            print('data insert in database <detail>!')
+            CWebLog.log('data insert in database <detail>!')
 
     def switch_db_detail_item(self, data):
         if data.get('_id'):
@@ -113,6 +113,14 @@ class CWebDataDbUtis(object):
             self.dbBriefJobParsed.delete_one(data)
 
         self.dbBriefJob.insert_one(data)
+
+    def switch_db_brief_noparse_to_brief(self):
+        for data in self.dbBriefJobNoParsed.find():
+            if data.get('_id'):
+                data.pop('_id')
+            if not self.dbBriefJob.find_one(data):
+                self.dbBriefJob.insert_one(data)
+            self.dbBriefJobNoParsed.delete_one(data)
 
     def parse_clear_url(self):
         self.dbUrl.remove()
