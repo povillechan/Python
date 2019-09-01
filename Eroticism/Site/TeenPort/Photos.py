@@ -134,8 +134,6 @@ class CWebParserSite(CWebParserSingleUrl):
 
 
 def job_start():
-    print(__file__, "start!")
-
     job_list = [
         ('S', 'http://www.teenport.com/galleries/teen-mega-world'),
         ('S', 'http://www.teenport.com/galleries/x-art'),

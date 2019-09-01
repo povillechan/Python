@@ -64,8 +64,7 @@ class CWebParserSiteCommon(CWebParserProcess):
         return data
 
     def get_sub_dir_name(self, data):
-        sub_dir_name = ""
-        return sub_dir_name
+        return ""
 
     def process_data(self, data):
         result = True
@@ -84,9 +83,11 @@ class CWebParserSiteCommon(CWebParserProcess):
                     if subVal:
                         self.webParser.utils.verify = False
                         result &= self.webParser.utils.download_file(subVal,
-                                      os.path.join('%s', 'galleries', '%s', '%s') % (
-                                        sub_dir_name, self.format_save_name(galleries.get('name')), str(i))
-                                )
+                                                                     os.path.join('%s', 'galleries', '%s', '%s') % (
+                                                                         sub_dir_name,
+                                                                         self.format_save_name(galleries.get('name')),
+                                                                         str(i))
+                                                                     )
         return result
 
 

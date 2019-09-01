@@ -19,26 +19,12 @@ from copy import deepcopy
 from pyquery import PyQuery as pq
 from urllib.parse import urljoin
 
+
 class CWebParserSiteCommon(CWebParserProcess):
     def __init__(self, webParser):
         super().__init__(webParser)
 
-    #
     def parse_item(self, item):
-        #         data = None
-        #         url = item('a').attr('href')
-        #         discrib = item('a').attr('title')
-        #         if not discrib:
-        #             discrib = item('img').attr('alt')
-        #         result = re.findall('[a-zA-z]+://[^\s]*', str(item('img').attr('srcset')))
-        #
-        #         if self.webParser.parseOnly == CParseType.Parse_Brief:
-        #             data = {
-        #                 'url'     :  url,
-        #                 'discrib' :  self.webParser.utils.format_name(discrib),
-        #                 'board'   :  [result[0] if result and len(result) >= 2 else None,item('img').attr('src'), result[1] if result and len(result) >= 2 else None],
-        #             }
-        #         else:
         step = 0
         try:
             data = {}
@@ -65,65 +51,26 @@ class CWebParserSiteCommon(CWebParserProcess):
                         if not video_one:
                             step = 4
                             break
-                            #
-                        #                                     if isLast:
-                        #                                         data['videos'] = video_one
-                        #                                         self.save_info(data)
-                        #                                         step = 5
-                        #                                     else:
+
                         data_temp = deepcopy(data)
                         data_temp['videos'] = video_one
-                        #
-                        # #                                         if self.parseOnly == 1:
-                        # #                                             try:
-                        # #                                                 datatmp = deepcopy(data_temp)
-                        # #                                                 if self.common.dbBriefJob.find_one(datatmp) or self.common.dbBriefJobParsed.find_one(datatmp):
-                        # #                                                     print('a db record already exist!')
-                        # #                                                 else:
-                        # #                                                     print('insert a db record!')
-                        # #                                                     self.common.dbBriefJob.insert_one(datatmp)
-                        # #                                                     self.log('parsed url %s' % url)
-                        # #                                             except Exception as e:
-                        # #                                                 print('database error')
-                        # #                                                 print(e)
+
                         step = 5
                         yield data_temp
                         step = 6
-                        #                             else:
-                    #                                 data['videos'] = []
-                    #                                 yield data
-                    #                             step = 7
+
                     except (GeneratorExit, StopIteration):
                         break
                     except Exception as e:
                         self.webParser.log('parse video error in step %s' % step)
-                        print(e)
                         break
         except Exception as e:
-            print(e)
             self.webParser.log('error in parse content in step' % step)
             yield None
 
         yield None
 
     def parse_detail_fr_brief(self, item):
-        #         data = deepcopy(item)
-        #
-        #         url = data.get('videos').get('url')
-        #         if url:
-        #             video, still= self.parse_video_detail(url)
-        #
-        #             video_item =  {
-        #                             'name'   :  data.get('videos').get('name'),
-        #                             'url'    :  url,
-        #                             'video'  :  video,
-        #                             'stills' :  still
-        #                             }
-        #             data['videos'] =  video_item
-        #             return data
-        #
-        #         return None
-
         data = None
         url = item.get('brief').get('url')
         html = self.webParser.utils.get_page_by_chrome(url, 'video source', headless=False)
@@ -145,11 +92,6 @@ class CWebParserSiteCommon(CWebParserProcess):
         return data
 
     def parse_video(self, data, url):
-        #         videos_dict = []
-        #
-        #         browser = CWebSpiderUtils(None)
-        #         browser.init_chrome()
-
         while True:
             html = self.webParser.utils.get_page(url)
             page = pq(html)
@@ -186,19 +128,12 @@ class CWebParserSiteCommon(CWebParserProcess):
             else:
                 break
 
-        #         browser.close_chrome()
-        #         yield videos_dict, True
-
         yield None
 
     def parse_video_detail(self, url):
         html = self.webParser.utils.get_page(url)
         if not html:
             return None, []
-        #
-        #         html = browser.get_chrome(url, '#player #html5')
-        #         if not html:
-        #             return None,[]
 
         soup = BeautifulSoup(html, 'lxml')
         Stills = []
@@ -275,7 +210,7 @@ class CWebParserSiteCommon(CWebParserProcess):
         if video:
             result &= self.webParser.utils.download_file(video,
                                                          '%s\\%s\\%s' % (
-                                                         modelName, videos.get('name'), videos.get('name')),
+                                                             modelName, videos.get('name'), videos.get('name')),
                                                          headers={'Referer': data.get('url')}
                                                          )
 
@@ -330,6 +265,7 @@ class CWebParserSite(CWebParserMultiUrl):
             self.log('error in parse url %s' % url)
             yield None
         yield None
+
 
 def job_start():
     para_args = {

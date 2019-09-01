@@ -64,7 +64,6 @@ class CWebParserSiteCommon(CWebParserProcess):
         return data
 
     def process_data(self, data):
-        #         print(data)
         result = True
         sub_dir_name = self.get_sub_dir_name(data)
 

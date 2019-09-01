@@ -64,6 +64,10 @@ class CWebParserSiteCommon(CWebParserProcess):
 
         return data
 
+    def get_sub_dir_name(self, data):
+        sub_dir_name = os.path.join("models", "%s" % self.format_save_name(data.get('name')))
+        return sub_dir_name
+
     @staticmethod
     def get_gallery_dir():
         return ''
